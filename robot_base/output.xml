@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.1.1 (Python 3.11.7 on win32)" generated="2024-11-22T16:09:42.828527" rpa="false" schemaversion="5">
+<suite id="s1" name="Test" source="d:\Pyton\RFW\test.robot">
+<test id="s1-t1" name="Addition Test" line="9">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.878240" level="INFO">${expression} = 2 + 3</msg>
+<var>${expression}</var>
+<arg>2 + 3</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.877235" elapsed="0.001971"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.880225" level="INFO">${result} = 5</msg>
+<var>${result}</var>
+<arg>${expression}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.880225" elapsed="0.001014"/>
+</kw>
+<kw name="Should Be Equal As Numbers" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.882207" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<arg>${result}</arg>
+<arg>5</arg>
+<doc>Fails if objects are unequal after converting them to real numbers.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.881239" elapsed="0.000968"/>
+</kw>
+<doc>Test the addition operation of the calculator</doc>
+<status status="PASS" start="2024-11-22T16:09:42.876206" elapsed="0.006001"/>
+</test>
+<test id="s1-t2" name="Subtraction Test" line="16">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.885219" level="INFO">${expression} = 5 - 2</msg>
+<var>${expression}</var>
+<arg>5 - 2</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.885219" elapsed="0.001021"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.888262" level="INFO">${result} = 3</msg>
+<var>${result}</var>
+<arg>${expression}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.887260" elapsed="0.001002"/>
+</kw>
+<kw name="Should Be Equal As Numbers" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.889246" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<arg>${result}</arg>
+<arg>3</arg>
+<doc>Fails if objects are unequal after converting them to real numbers.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.889246" elapsed="0.000000"/>
+</kw>
+<doc>Test the subtraction operation of the calculator</doc>
+<status status="PASS" start="2024-11-22T16:09:42.884208" elapsed="0.006078"/>
+</test>
+<test id="s1-t3" name="Multiplication Test" line="23">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.893246" level="INFO">${expression} = 4 * 3</msg>
+<var>${expression}</var>
+<arg>4 * 3</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.893246" elapsed="0.000000"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.894246" level="INFO">${result} = 12</msg>
+<var>${result}</var>
+<arg>${expression}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.894246" elapsed="0.000000"/>
+</kw>
+<kw name="Should Be Equal As Numbers" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.895070" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<arg>${result}</arg>
+<arg>12</arg>
+<doc>Fails if objects are unequal after converting them to real numbers.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.895070" elapsed="0.000000"/>
+</kw>
+<doc>Test the multiplication operation of the calculator</doc>
+<status status="PASS" start="2024-11-22T16:09:42.892245" elapsed="0.003838"/>
+</test>
+<test id="s1-t4" name="Division Test" line="30">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.898075" level="INFO">${expression} = 25 / 5</msg>
+<var>${expression}</var>
+<arg>25 / 5</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.898075" elapsed="0.000000"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.899094" level="INFO">${result} = 5.0</msg>
+<var>${result}</var>
+<arg>${expression}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.899094" elapsed="0.000000"/>
+</kw>
+<kw name="Should Be Equal As Numbers" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.900076" level="INFO">Argument types are:
+&lt;class 'float'&gt;
+&lt;class 'str'&gt;</msg>
+<arg>${result}</arg>
+<arg>5</arg>
+<doc>Fails if objects are unequal after converting them to real numbers.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.900076" elapsed="0.000000"/>
+</kw>
+<doc>Test the division operation of the calculator</doc>
+<status status="PASS" start="2024-11-22T16:09:42.897074" elapsed="0.004002"/>
+</test>
+<test id="s1-t5" name="Module Test" line="37">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.903078" level="INFO">${expression} = 50 % 5</msg>
+<var>${expression}</var>
+<arg>50 % 5</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.903078" elapsed="0.000000"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.904077" level="INFO">${result} = 0</msg>
+<var>${result}</var>
+<arg>${expression}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.904077" elapsed="0.000000"/>
+</kw>
+<kw name="Should Be Equal As Numbers" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.905187" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<arg>${result}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to real numbers.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.905187" elapsed="0.000000"/>
+</kw>
+<doc>Test the Module operation of the calculator</doc>
+<status status="PASS" start="2024-11-22T16:09:42.902075" elapsed="0.004482"/>
+</test>
+<test id="s1-t6" name="Example Test Case" line="43">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.908193" level="INFO">${numbers} = ['1', '2', '3', '4', '5']</msg>
+<var>${numbers}</var>
+<arg>1</arg>
+<arg>2</arg>
+<arg>3</arg>
+<arg>4</arg>
+<arg>5</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.908193" elapsed="0.001027"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.909220" level="INFO">${sum} = 0</msg>
+<var>${sum}</var>
+<arg>0</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.909220" elapsed="0.000000"/>
+</kw>
+<for flavor="IN">
+<iter>
+<kw name="Log" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.911194" level="INFO">Number: 1</msg>
+<arg>Number: ${number}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.911194" elapsed="0.000000"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.912194" level="INFO">${sum} = 1</msg>
+<var>${sum}</var>
+<arg>${sum} + ${number}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.911194" elapsed="0.001000"/>
+</kw>
+<var name="${number}">1</var>
+<status status="PASS" start="2024-11-22T16:09:42.910202" elapsed="0.001992"/>
+</iter>
+<iter>
+<kw name="Log" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.913208" level="INFO">Number: 2</msg>
+<arg>Number: ${number}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.913208" elapsed="0.000000"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.914203" level="INFO">${sum} = 3</msg>
+<var>${sum}</var>
+<arg>${sum} + ${number}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.914203" elapsed="0.000507"/>
+</kw>
+<var name="${number}">2</var>
+<status status="PASS" start="2024-11-22T16:09:42.912194" elapsed="0.002516"/>
+</iter>
+<iter>
+<kw name="Log" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.915216" level="INFO">Number: 3</msg>
+<arg>Number: ${number}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.915216" elapsed="0.000000"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.915216" level="INFO">${sum} = 6</msg>
+<var>${sum}</var>
+<arg>${sum} + ${number}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.915216" elapsed="0.000000"/>
+</kw>
+<var name="${number}">3</var>
+<status status="PASS" start="2024-11-22T16:09:42.914710" elapsed="0.001515"/>
+</iter>
+<iter>
+<kw name="Log" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.916225" level="INFO">Number: 4</msg>
+<arg>Number: ${number}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.916225" elapsed="0.001006"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.918245" level="INFO">${sum} = 10</msg>
+<var>${sum}</var>
+<arg>${sum} + ${number}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.917231" elapsed="0.001014"/>
+</kw>
+<var name="${number}">4</var>
+<status status="PASS" start="2024-11-22T16:09:42.916225" elapsed="0.002020"/>
+</iter>
+<iter>
+<kw name="Log" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.918245" level="INFO">Number: 5</msg>
+<arg>Number: ${number}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.918245" elapsed="0.000998"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.919243" level="INFO">${sum} = 15</msg>
+<var>${sum}</var>
+<arg>${sum} + ${number}</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.919243" elapsed="0.000993"/>
+</kw>
+<var name="${number}">5</var>
+<status status="PASS" start="2024-11-22T16:09:42.918245" elapsed="0.001991"/>
+</iter>
+<var>${number}</var>
+<value>@{numbers}</value>
+<status status="PASS" start="2024-11-22T16:09:42.910202" elapsed="0.010034"/>
+</for>
+<kw name="Log" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.941492" level="INFO">Total Sum: 15</msg>
+<arg>Total Sum: ${sum}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.940987" elapsed="0.000505"/>
+</kw>
+<if>
+<branch type="IF" condition="${sum} &gt; 10">
+<kw name="Log" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.943500" level="INFO">Sum is greater than 10</msg>
+<arg>Sum is greater than 10</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.942506" elapsed="0.000994"/>
+</kw>
+<status status="PASS" start="2024-11-22T16:09:42.942506" elapsed="0.000994"/>
+</branch>
+<branch type="ELSE">
+<kw name="Log" owner="BuiltIn">
+<arg>Sum is not greater than 10</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-11-22T16:09:42.943500" elapsed="0.000000"/>
+</kw>
+<status status="NOT RUN" start="2024-11-22T16:09:42.943500" elapsed="0.000000"/>
+</branch>
+<status status="PASS" start="2024-11-22T16:09:42.942506" elapsed="0.000994"/>
+</if>
+<kw name="Should Be Equal As Numbers" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.945002" level="INFO">Argument types are:
+&lt;class 'int'&gt;
+&lt;class 'str'&gt;</msg>
+<arg>${sum}</arg>
+<arg>15</arg>
+<doc>Fails if objects are unequal after converting them to real numbers.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.944498" elapsed="0.000504"/>
+</kw>
+<doc>Example of for loop and if condition</doc>
+<tag>example</tag>
+<status status="PASS" start="2024-11-22T16:09:42.908193" elapsed="0.036809"/>
+</test>
+<test id="s1-t7" name="External Python Test" line="60">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.947008" level="INFO">${arg} = capper</msg>
+<var>${arg}</var>
+<arg>capper</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.947008" elapsed="0.000000"/>
+</kw>
+<kw name="Evaluate" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.948007" level="INFO">${result} = The provided string is not correct</msg>
+<var>${result}</var>
+<arg>utils.test_dialog('${arg}')</arg>
+<arg>modules=utils</arg>
+<doc>Evaluates the given expression in Python and returns the result.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.948007" elapsed="0.000000"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.949008" level="INFO">result: The provided string is not correct</msg>
+<arg>result: ${result}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="PASS" start="2024-11-22T16:09:42.949008" elapsed="0.001002"/>
+</kw>
+<kw name="Should Be Equal As Strings" owner="BuiltIn">
+<msg time="2024-11-22T16:09:42.951008" level="FAIL">The provided string is not correct != ""</msg>
+<arg>${result}</arg>
+<arg>""</arg>
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<status status="FAIL" start="2024-11-22T16:09:42.950010" elapsed="0.001998">The provided string is not correct != ""</status>
+</kw>
+<doc>Example how call external testting</doc>
+<status status="FAIL" start="2024-11-22T16:09:42.946008" elapsed="0.008510">The provided string is not correct != ""</status>
+</test>
+<doc>Simple Calculator Test</doc>
+<status status="FAIL" start="2024-11-22T16:09:42.834527" elapsed="0.123517"/>
+</suite>
+<statistics>
+<total>
+<stat pass="6" fail="1" skip="0">All Tests</stat>
+</total>
+<tag>
+<stat pass="1" fail="0" skip="0">example</stat>
+</tag>
+<suite>
+<stat pass="6" fail="1" skip="0" id="s1" name="Test">Test</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>
