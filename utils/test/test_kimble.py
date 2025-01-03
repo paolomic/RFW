@@ -13,7 +13,7 @@ sys.path.append(_path_import)
 import utl_win as uw
 import utl_old as uo
 
-def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
+def kimble(SerchKey, ActivKey, IONProduct, Activity, Notes, Hours):
     #####################
     # Windows
     #####################
@@ -22,12 +22,12 @@ def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
     uw.win_activate(wnd)
 
     #####################
-    # Positions
+    # PlaceHolders
     #####################
     node_SEE = uw.get_child(wnd, name='Salesforce - Enterprise Edition', recursive=True, use_regex=False)    #Sub Window
     print (f'node_SEE {node_SEE}')
 
-    node_TEC = uw.get_child(node_SEE, name='Time Entry .* Cancel', recursive=True, use_regex=True)            # sub window - dopo c e anche Save
+    node_TEC = uw.get_child(node_SEE, name='Time Entry .* Cancel', recursive=True, use_regex=True)           # sub window - dopo c e anche Save
     print (f'node_TEC {node_TEC}')
 
     #uw.dump_uia_tree(node_TEC)
@@ -35,7 +35,7 @@ def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
     ###############################
     # Activity
     ###############################
-    if (key):
+    if (SerchKey):
       # hyperlink piu annidato
       # Edit e LIST (dinamiche?) sotto SEE
 
@@ -47,14 +47,14 @@ def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
 
       hlink = uw.get_child(node.parent(), ctrl_type='Hyperlink', recursive=True, use_regex=False)
       print (f'hlink {hlink}')
-      coord = uw.win_click(hlink, wait=0.2)
+      coord = uw.win_click(hlink)
       time.sleep(1)
 
       edit = uw.get_child(node_SEE, ctrl_type='Edit', recursive=True, use_regex=False)
       print (f'edit {edit}')
       uw.win_click(edit)
 
-      value = key
+      value = SerchKey
       keyboard.write(value, delay=0.05)
       time.sleep(1)
 
@@ -62,15 +62,15 @@ def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
       print (f'list {list}')
       uw.dump_uia_path(list)
       #print(uw.dump_uia_tree(list))
-      uw.list_select_texts(list, s1, s2, s3)
+      uw.list_select_texts(list, ActivKey)
 
-      time.sleep(4.5) # long wait - change layout - TODO inteligent wait
+      # UIA changes dinamically here 
 
     ###############################
-    # ION Product
+    # ION Product 
     ###############################
     if (IONProduct):
-      head = uw.get_child(node_TEC, name='ION Product', ctrl_type='Header', recursive=True, use_regex=False)
+      head = uw.get_child_retry(node_TEC, name='ION Product', ctrl_type='Header', recursive=True, use_regex=False, wait_init=4, wait_end=0.5)
       print (f'head {head}')
 
       combo = uw.get_child(head.parent(), ctrl_type='ComboBox', recursive=True, use_regex=False)
@@ -79,8 +79,7 @@ def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
       data = uw.get_child(head.parent(), ctrl_type='DataItem', recursive=True, use_regex=False)   # solo per check
       print (f'data {data}')
 
-      uw.win_click(combo)
-      time.sleep(0.5)
+      uw.win_click(combo, wait=0.5)
 
       value = IONProduct
       keyboard.write(value, delay=0.05)
@@ -106,8 +105,7 @@ def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
       combo = uw.get_child(node, ctrl_type='ComboBox', recursive=True, use_regex=False)
       print (f'combo {combo}')
 
-      uw.win_click(combo)
-      time.sleep(0.5)
+      uw.win_click(combo, wait=0.5)
 
       list = uw.get_child(node, ctrl_type='List', recursive=True, use_regex=False)
       print (f'list {list}')
@@ -116,8 +114,6 @@ def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
       value = Activity
       keyboard.write(value, delay=0.05)
       keyboard.send('enter')
-
-      #uw.list_select(list, "Support")
 
       ###############################
       # Notes
@@ -130,7 +126,6 @@ def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
         print (f'edit {edit}')
 
         uw.win_click(edit)
-        time.sleep(0.5)
 
         value = Notes
         keyboard.write(value, delay=0.05)
@@ -147,7 +142,6 @@ def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
         print (f'edit {edit}')
 
         uw.win_click(edit)
-        time.sleep(0.5)
 
         value = Hours
         keyboard.write(value, delay=0.05)
@@ -162,7 +156,6 @@ def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
       print (f'edit {edit}')
 
       uw.win_click(edit)
-      time.sleep(0.5)
 
       value = "none"
       keyboard.write(value, delay=0.05)
@@ -176,5 +169,6 @@ def kimble(key, s1, s2, s3, IONProduct, Activity, Notes, Hours):
       mouse.move(uw.win_coord(butt))
 
 
-#kimble('ftx', 'ION Internal Development', 'FTX', 'Markets - Developer', 'IONM.FI.FTX', 'Support', 'MyNotes', '0.5')
-kimble('ftx', 'ION Internal Development', 'FTX', 'Markets - Developer', 'IONM.FI.FTX', 'Support', 'MyNotes', '0.5')
+
+#kimble('ftx', ['ION Internal Development', 'FTX', 'Markets - Developer'], 'IONM.FI.FTX', 'Support', 'MyNotes', '0.5')
+kimble('ftx', ['ION Internal Development', 'FTX', 'Markets - Developer'], 'IONM.FI.FTX', 'development - incr', 'MyNotes', '0.5')

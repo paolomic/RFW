@@ -6,6 +6,54 @@ import time
 import re
 
 
+## TODO #####################
+# 
+# get_child temporizzatas
+# organizzare delay wait vari
+# fare una reload affidabile 
+#
+
+
+######################################################################################################
+# COMMON
+######################################################################################################
+def is_array(a):
+    if isinstance(a, (list, tuple)):
+        return True
+    return (not isinstance(a, (str, dict)) and hasattr(a, 'iter') and hasattr(a, 'len'))
+
+def array_to_str(arr, sep=' ', max_depth=None, depth=0):
+    """
+    Converte un array in stringa, con gestione ricorsiva controllata.
+    
+    Args:
+        arr: Array da convertire
+        sep: Separatore tra elementi (default spazio)
+        max_depth: Profondità massima di ricorsione (None = illimitata)
+        depth: Profondità corrente (uso interno)
+    """
+    if max_depth is not None and depth > max_depth:
+        return "..."
+    if not is_array(arr):
+        return str(arr)
+    
+    # Usa join invece della concatenazione
+    return sep.join(array_to_str(elem, sep, max_depth, depth + 1) 
+                   for elem in arr)
+
+def all_substring(subs, thestr, case_sens=True):
+    if not is_array(subs):
+        if (not case_sens):
+            subs.lower()
+            thestr.lower()
+        return str(subs) in str(thestr)
+        
+    return all(all_substring(elem, thestr) for elem in subs)
+    
+
+######################################################################################################
+# WIN
+######################################################################################################
 
 def win_move(window, x, y):
   window.iface_transform.Move(x, y)
@@ -28,7 +76,7 @@ def win_coord(window, where='c'):
       y = (rect.top + rect.bottom) // 2
       return(x,y)   # absolute
 
-def win_click(window, wait=0.1):
+def win_click(window, wait=0.25):
     rect = window.element_info.rectangle
     click_x = (rect.left + rect.right) // 2
     click_y = (rect.top + rect.bottom) // 2
@@ -102,91 +150,120 @@ def find_window(name=None, class_name=None, handle=None, process_id=None, exact_
 ######################################################################################################
 # get_child
 ######################################################################################################
-def get_child(parent_wnd, name=None, ctrl_type=None, class_name=None, 
-              automation_id=None, handle=None, use_regex=False, recursive=False,
-              visible_only=False):
-    """
-    Trova un controllo figlio basato su più criteri.
-    Usa descendants() per ricerca ricorsiva, children() altrimenti.
-    """
+def match_value(pattern, value, use_regex=False, case_sens=True):
+  try:          
+      if (not case_sens):
+          pattern.lower()     # puo essere regexp
+          value.lower()
+      
+      if use_regex:
+          return bool(re.match(pattern, str(value)))
+      return pattern == value
+  except Exception:
+      return False
+  
+def check_control(control, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
+                         recursive=False, use_regex=False, case_sens=True, visible_only=False):
+    try:
+        if not control.is_enabled():
+          return False
+        
+        if visible_only:
+            try:
+                if not control.is_visible():
+                    return False
+            except Exception:
+                pass
+            
+        if name is not None:
+            try:
+                if not match_value(name, control.window_text(), use_regex, case_sens):
+                    return False
+            except Exception:
+                return False
+
+        if ctrl_type is not None:
+            try:
+                if not match_value(ctrl_type, control.element_info.control_type, False, case_sens):
+                    return False
+            except Exception:
+                return False
+        
+        if class_name is not None:
+            try:
+                if not match_value(class_name, control.element_info.class_name, False, case_sens):
+                    return False
+            except Exception:
+                return False
+
+
+        if automation_id is not None:
+            try:
+                if not match_value(automation_id, control.element_info.automation_id, False, case_sens):
+                    return False
+            except Exception:
+                return False
+
+
+        if handle is not None:
+            try:
+                if control.element_info.handle != handle:
+                    return False
+            except Exception:
+                return False
+
+        if texts is not None:
+            try:
+                properties = control.get_properties()
+                prop_texts = properties.get('texts', [])
+
+                if not all_substring(texts, array_to_str(prop_texts), case_sens):
+                    return False
+            except Exception:
+                return False      
+        
+        return True
+            
+    except Exception:
+        return False
+
+def get_child(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
+                         recursive=False, use_regex=False, case_sens=True, visible_only=False):
+    
     if not parent_wnd:
         return None
-
-    def match_value(pattern, value):
-        try:
-            if not value:
-                return False
-                
-            if use_regex:
-                return bool(re.match(pattern, str(value)))
-            return pattern == value
-        except Exception:
-            return False
             
-    def check_control(control):
-        try:
-            if not control.is_enabled():
-              return False
-            
-            if visible_only:
-                try:
-                    if not control.is_visible():
-                        return False
-                except Exception:
-                    pass
-            
-            if handle is not None:
-                try:
-                    if control.element_info.handle != handle:
-                        return False
-                except Exception:
-                    return False
-            
-            if ctrl_type is not None:
-                try:
-                    if not match_value(ctrl_type, control.element_info.control_type):
-                        return False
-                except Exception:
-                    return False
-            
-            if class_name is not None:
-                try:
-                    if not match_value(class_name, control.element_info.class_name):
-                        return False
-                except Exception:
-                    return False
-            
-            if automation_id is not None:
-                try:
-                    if not match_value(automation_id, control.element_info.automation_id):
-                        return False
-                except Exception:
-                    return False
-            
-            if name is not None:
-                try:
-                    if not match_value(name, control.window_text()):
-                        return False
-                except Exception:
-                    return False
-            
-            return True
-                
-        except Exception:
-            return False
-    
     try:
         # Usa descendants() se recursive=True, altrimenti children()
         elements = parent_wnd.descendants() if recursive else parent_wnd.children()
         
         for element in elements:
-            if check_control(element):
-                return element
+            if check_control(element, name, ctrl_type, class_name, automation_id, handle, texts,
+                              recursive, use_regex, case_sens, visible_only):
+              return element
                 
     except Exception:
         pass
         
     return None
+
+def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
+                         recursive=False, use_regex=False, case_sens=True, visible_only=False,
+                         attempt=5, pause=1, wait_init=0.25, wait_end=0.25):
+    time.sleep(wait_init)
+
+    while attempt>0:
+        print (attempt)
+        cld = get_child(parent_wnd, name, ctrl_type, class_name, automation_id, handle, texts,
+                         recursive, use_regex, case_sens, visible_only)
+        if (cld):
+            time.sleep(wait_end) 
+            return cld
+        
+        attempt -= 1
+        if attempt==0:
+          return None
+        time.sleep(pause) 
 
 #TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST 
 def win_reload_bytype(item):
@@ -221,38 +298,13 @@ def list_select(list_control, s):
             continue
 
 
-def list_select_texts(list_control, s1=None, s2=None, s3=None):
-    items = list_control.children()
-    for item in items:
-        
-        try:
-            properties = item.get_properties()
-            texts = properties.get('texts', [])
+def list_select_texts(list_control, text_values):
+    list_item = get_child(list_control, texts=text_values)
 
-
-
-            #xy=win_coord(item)
-            #mouse.move(coords=xy)
-            #time.sleep(0.1)
-            
-            # Verifica match posizionale
-            found = True
-            if s1 is not None and (len(texts) < 1 or s1 not in texts[0]):
-                found = False
-            if s2 is not None and (len(texts) < 2 or s2 not in texts[1]):
-                found = False
-            if s3 is not None and (len(texts) < 3 or s3 not in texts[2]):
-                found = False
-            
-            if found:
-              win_click(item)
-              #item.click_input()
-              pass
-                
-        except Exception as e:
-            print(f"Errore nel processare un item: {e}")
-            continue
-        
+    if (not list_item):
+      return False
+    
+    win_click(list_item)
 
 ######################################################################################################
 # Dump
