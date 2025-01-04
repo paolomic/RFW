@@ -8,9 +8,7 @@ import re
 
 ## TODO #####################
 # 
-# get_child temporizzatas
-# organizzare delay wait vari
-# fare una reload affidabile 
+#  - reload node affidabile 
 #
 
 
@@ -23,32 +21,21 @@ def is_array(a):
     return (not isinstance(a, (str, dict)) and hasattr(a, 'iter') and hasattr(a, 'len'))
 
 def array_to_str(arr, sep=' ', max_depth=None, depth=0):
-    """
-    Converte un array in stringa, con gestione ricorsiva controllata.
-    
-    Args:
-        arr: Array da convertire
-        sep: Separatore tra elementi (default spazio)
-        max_depth: Profondità massima di ricorsione (None = illimitata)
-        depth: Profondità corrente (uso interno)
-    """
     if max_depth is not None and depth > max_depth:
         return "..."
     if not is_array(arr):
         return str(arr)
     
-    # Usa join invece della concatenazione
     return sep.join(array_to_str(elem, sep, max_depth, depth + 1) 
                    for elem in arr)
 
-def all_substring(subs, thestr, case_sens=True):
+def all_substr_in(subs:list, thestr:str, case_sens=True):        
     if not is_array(subs):
         if (not case_sens):
             subs.lower()
             thestr.lower()
         return str(subs) in str(thestr)
-        
-    return all(all_substring(elem, thestr) for elem in subs)
+    return all(all_substr_in(elem, thestr) for elem in subs)
     
 
 ######################################################################################################
@@ -61,28 +48,29 @@ def win_move(window, x, y):
 def win_resize(window, w, h):
   window.iface_transform.Resize(w, h)
 
-def win_activate(window, unminimize = True):
-   window.set_focus()
-   time.sleep(0.1)
-   if unminimize and window.element_info.control_type == 'Window' and window.is_minimized():
-      window.restore()
-      time.sleep(0.5)  # Attende il ripristino
+def win_activate(window, unminimize = True, wait_end=0.25, wait_restore=0.5):
+    window.set_focus()
+   
+    if unminimize and window.element_info.control_type == 'Window' and window.is_minimized():
+        window.restore()
+        time.sleep(wait_restore)  # Attende il ripristino
+    time.sleep(wait_end)
 
 def win_coord(window, where='c'):
     rect = window.element_info.rectangle
     #altri where
     if where=='c':
-      x = (rect.left + rect.right) // 2
-      y = (rect.top + rect.bottom) // 2
-      return(x,y)   # absolute
+        x = (rect.left + rect.right) // 2
+        y = (rect.top + rect.bottom) // 2
+        return(x,y)   # absolute
 
-def win_click(window, wait=0.25):
+def win_click(window, wait_end=0.25):
     rect = window.element_info.rectangle
     click_x = (rect.left + rect.right) // 2
     click_y = (rect.top + rect.bottom) // 2
     window.click_input(coords=(click_x - rect.left, click_y - rect.top))    # usa coord relative
-    time.sleep(wait)
-    return (click_x, click_y) #abs
+    time.sleep(wait_end)
+    return (click_x, click_y)                                               # abs cord
 
 ######################################################################################################
 # find_window
@@ -150,20 +138,19 @@ def find_window(name=None, class_name=None, handle=None, process_id=None, exact_
 ######################################################################################################
 # get_child
 ######################################################################################################
-def match_value(pattern, value, use_regex=False, case_sens=True):
-  try:          
-      if (not case_sens):
-          pattern.lower()     # puo essere regexp
-          value.lower()
-      
-      if use_regex:
-          return bool(re.match(pattern, str(value)))
-      return pattern == value
-  except Exception:
-      return False
+def match_value(pattern, value, regex=False, case_sens=True):
+    try:          
+        if (not case_sens):
+            pattern.lower()     # puo essere regexp
+            value.lower()
+        if regex:
+            return bool(re.match(pattern, str(value)))
+        return pattern == value
+    except Exception:
+        return False
   
 def check_control(control, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
-                         recursive=False, use_regex=False, case_sens=True, visible_only=False):
+                         recursive=False, regex=False, case_sens=True, visible_only=False):
     try:
         if not control.is_enabled():
           return False
@@ -177,7 +164,7 @@ def check_control(control, name=None, ctrl_type=None, class_name=None, automatio
             
         if name is not None:
             try:
-                if not match_value(name, control.window_text(), use_regex, case_sens):
+                if not match_value(name, control.window_text(), regex, case_sens):
                     return False
             except Exception:
                 return False
@@ -217,7 +204,7 @@ def check_control(control, name=None, ctrl_type=None, class_name=None, automatio
                 properties = control.get_properties()
                 prop_texts = properties.get('texts', [])
 
-                if not all_substring(texts, array_to_str(prop_texts), case_sens):
+                if not all_substr_in(texts, array_to_str(prop_texts), case_sens):
                     return False
             except Exception:
                 return False      
@@ -228,7 +215,7 @@ def check_control(control, name=None, ctrl_type=None, class_name=None, automatio
         return False
 
 def get_child(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
-                         recursive=False, use_regex=False, case_sens=True, visible_only=False):
+                         recursive=False, regex=False, case_sens=True, visible_only=False):
     
     if not parent_wnd:
         return None
@@ -239,7 +226,7 @@ def get_child(parent_wnd, name=None, ctrl_type=None, class_name=None, automation
         
         for element in elements:
             if check_control(element, name, ctrl_type, class_name, automation_id, handle, texts,
-                              recursive, use_regex, case_sens, visible_only):
+                              recursive, regex, case_sens, visible_only):
               return element
                 
     except Exception:
@@ -248,22 +235,21 @@ def get_child(parent_wnd, name=None, ctrl_type=None, class_name=None, automation
     return None
 
 def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
-                         recursive=False, use_regex=False, case_sens=True, visible_only=False,
-                         attempt=5, pause=1, wait_init=0.25, wait_end=0.25):
+                         recursive=False, regex=False, case_sens=True, visible_only=False,
+                         attempt=5, wait_init=0.25,  delay=1, wait_end=0.25):
     time.sleep(wait_init)
-
     while attempt>0:
-        print (attempt)
+        #print (attempt)
         cld = get_child(parent_wnd, name, ctrl_type, class_name, automation_id, handle, texts,
-                         recursive, use_regex, case_sens, visible_only)
+                         recursive, regex, case_sens, visible_only)
         if (cld):
             time.sleep(wait_end) 
             return cld
         
         attempt -= 1
         if attempt==0:
-          return None
-        time.sleep(pause) 
+            return None
+        time.sleep(delay) 
 
 #TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST 
 def win_reload_bytype(item):
@@ -272,7 +258,7 @@ def win_reload_bytype(item):
     ctrltype = item.element_info.control_type
 
     if ctrltype=='':
-      ctrltype=None
+        ctrltype=None
 
     return get_child(item.parent(), ctrl_type=ctrltype)
 
@@ -281,33 +267,26 @@ def win_reload_bytype(item):
 # List
 ######################################################################################################
 
-def list_select(list_control, s):
-    items = list_control.children()
-    for item in items:
-        
-        try:
-            properties = item.get_properties()
-            text = properties.get('texts', [])
-            #text = item.windows_text()
-
-            if(s in text):
-              win_click(item)
-            
-        except Exception as e:
-            print(f"Errore nel processare un item: {e}")
-            continue
+def list_select(list_control, value, regex=False):
+    list_item = get_child(list_control, name=value, regex=regex)
+    
+    if (not list_item):
+        return False
+    win_click(list_item, wait_end=0.5)
+    print("click")
+    return True
 
 
-def list_select_texts(list_control, text_values):
-    list_item = get_child(list_control, texts=text_values)
+def list_select_texts(list_control, text_values, regex=False):
+    list_item = get_child(list_control, texts=text_values, regex=regex)
 
     if (not list_item):
       return False
-    
-    win_click(list_item)
+    win_click(list_item, wait_end=0.5)
+    return True
 
 ######################################################################################################
-# Dump
+# Dump - (Develop Helpers)
 ######################################################################################################
 
 def dump_uia_item(element, level=0):
