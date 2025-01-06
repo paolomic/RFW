@@ -15,8 +15,6 @@ sys.path.append(_path_import)
 import utl_win as uw
 import utl_log as ul
 
-from win32gui import FindWindow, PostMessage
-import win32.lib.win32con as win32con
 
 ############################################
 #region - PARAMETER
@@ -34,9 +32,10 @@ COH_MRK=            'MTA'
 COH_SEC=            'AUTOGRILL SPA'
 COH_PRICE =         '95.01'
 COH_QTY =           '100'
-COH_CLIENTID =      'MARI - CLIENT MARI'
-COH_CLIENTACC =     'TEST'
+
 COH_ALIAS =         'KATIA'
+COH_CLIENTID =      'MARI'
+COH_CLIENTACC =     'TEST'
 #endregion
 
 ############################################
@@ -48,8 +47,11 @@ K_RGRP=           "ribbon_group"
 K_SBAR=           "statusbar"
 #endregion
 
-def close_window(handle: int):
-    PostMessage(handle, win32con.WM_CLOSE, 0, 0)
+############################################
+#region - Common
+
+#endregion
+
 
 def get_env(app):
     env={}
@@ -236,7 +238,7 @@ def handle_NewCareOrder(env):
     # better close
     #dlgadv.close()
     #time.sleep(0.25)
-    close_window(dlgadv.handle)
+    uw.win_close(dlgadv.handle)
 
     ### Buy
     but = uw.get_child(dlg, automation_id='1')          

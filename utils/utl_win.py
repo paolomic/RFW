@@ -6,6 +6,8 @@ import keyboard
 import time
 import re
 
+from win32gui import FindWindow, PostMessage
+import win32.lib.win32con as win32con
 
 ## TODO #####################
 # 
@@ -70,6 +72,9 @@ def edit_set(edit, value):
 ######################################################################################################
 # WIN
 ######################################################################################################
+
+def win_close(handle: int):
+    PostMessage(handle, win32con.WM_CLOSE, 0, 0)
 
 def win_move(window, x, y):
   window.iface_transform.Move(x, y)
