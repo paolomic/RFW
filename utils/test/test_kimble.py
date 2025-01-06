@@ -26,10 +26,10 @@ def kimble(SerchKey, ActivKey:list, IONProduct, Activity, Notes, Hours):
     ###############################
     # region - PlaceHolders
 
-    node_SEE = uw.get_child(wnd, name='Salesforce - Enterprise Edition', recursive=True, regex=False)    #Sub Window
+    node_SEE = uw.get_child(wnd, name='Salesforce - Enterprise Edition', recursive=True, re=False)    #Sub Window
     print (f'node_SEE {node_SEE}')
 
-    node_TEC = uw.get_child(node_SEE, name='Time Entry .* Cancel', recursive=True, regex=True)           # sub window - dopo c e anche Save
+    node_TEC = uw.get_child(node_SEE, name='Time Entry .* Cancel', recursive=True, re=True)           # sub window - dopo c e anche Save
     print (f'node_TEC {node_TEC}')
 
     #uw.dump_uia_tree(node_TEC)
@@ -43,18 +43,18 @@ def kimble(SerchKey, ActivKey:list, IONProduct, Activity, Notes, Hours):
         # hyperlink piu annidato
         # Edit e LIST (dinamiche?) sotto SEE
 
-        head = uw.get_child(node_SEE, name='Activity', ctrl_type='Header', recursive=True, regex=False)
+        head = uw.get_child(node_SEE, name='Activity', ctrl_type='Header', recursive=True, re=False)
         print (f'head {head}')
 
         node = head.parent()
         print (f'node {node}')
 
-        hlink = uw.get_child(node.parent(), ctrl_type='Hyperlink', recursive=True, regex=False)
+        hlink = uw.get_child(node.parent(), ctrl_type='Hyperlink', recursive=True, re=False)
         print (f'hlink {hlink}')
         coord = uw.win_click(hlink)
         time.sleep(1)
 
-        edit = uw.get_child(node_SEE, ctrl_type='Edit', recursive=True, regex=False)
+        edit = uw.get_child(node_SEE, ctrl_type='Edit', recursive=True, re=False)
         print (f'edit {edit}')
         uw.win_click(edit)
 
@@ -78,10 +78,10 @@ def kimble(SerchKey, ActivKey:list, IONProduct, Activity, Notes, Hours):
         head = uw.get_child_retry(node_TEC, name='ION Product', ctrl_type='Header', recursive=True, regex=False, wait_init=4, wait_end=0.5)
         print (f'head {head}')
 
-        combo = uw.get_child(head.parent(), ctrl_type='ComboBox', recursive=True, regex=False)
+        combo = uw.get_child(head.parent(), ctrl_type='ComboBox', recursive=True, re=False)
         print(uw.dump_uia_item(combo))
 
-        data = uw.get_child(head.parent(), ctrl_type='DataItem', recursive=True, regex=False)   # solo per check
+        data = uw.get_child(head.parent(), ctrl_type='DataItem', recursive=True, re=False)   # solo per check
         print (f'data {data}')
 
         uw.win_click(combo, wait_end=0.5)
@@ -103,17 +103,17 @@ def kimble(SerchKey, ActivKey:list, IONProduct, Activity, Notes, Hours):
     # region - Activity/Roadmap Type
 
     if (Activity):
-        head = uw.get_child(node_TEC, name='Activity/Roadmap Type', ctrl_type='Header', recursive=True, regex=False)
+        head = uw.get_child(node_TEC, name='Activity/Roadmap Type', ctrl_type='Header', recursive=True, re=False)
         print (f'head {head}')
 
         node = head.parent()    # Custom
 
-        combo = uw.get_child(node, ctrl_type='ComboBox', recursive=True, regex=False)
+        combo = uw.get_child(node, ctrl_type='ComboBox', recursive=True, re=False)
         print (f'combo {combo}')
 
         uw.win_click(combo, wait_end=0.5)
 
-        list = uw.get_child(node, ctrl_type='List', recursive=True, regex=False)
+        list = uw.get_child(node, ctrl_type='List', recursive=True, re=False)
         print (f'list {list}')
         uw.dump_uia_tree(list)
         assert uw.list_select(list, Activity, regex=True)
@@ -131,10 +131,10 @@ def kimble(SerchKey, ActivKey:list, IONProduct, Activity, Notes, Hours):
     # region - Notes
 
     if (Notes):
-        head = uw.get_child(node_TEC, name='Notes', ctrl_type='Header', recursive=True, regex=False)
+        head = uw.get_child(node_TEC, name='Notes', ctrl_type='Header', recursive=True, re=False)
         print (f'head {head}')
 
-        edit = uw.get_child(head.parent(), ctrl_type='Edit', recursive=True, regex=False)
+        edit = uw.get_child(head.parent(), ctrl_type='Edit', recursive=True, re=False)
         print (f'edit {edit}')
 
         uw.win_click(edit)
@@ -148,10 +148,10 @@ def kimble(SerchKey, ActivKey:list, IONProduct, Activity, Notes, Hours):
     # region - Hours
 
     if (Hours):
-        head = uw.get_child(node_TEC, name='Entry Hours', ctrl_type='Header', recursive=True, regex=False)
+        head = uw.get_child(node_TEC, name='Entry Hours', ctrl_type='Header', recursive=True, re=False)
         print (f'head {head}')
 
-        edit = uw.get_child(head.parent(), ctrl_type='Edit', recursive=True, regex=False)
+        edit = uw.get_child(head.parent(), ctrl_type='Edit', recursive=True, re=False)
         print (f'edit {edit}')
 
         uw.win_click(edit)
@@ -164,10 +164,10 @@ def kimble(SerchKey, ActivKey:list, IONProduct, Activity, Notes, Hours):
     ###############################
     # region - TrackerRefID - CONSTANT
 
-    head = uw.get_child(node_TEC, name='Tracker Ref ID', ctrl_type='Header', recursive=True, regex=False)
+    head = uw.get_child(node_TEC, name='Tracker Ref ID', ctrl_type='Header', recursive=True, re=False)
     print (f'head {head}')
 
-    edit = uw.get_child(head.parent(), ctrl_type='Edit', recursive=True, regex=False)
+    edit = uw.get_child(head.parent(), ctrl_type='Edit', recursive=True, re=False)
     print (f'edit {edit}')
 
     uw.win_click(edit)
@@ -180,7 +180,7 @@ def kimble(SerchKey, ActivKey:list, IONProduct, Activity, Notes, Hours):
     ###############################
     # region - Save Butt
 
-    butt = uw.get_child(node_TEC, name='Save', ctrl_type='Button', automation_id='saveNewEntryBtn', recursive=True, regex=False)
+    butt = uw.get_child(node_TEC, name='Save', ctrl_type='Button', automation_id='saveNewEntryBtn', recursive=True, re=False)
     print (f'butt {butt}')
     #uw.dump_uia_path(butt)
     mouse.move(uw.win_coord(butt))

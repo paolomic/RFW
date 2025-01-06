@@ -1,6 +1,7 @@
 from pywinauto.application import Application
 from pywinauto import Desktop
 from pywinauto import mouse
+import keyboard
 
 import time
 import re
@@ -11,6 +12,7 @@ import re
 #  - reload node affidabile 
 #
 
+WIN_BUTT_STATE_CHECKED          = (1<<4)
 
 ######################################################################################################
 # COMMON
@@ -37,6 +39,33 @@ def all_substr_in(subs:list, thestr:str, case_sens=True):
         return str(subs) in str(thestr)
     return all(all_substr_in(elem, thestr) for elem in subs)
     
+def hide_select(n):
+    if n>0:
+        keyboard.press("home")
+        for i in range(0,n-1):
+            keyboard.press("down")
+    else:
+        keyboard.press("end")
+        for i in range(0,-n-1):
+            keyboard.press("up")
+
+def statusbar_wait(statusbar, state, attempt=5, wait_init=0.25,  delay=1, wait_end=0.25):
+    time.sleep(wait_init)
+    while attempt>0:
+        cld = get_child(statusbar, name=state, ctrl_type='Text')
+        if (cld):
+            time.sleep(wait_end) 
+            return True
+        
+        attempt -= 1
+        if attempt==0:
+            return None
+        time.sleep(delay) 
+    return False
+
+def edit_set(edit, value):
+    edit.iface_value.SetValue(value)
+
 
 ######################################################################################################
 # WIN
@@ -64,13 +93,46 @@ def win_coord(window, where='c'):
         y = (rect.top + rect.bottom) // 2
         return(x,y)   # absolute
 
-def win_click(window, wait_end=0.25):
+def win_click(window, mode="center", wait_end=0.25):        
     rect = window.element_info.rectangle
-    click_x = (rect.left + rect.right) // 2
-    click_y = (rect.top + rect.bottom) // 2
+    click_x = 0
+    click_y = 0
+    if (mode=='center'):
+        click_x = (rect.left + rect.right) // 2
+        click_y = (rect.top + rect.bottom) // 2
+        
+    if (mode=='combo'):
+        click_x = (rect.right) -10
+        click_y = (rect.top + rect.bottom) // 2
+
+    if (mode=='grid_tl'):
+        click_x = (rect.left +10)
+        click_y = (rect.top + 10) 
+
+    if (mode=='grid_row1'):
+        click_x = (rect.left +30)
+        click_y = (rect.top + 26) 
+
     window.click_input(coords=(click_x - rect.left, click_y - rect.top))    # usa coord relative
     time.sleep(wait_end)
     return (click_x, click_y)                                               # abs cord
+
+def popup_click(popupmenu, name):
+    cmd = get_child(popupmenu, name=name, ctrl_type='MenuItem', deep=2)
+    win_click(cmd)
+    #cmd.click()
+
+def popup_reply(wtop, selects):
+    sel = selects.split('#')
+    menuname = 'PopupMenu'          # level0
+    for s in sel:
+        popupmenu  = get_child(wtop, name=menuname, ctrl_type='Menu')
+        popup_click(popupmenu, s)
+        menuname = s
+
+def butt_is_checked(butt):
+    state = butt.legacy_properties()['State']
+    return ((state & WIN_BUTT_STATE_CHECKED)!=0)
 
 ######################################################################################################
 # find_window
@@ -138,19 +200,19 @@ def find_window(name=None, class_name=None, handle=None, process_id=None, exact_
 ######################################################################################################
 # get_child
 ######################################################################################################
-def match_value(pattern, value, regex=False, case_sens=True):
+def match_value(pattern, value, usere=False, case_sens=True):
     try:          
         if (not case_sens):
             pattern.lower()     # puo essere regexp
             value.lower()
-        if regex:
+        if usere:
             return bool(re.match(pattern, str(value)))
         return pattern == value
     except Exception:
         return False
   
 def check_control(control, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
-                         recursive=False, regex=False, case_sens=True, visible_only=False):
+                         usere=False, case_sens=True, visible_only=False):
     try:
         if not control.is_enabled():
           return False
@@ -164,7 +226,7 @@ def check_control(control, name=None, ctrl_type=None, class_name=None, automatio
             
         if name is not None:
             try:
-                if not match_value(name, control.window_text(), regex, case_sens):
+                if not match_value(name, control.window_text(), usere, case_sens):
                     return False
             except Exception:
                 return False
@@ -214,34 +276,42 @@ def check_control(control, name=None, ctrl_type=None, class_name=None, automatio
     except Exception:
         return False
 
+DEEP_ALL = -1
+
 def get_child(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
-                         recursive=False, regex=False, case_sens=True, visible_only=False):
+                         deep=1, usere=False, case_sens=True, visible_only=False):
     
     if not parent_wnd:
         return None
             
     try:
-        # Usa descendants() se recursive=True, altrimenti children()
-        elements = parent_wnd.descendants() if recursive else parent_wnd.children()
+        elements = parent_wnd.descendants() if deep==DEEP_ALL else parent_wnd.children()
         
         for element in elements:
             if check_control(element, name, ctrl_type, class_name, automation_id, handle, texts,
-                              recursive, regex, case_sens, visible_only):
-              return element
-                
+                              usere, case_sens, visible_only):
+                return element
+            
+        # voglio ricercare top-first, non deep-first
+        if (deep!=DEEP_ALL and deep > 1):
+            for element in elements:     
+                subres = get_child(element, name, ctrl_type, class_name, automation_id, handle, texts,
+                                     deep-1, usere, case_sens, visible_only)
+                if (subres):
+                    return subres
     except Exception:
         pass
         
     return None
 
 def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
-                         recursive=False, regex=False, case_sens=True, visible_only=False,
+                         deep=1, usere=False, case_sens=True, visible_only=False,
                          attempt=5, wait_init=0.25,  delay=1, wait_end=0.25):
     time.sleep(wait_init)
     while attempt>0:
         #print (attempt)
         cld = get_child(parent_wnd, name, ctrl_type, class_name, automation_id, handle, texts,
-                         recursive, regex, case_sens, visible_only)
+                         deep, usere, case_sens, visible_only)
         if (cld):
             time.sleep(wait_end) 
             return cld
@@ -250,6 +320,7 @@ def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, auto
         if attempt==0:
             return None
         time.sleep(delay) 
+    return None
 
 #TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST 
 def win_reload_bytype(item):
@@ -264,30 +335,85 @@ def win_reload_bytype(item):
 
 
 ######################################################################################################
-# List
+#region List - Chrome
 ######################################################################################################
 
-def list_select(list_control, value, regex=False):
-    list_item = get_child(list_control, name=value, regex=regex)
+def list_select(list_control, value, usere=False):
+    list_item = get_child(list_control, name=value, usere=usere)
     
     if (not list_item):
         return False
     win_click(list_item, wait_end=0.5)
     print("click")
     return True
-
-
-def list_select_texts(list_control, text_values, regex=False):
-    list_item = get_child(list_control, texts=text_values, regex=regex)
+def list_select_texts(list_control, text_values, usere=False):
+    list_item = get_child(list_control, texts=text_values, usere=usere)
 
     if (not list_item):
       return False
     win_click(list_item, wait_end=0.5)
     return True
 
+#endregion
+
+######################################################################################################
+#region List - Windows 
+######################################################################################################
+
+def list_check(list_control, Names="*", value:bool=True, wait_end=0.25):
+    items = list_control.children()
+    
+    for item in items:
+        if item.element_info.control_type=='ListItem':
+            if (Names=='*' or item.window_text() in Names):
+                if item.iface_toggle.CurrentToggleState != int(value):
+                    item.iface_toggle.Toggle()
+    time.sleep(wait_end)
+
+#endregion
+
+######################################################################################################
+#region Warning - Confirm 
+######################################################################################################
+def warning_replay(wtop, mess, butt):
+    warning = get_child(wtop, name='Coherence', ctrl_type='Pane')
+    if warning:
+        message = get_child(warning, ctrl_type='Text', usere=False).window_text()
+        assert (mess in message)
+        butt = get_child(warning, name=butt, ctrl_type='Button')
+        win_click(butt)
+        return True
+    return False
+
+
 ######################################################################################################
 # Dump - (Develop Helpers)
 ######################################################################################################
+
+
+def dump_uia_detail(item):
+    properties = item.legacy_properties()
+    print('### legacy_properties:')
+    print(properties)
+
+    props = item.get_properties()
+    print('### get_properties:')
+    print(props)
+
+    try:
+        wrapper = item.wrapper_object()
+        print(wrapper.get_toggle_state())
+    except:
+        print("Toggle interface non disponibile")
+
+    try:
+        print(item.iface_toggle.CurrentToggleState())
+    except:
+        print("Toggle interface non disponibile")
+
+    print('### dir(item):')
+    print(dir(item))  # mostra tutti i metodi/proprietà disponibili
+
 
 def dump_uia_item(element, level=0):
     """
@@ -405,3 +531,85 @@ def dump_uia_path(item, root=None, file_path='out.txt'):
     except Exception as e:
         print(f"Error in dump_uia_path: {str(e)}")       
         
+
+def dump_uia_detail(item, indent=""):
+    """
+    Funzione per analizzare e stampare tutti i dettagli disponibili di un elemento UIA
+    Args:
+        item: Elemento UIA da analizzare
+        indent: Indentazione per output annidato (default "")
+    """
+    def print_section(title, indent=""):
+        print(f"\n{indent}{'='*20} {title} {'='*20}")
+    
+    def safe_get(func, default="Non disponibile"):
+        try:
+            result = func()
+            return result
+        except Exception as e:
+            return f"{default} (Errore: {str(e)})"
+    
+    # Informazioni base dell'elemento
+    print_section("INFORMAZIONI BASE", indent)
+    print(f"{indent}Elemento: {item}")
+    print(f"{indent}Tipo: {type(item)}")
+    
+    # Element Info
+    print_section("ELEMENT INFO", indent)
+    if hasattr(item, 'element_info'):
+        ei = item.element_info
+        print(f"{indent}Control Type: {safe_get(lambda: ei.control_type)}")
+        print(f"{indent}Class Name: {safe_get(lambda: ei.class_name)}")
+        print(f"{indent}Name: {safe_get(lambda: ei.name)}")
+        print(f"{indent}Handle: {safe_get(lambda: ei.handle)}")
+        print(f"{indent}Runtime ID: {safe_get(lambda: ei.runtime_id)}")
+        print(f"{indent}Rectangle: {safe_get(lambda: ei.rectangle)}")
+        print(f"{indent}Process ID: {safe_get(lambda: ei.process_id)}")
+    
+    # Properties
+    print_section("PROPERTIES", indent)
+    print(f"{indent}Legacy Properties:")
+    legacy_props = safe_get(lambda: item.legacy_properties())
+    for key, value in legacy_props.items() if isinstance(legacy_props, dict) else []:
+        print(f"{indent}  {key}: {value}")
+    
+    print(f"\n{indent}Get Properties:")
+    props = safe_get(lambda: item.get_properties())
+    for key, value in props.items() if isinstance(props, dict) else []:
+        print(f"{indent}  {key}: {value}")
+    
+    # Stati e Toggle
+    print_section("STATI E TOGGLE", indent)
+    print(f"{indent}Toggle State: {safe_get(lambda: item.get_toggle_state())}")
+    print(f"{indent}Is Selected: {safe_get(lambda: item.is_selected())}")
+    print(f"{indent}Is Enabled: {safe_get(lambda: item.is_enabled())}")
+    print(f"{indent}Is Visible: {safe_get(lambda: item.is_visible())}")
+    
+    # Pattern Interfaces
+    print_section("PATTERN INTERFACES", indent)
+    patterns = [
+        'iface_toggle', 'iface_selection', 'iface_selection_item',
+        'iface_value', 'iface_range_value', 'iface_grid', 'iface_table',
+        'iface_text', 'iface_invoke', 'iface_expand_collapse'
+    ]
+    
+    # Gestione sicura dei pattern
+    for pattern in patterns:
+        try:
+            interface = getattr(item, pattern, None)
+            if interface is not None:
+                print(f"{indent}{pattern}: Disponibile")
+                # Gestione sicura dei metodi specifici per pattern
+                if pattern == 'iface_toggle':
+                    print(f"{indent}  Toggle State: {safe_get(lambda: interface.CurrentToggleState())}")
+                elif pattern == 'iface_value':
+                    print(f"{indent}  Value: {safe_get(lambda: interface.CurrentValue())}")
+        except Exception as e:
+            print(f"{indent}{pattern}: Non disponibile (Errore: {str(e)})")
+    
+    # Metodi disponibili
+    print_section("METODI DISPONIBILI", indent)
+    methods = [method for method in dir(item) if not method.startswith('_')]
+    print(f"{indent}Metodi totali: {len(methods)}")
+    for method in sorted(methods):
+        print(f"{indent}  {method}")

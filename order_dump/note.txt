@@ -1,10 +1,12 @@
-lancia coh
+lancia coh e aggancia processo e main windows
 
-istanzia MM UP
+Controlla presenza addin MMe UP
 
-wait DL
+Check MM UP
 
-setting MM Debug
+Lancia il DL e attende il DL
+
+setting MM level Debug
 
 (security Browser)
 

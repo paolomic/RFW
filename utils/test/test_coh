@@ -1,0 +1,327 @@
+
+import keyboard.mouse
+from pywinauto import mouse
+from pywinauto import Application
+import keyboard
+import time
+import pywinauto
+
+# import da altri path - MAMMAMIA :(
+import sys
+from pathlib import Path
+_path_import = str(Path(__file__).parent.parent)
+sys.path.append(_path_import) 
+
+import utl_win as uw
+import utl_log as ul
+
+from win32gui import FindWindow, PostMessage
+import win32.lib.win32con as win32con
+
+############################################
+#region - PARAMETER
+COH_EXE =           'Coherence.exe'
+COH_PATH =          r'C:\work\disks\D\COH_x64\bin\Coherence.exe'
+COH_TITLE_PATT=     "Starting Coherence"
+COH_ADDIN=           ['MetaMarket','UserPages']
+##
+#COH_WSP=            r"C:\work\disks\D\wsp_c\FTX_GOV_TEQ.wsp4"
+#COH_SEC=            'BCC CREDIFRIULI 1,85%16/3/25 222'
+##
+COH_WSP=            r"C:\work\disks\D\wsp_c\127_28000.wsp4"
+COH_EXC=            'BIT'
+COH_MRK=            'MTA'
+COH_SEC=            'AUTOGRILL SPA'
+COH_PRICE =         '95.01'
+COH_QTY =           '100'
+COH_CLIENTID =      'MARI - CLIENT MARI'
+COH_CLIENTACC =     'TEST'
+COH_ALIAS =         'KATIA'
+#endregion
+
+############################################
+#region - Env Key
+K_APP =           'app'
+K_TOP =           'wtop'
+K_RTAB=           "ribbon_tab"
+K_RGRP=           "ribbon_group"
+K_SBAR=           "statusbar"
+#endregion
+
+def close_window(handle: int):
+    PostMessage(handle, win32con.WM_CLOSE, 0, 0)
+
+def get_env(app):
+    env={}
+    env[K_APP] = app
+    try:
+        env[K_TOP] = app.top_window()
+    except:
+        pass
+    try:
+        env[K_RTAB] = uw.get_child(env[K_TOP], name='Ribbon Tabs', ctrl_type='Group', deep=3)
+    except:
+        pass
+    try:
+        env[K_RGRP] = uw.get_child(env[K_TOP], automation_id='59398', ctrl_type='ToolBar', deep=3)
+    except:
+        pass
+    try:
+        env[K_SBAR] = uw.get_child(env[K_TOP], name='StatusBar', ctrl_type='StatusBar')
+    except:
+        pass
+    print (env)
+    return env
+
+def hang_app():
+    # prova ad agganciarla
+    try:
+        app = Application(backend="uia").connect(path=COH_EXE, title=COH_TITLE_PATT)
+        wtop = app.top_window()
+    except Exception:
+        try:
+            print('Avvio nuova istanza...')
+            app = Application(backend="uia").start(COH_PATH)
+            time.sleep(1)  # Attende che l'app si avvii completamente
+            wtop = app.top_window()
+        except Exception as e:
+            print(f"Start Error: {str(e)}")
+            raise
+    
+    if not wtop:
+        raise Exception("Open Error")
+    
+    print(f'app {app}')
+    print(f'wtop {wtop}')
+    return get_env(app)
+
+def done():
+    print ('## Test Done ##')
+    exit()
+
+def handle_start_dialog(wtop):
+    edit = uw.get_child(wtop, automation_id='12429', ctrl_type='Edit', deep=3)
+    print(f'edit {edit}')
+    uw.edit_set(edit, COH_WSP)
+    time.sleep(0.25)
+
+    list = uw.get_child(wtop, name='Import From', ctrl_type='List', deep=3)
+    print(f'list {list}')
+
+    uw.list_check(list, '*', False)
+    uw.list_check(list, COH_ADDIN, True)
+
+    butt = uw.get_child(wtop, automation_id='1', ctrl_type='Button', deep=3)
+    print(f'butt {butt}')
+    is_create = butt.window_text()=='Create'
+    uw.win_click(butt, wait_end=0.5)
+
+    uw.warning_replay(wtop, 'This workspace has not been closed properly', 'No')
+    return is_create
+
+def handle_setting_init(wtop):
+    butt = uw.get_child(wtop, name='Settings', ctrl_type='Button', deep=3)
+    print(f'butt {butt}')
+    uw.win_click(butt, wait_end=0.5)
+
+    pane = uw.get_child(wtop, name='Settings', ctrl_type='Pane', deep=3)
+    print(f'pane {pane}')
+
+    list = uw.get_child(pane, automation_id='103', ctrl_type='List', deep=3)
+    print(f'list {list}')
+    uw.list_select(list, "MetaMarket")
+
+    trace = uw.get_child(pane, name='Trace Level', ctrl_type='Custom', deep=3)
+    print(f'trace {trace}')
+    uw.win_click(trace, mode='combo')
+
+    #time.sleep(.25)
+    #uw.dump_uia_tree(wtop)         # non c'e' lista popup
+
+    uw.hide_select(-1)      # detail
+    keyboard.press("enter")
+    time.sleep(.25)
+    keyboard.press("enter")
+    time.sleep(.25)
+
+def start_connections(env, addins):
+    for addin in addins:
+        butt = select_ribbon_butt(env, addin, 'Auto Connect')
+        if not uw.butt_is_checked(butt):
+            uw.win_click(butt)
+
+    butt = select_ribbon_butt(env, 'Home', 'Auto Connect')
+    if not uw.butt_is_checked(butt):
+        uw.win_click(butt)
+
+def select_ribbon(env, ribb):
+    rib_sel = uw.get_child(env[K_RTAB], name=ribb, ctrl_type='TabItem')
+    uw.win_click(rib_sel)
+    toolbar = uw.get_child(env[K_RGRP], name=ribb, ctrl_type='ToolBar')
+    print(f'toolbar {toolbar}')
+    return toolbar
+
+def select_ribbon_butt(env, ribb, butt):
+    toolbar = select_ribbon(env, ribb)
+    print(f'toolbar {toolbar}')
+    bt = uw.get_child(toolbar, name=butt, ctrl_type='Button', deep=2)
+    print(f'bt {bt}')
+    return bt
+
+def click_ribbon_butt(env, ribb, butt):
+    bt = select_ribbon_butt(env, ribb, butt)
+    uw.win_click(bt)
+    return bt
+
+def handle_SecurityBrowser(wtop):
+     # la pg viene generata sotto main-node coherence
+    page = uw.get_child(wtop, name='Security Browser.*', ctrl_type='Pane', usere=1)
+    print(f'page {page}')
+    #uw.win_resize(page, 600,400)
+
+    # punto exchenge
+    treekey = f'{COH_EXC} - {COH_MRK}'
+    item = uw.get_child(page, name=treekey, ctrl_type='TreeItem', deep=10) 
+    uw.win_click(item)
+
+    edit = uw.get_child(page, name='Reference:', ctrl_type='Edit', deep=10)     # POTEVO USARE -1 
+    print(f'edit {edit}')
+    uw.edit_set(edit, COH_SEC)
+
+    butt = uw.get_child(page, name='Search', ctrl_type='Button', deep=10)
+    uw.win_click(butt)
+
+    status_num = uw.get_child(page, name='No. of Rows: .*', ctrl_type='Text', deep=10, usere=True)
+    print(f'status_num {status_num}')
+    assert status_num.window_text()=='No. of Rows: 1'       # UNIQUE 
+
+    grid = status_num = uw.get_child(page, automation_id='59661', ctrl_type='Pane', deep=10, usere=True)
+    # hide
+    uw.win_click(grid, mode='grid_row1')
+    keyboard.mouse.click('right')
+    time.sleep(0.25)
+
+    # Il popup viene generato sotto level top - anche il sotto menu
+
+    uw.popup_reply(wtop, 'New#Care Order')
+
+def handle_NewCareOrder(env):
+    dlg = uw.get_child(env[K_TOP], name="New Care Order.*", ctrl_type="Pane", usere=1)
+    adv = uw.get_child(dlg, automation_id='13652', ctrl_type="CheckBox", usere=1)
+    if not uw.butt_is_checked(adv):
+        uw.win_click(adv)
+    dlgadv = uw.get_child(dlg, name="Order Advanced Parameters", ctrl_type="Pane")
+    
+    # TODO non corrispondonoi alcuni names ???
+
+    ### Q
+    edit = uw.get_child(dlg, automation_id='12216')     
+    uw.edit_set(edit, COH_QTY)
+    ### P
+    edit = uw.get_child(dlg, automation_id='12214')     
+    uw.edit_set(edit, COH_PRICE)
+    
+    ### ALIAS
+    edit = uw.get_child(dlg, automation_id='12796')
+    uw.win_click(edit)
+    keyboard.write(COH_ALIAS)                               # popup is hide - or edit_set
+    keyboard.press("tab")
+        
+    ### Note
+    start_time = ul.get_now_sec(sep='_')
+    mytag = f'pwa_{start_time}' 
+    edit = uw.get_child(dlgadv, automation_id='12954')  
+    uw.edit_set(edit, mytag)
+
+    # better close
+    #dlgadv.close()
+    #time.sleep(0.25)
+    close_window(dlgadv.handle)
+
+    ### Buy
+    but = uw.get_child(dlg, automation_id='1')          
+    uw.win_click(but)
+
+    # todo controllare messages ???
+    #log_path = Path(COH_WSP).parent            # TODO coastruire dinamico
+    log_path = r'C:\work\disks\D\wsp_c\127_28000.wsp4_wrk\Logs\MetaMarket_20250106.log'
+    res = ul.GetLogRows(log_path, 'CLIENT_ORDER', 'ComplianceText', mytag, start_time.replace('_',':'), retry = 4, wait_s = 1)
+    print (res)
+
+    if (not res):
+        raise Exception("Order not Found")
+    
+    return res
+
+def handle_order(env, order_id):
+    click_ribbon_butt(env, 'Trading', 'Orders')
+    time.sleep(.5)
+    page = uw.get_child(env[K_TOP], name='Orders.*', ctrl_type='Pane', usere=1, deep=2)
+    
+    edit = uw.get_child(page, name='Order ID', ctrl_type='Edit', deep=5)  
+    uw.edit_set(edit, order_id)
+
+    butt = uw.get_child(page, name='Apply', ctrl_type='Button', deep=5)  
+    uw.win_click(butt)
+
+############################################################################################################################################################
+### Main Run
+############################################################################################################################################################
+
+env = {}
+
+def run_session():
+    ############################################################################## Hang app
+    env = hang_app()
+
+    ############################################################################## Starting Dialg
+    is_create = handle_start_dialog(env[K_TOP])
+    time.sleep(2.5)                             # TODO usare wait e find_windows
+
+    ############################################################################## New env nodes
+    env = hang_app()
+
+    ############################################################################## Init Wsp - TODO
+    #if is_create:
+    #    #workspace_init(env[K_TOP])        
+    #    pass
+
+    ############################################################################## init settings
+    handle_setting_init(env[K_TOP])
+    
+    ############################################################################## Connection - Opening-check
+    start_connections(env, ['MetaMarket'])
+
+    ############################################################################## Wait for Connection Ready
+    if uw.statusbar_wait(env[K_SBAR], 'Ready', attempt=15, delay=2):
+        print ('Connection Ready')
+    else:
+        raise Exception("Connection Fail")
+
+    ############################################################################## Peek Security and Open New Care Order
+    click_ribbon_butt(env, 'Trading', 'Security Browser')
+    handle_SecurityBrowser(env[K_TOP])
+
+    ############################################################################## Fill Order
+    res = handle_NewCareOrder(env)
+    handle_order(env, res['fields']['OrderID'])
+
+    done()
+
+
+def run_session_simple():
+    env = hang_app()
+    #click_ribbon_butt(env, 'Trading', 'Security Browser')
+    #handle_SecurityBrowser(env[K_TOP])
+    #res = handle_NewCareOrder(env)
+    #handle_order(env, res['fields']['OrderID'])
+    log_path = r'C:\work\disks\D\wsp_c\127_28000.wsp4_wrk\Logs\MetaMarket_20250106.log'
+    res = ul.GetLogRows(log_path, 'CLIENT_ORDER', 'ComplianceText', "pwa_16_17_09", '16:17:09', retry = 4, wait_s = 1)
+    print(res)
+   
+
+# TEST TEST TEST TEST TEST TEST TEST TEST
+if (1):
+    run_session()
+else:
+    run_session_simple()
