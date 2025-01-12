@@ -2,7 +2,7 @@ from pywinauto.application import Application
 from pywinauto import Desktop
 from pywinauto import mouse
 import keyboard
-
+from datetime import datetime
 import time
 import re
 
@@ -68,6 +68,12 @@ def statusbar_wait(statusbar, state, attempt=5, wait_init=0.25,  delay=1, wait_e
 def edit_set(edit, value):
     edit.iface_value.SetValue(value)
 
+def get_today_iso():
+  return datetime.now().strftime('%Y%m%d')
+
+def get_log_path(wsp_path, logname):
+  filename = f'{logname}_{get_today_iso()}.log'
+  return f'{wsp_path}_wrk\\Logs\\{filename}'
 
 ######################################################################################################
 # WIN
@@ -378,8 +384,9 @@ def list_check(list_control, Names="*", value:bool=True, wait_end=0.25):
 #endregion
 
 ######################################################################################################
-#region Warning - Confirm 
+# Warning - Confirm 
 ######################################################################################################
+#region
 def warning_replay(wtop, mess, butt):
     warning = get_child(wtop, name='Coherence', ctrl_type='Pane')
     if warning:
@@ -389,12 +396,121 @@ def warning_replay(wtop, mess, butt):
         win_click(butt)
         return True
     return False
+#endregion
+
+ROBOT_MAX_BUFFER_SIZE   = 4096                              # ?
+#WM_ROBOT_GRID_COMMAND = win32con.WM_USER + 199
+ROBOT_PORT              = 63888                             # reply
+ROBOT_SIGNATURE         = 55555                             # check sender
+ROBOT_CMD_BASE          = 22220                             # aske fun
+ROBOT_CMD_GET_HEADER    = ROBOT_CMD_BASE + 0
+
+import win32gui
+import socket
+import ctypes
+
+class RobotCommunicator:
+    def __init__(self, window_handle):
+        self.window_handle = window_handle
+        self.server = None
+        
+    def __enter__(self):
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.server:
+            self.server.close()
+            
+    def start_server(self):
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.bind(('localhost', ROBOT_PORT))
+        self.server.listen(1)
+        return self.server
+        
+    def send_command(self, command_id, input_str=""):
+        try:
+            # Prepare data structure
+            class COPYDATASTRUCT(ctypes.Structure):
+                _fields_ = [
+                    ("dwData", ctypes.wintypes.LPARAM),
+                    ("cbData", ctypes.wintypes.DWORD),
+                    ("lpData", ctypes.c_void_p)
+                ]
+            
+            # Encode input data
+            data = input_str.encode('utf-8') if input_str else b''
+            buffer = ctypes.create_string_buffer(data)
+            
+            # Setup COPYDATA structure
+            cds = COPYDATASTRUCT()
+            cds.dwData = command_id
+            cds.cbData = len(data)
+            cds.lpData = ctypes.cast(buffer, ctypes.c_void_p).value
+            
+            wparam = (ROBOT_SIGNATURE << 16) | ROBOT_PORT
+            
+            # Start server before sending message
+            self.start_server()
+            self.server.settimeout(2)  # 2 seconds timeout
+            
+            # Send message
+            result = win32gui.SendMessage(
+                self.window_handle,
+                win32con.WM_COPYDATA,
+                wparam,
+                ctypes.addressof(cds)
+            )
+            
+            if result == 1:
+                return self._receive_response()
+            
+            return result
+            
+        except Exception as e:
+            print(f"Error in send_command: {e}")
+            return None
+            
+    def _receive_response(self):
+        try:
+            client_socket, _ = self.server.accept()
+            data = client_socket.recv(ROBOT_MAX_BUFFER_SIZE).decode('utf-8')
+            client_socket.close()
+            return data
+        except socket.timeout:
+            print("Socket timeout while waiting for response")
+            return None
+        except Exception as e:
+            print(f"Error receiving response: {e}")
+            return None
+
+def robot_send(window_handle, command_id, input_str=""):
+    with RobotCommunicator(window_handle) as communicator:
+        return communicator.send_command(command_id, input_str)
+
+
+#endregion
 
 
 ######################################################################################################
-# Dump - (Develop Helpers)
+# Warning Reply
 ######################################################################################################
+#region
+def warning_replay(wtop, mess, butt):
+    warning = get_child(wtop, name='Coherence', ctrl_type='Pane')
+    if warning:
+        message = get_child(warning, ctrl_type='Text', usere=False).window_text()
+        assert (mess in message)
+        butt = get_child(warning, name=butt, ctrl_type='Button')
+        win_click(butt)
+        return True
+    return False
+#endregion
 
+
+######################################################################################################
+#  Dump - (Develop Helpers)
+######################################################################################################
+#region
 
 def dump_uia_detail(item):
     properties = item.legacy_properties()
@@ -618,3 +734,5 @@ def dump_uia_detail(item, indent=""):
     print(f"{indent}Metodi totali: {len(methods)}")
     for method in sorted(methods):
         print(f"{indent}  {method}")
+
+#endregion

@@ -15,6 +15,19 @@ sys.path.append(_path_import)
 import utl_win as uw
 import utl_log as ul
 
+############################################
+#region - TODO
+#    - PEEK ORDER   Raccogliere l order in Json
+#    - MOVEWIN      sistemare move_win
+#    - VERS CHECK   Aggiungere Addin Versione e Check Load
+#    - AUTOM_ID     handle_NewCareOrder non corrispondono nomi why?
+#    - MESSAGE      COntrollare Message-Barra alle Tx
+#    - CLOSE PAGE   Fare win_close_page() che controlla warning
+#    - CLOSE SESS   Fare close_session - controlla warning
+#    - WAIT WIN     dopo handle_start_dialog attesa retry
+#    - NEW WSP      settare il new wsp - is_create
+#    - NODE RELOAD  fare reload_node affidabile (serve?)
+#endregion
 
 ############################################
 #region - PARAMETER
@@ -22,20 +35,22 @@ COH_EXE =           'Coherence.exe'
 COH_PATH =          r'C:\work\disks\D\COH_x64\bin\Coherence.exe'
 COH_TITLE_PATT=     "Starting Coherence"
 COH_ADDIN=           ['MetaMarket','UserPages']
-##
-#COH_WSP=            r"C:\work\disks\D\wsp_c\FTX_GOV_TEQ.wsp4"
-#COH_SEC=            'BCC CREDIFRIULI 1,85%16/3/25 222'
-##
+
 COH_WSP=            r"C:\work\disks\D\wsp_c\127_28000.wsp4"
+
 COH_EXC=            'BIT'
 COH_MRK=            'MTA'
 COH_SEC=            'AUTOGRILL SPA'
 COH_PRICE =         '95.01'
 COH_QTY =           '100'
-
 COH_ALIAS =         'KATIA'
 COH_CLIENTID =      'MARI'
 COH_CLIENTACC =     'TEST'
+
+##
+#COH_WSP=            r"C:\work\disks\D\wsp_c\FTX_GOV_TEQ.wsp4"
+#COH_SEC=            'BCC CREDIFRIULI 1,85%16/3/25 222'
+##
 #endregion
 
 ############################################
@@ -213,8 +228,6 @@ def handle_NewCareOrder(env):
     if not uw.butt_is_checked(adv):
         uw.win_click(adv)
     dlgadv = uw.get_child(dlg, name="Order Advanced Parameters", ctrl_type="Pane")
-    
-    # TODO non corrispondonoi alcuni names ???
 
     ### Q
     edit = uw.get_child(dlg, automation_id='12216')     
@@ -230,8 +243,8 @@ def handle_NewCareOrder(env):
     keyboard.press("tab")
         
     ### Note
-    start_time = ul.get_now_sec(sep='_')
-    mytag = f'pwa_{start_time}' 
+    start_time = ul.get_now_sec()
+    mytag = f'pwa_{start_time.replace(':','_')}' 
     edit = uw.get_child(dlgadv, automation_id='12954')  
     uw.edit_set(edit, mytag)
 
@@ -244,10 +257,8 @@ def handle_NewCareOrder(env):
     but = uw.get_child(dlg, automation_id='1')          
     uw.win_click(but)
 
-    # todo controllare messages ???
-    #log_path = Path(COH_WSP).parent            # TODO coastruire dinamico
-    log_path = r'C:\work\disks\D\wsp_c\127_28000.wsp4_wrk\Logs\MetaMarket_20250106.log'
-    res = ul.GetLogRows(log_path, 'CLIENT_ORDER', 'ComplianceText', mytag, start_time.replace('_',':'), retry = 4, wait_s = 1)
+    log_path = uw.get_log_path(COH_WSP, 'MetaMarket')
+    res = ul.GetLogRows(log_path, 'CLIENT_ORDER', 'ComplianceText', mytag, start_time, retry = 4, wait_s = 1)
     print (res)
 
     if (not res):
@@ -266,6 +277,11 @@ def handle_order(env, order_id):
     butt = uw.get_child(page, name='Apply', ctrl_type='Button', deep=5)  
     uw.win_click(butt)
 
+    # prova evento esterno
+    grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
+    res = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
+    print(f'ROBOT_CMD_GET_HEADER result: [{res}]')
+
 ############################################################################################################################################################
 ### Main Run
 ############################################################################################################################################################
@@ -278,12 +294,12 @@ def run_session():
 
     ############################################################################## Starting Dialg
     is_create = handle_start_dialog(env[K_TOP])
-    time.sleep(2.5)                             # TODO usare wait e find_windows
+    time.sleep(2.5)                       
 
     ############################################################################## New env nodes
     env = hang_app()
 
-    ############################################################################## Init Wsp - TODO
+    ############################################################################## Init Wsp - 
     #if is_create:
     #    #workspace_init(env[K_TOP])        
     #    pass
@@ -311,19 +327,19 @@ def run_session():
     done()
 
 
+################# Test RobotCall
+
 def run_session_simple():
     env = hang_app()
-    #click_ribbon_butt(env, 'Trading', 'Security Browser')
-    #handle_SecurityBrowser(env[K_TOP])
-    #res = handle_NewCareOrder(env)
-    #handle_order(env, res['fields']['OrderID'])
-    log_path = r'C:\work\disks\D\wsp_c\127_28000.wsp4_wrk\Logs\MetaMarket_20250106.log'
-    res = ul.GetLogRows(log_path, 'CLIENT_ORDER', 'ComplianceText', "pwa_16_17_09", '16:17:09', retry = 4, wait_s = 1)
-    print(res)
-   
+    page = uw.get_child(env[K_TOP], automation_id='28002', usere=1, deep=5)
+    grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
+    print(f'page {page}, grid{grid}')
+    res = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
+    print(f'Robot Query res: [{res}]')
+    
 
 # TEST TEST TEST TEST TEST TEST TEST TEST
-if (1):
+if (not 1):
     run_session()
 else:
     run_session_simple()
