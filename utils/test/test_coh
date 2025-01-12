@@ -277,10 +277,10 @@ def handle_order(env, order_id):
     butt = uw.get_child(page, name='Apply', ctrl_type='Button', deep=5)  
     uw.win_click(butt)
 
-    # prova evento esterno
+    # Keywords: ROBOT_CMD_GET_HEADER
     grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
-    res = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
-    print(f'ROBOT_CMD_GET_HEADER result: [{res}]')
+    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
+    print(f'ROBOT_CMD_GET_HEADER result: [{response}]')
 
 ############################################################################################################################################################
 ### Main Run
@@ -334,9 +334,8 @@ def run_session_simple():
     page = uw.get_child(env[K_TOP], automation_id='28002', usere=1, deep=5)
     grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
     print(f'page {page}, grid{grid}')
-    res = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
-    print(f'Robot Query res: [{res}]')
-    
+    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
+    print(f'ROBOT_CMD_GET_HEADER result: [{response}]')    
 
 # TEST TEST TEST TEST TEST TEST TEST TEST
 if (not 1):

@@ -427,7 +427,7 @@ class RobotCommunicator:
         self.server.listen(1)
         return self.server
         
-    def send_command(self, command_id, input_str=""):
+    def send_command(self, command_id, input_str, timeout):
         try:
             # Prepare data structure
             class COPYDATASTRUCT(ctypes.Structure):
@@ -451,7 +451,7 @@ class RobotCommunicator:
             
             # Start server before sending message
             self.start_server()
-            self.server.settimeout(2)  # 2 seconds timeout
+            self.server.settimeout(timeout)  # 2 seconds timeout
             
             # Send message
             result = win32gui.SendMessage(
@@ -483,9 +483,9 @@ class RobotCommunicator:
             print(f"Error receiving response: {e}")
             return None
 
-def robot_send(window_handle, command_id, input_str=""):
+def robot_send(window_handle, command_id, input_str="", timeout = 2):
     with RobotCommunicator(window_handle) as communicator:
-        return communicator.send_command(command_id, input_str)
+        return communicator.send_command(command_id, input_str, timeout=timeout)
 
 
 #endregion
