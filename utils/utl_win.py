@@ -5,6 +5,7 @@ import keyboard
 from datetime import datetime
 import time
 import re
+import win32clipboard
 
 from win32gui import FindWindow, PostMessage
 import win32.lib.win32con as win32con
@@ -104,7 +105,7 @@ def win_coord(window, where='c'):
         y = (rect.top + rect.bottom) // 2
         return(x,y)   # absolute
 
-def win_click(window, mode="center", wait_end=0.25):        
+def win_click(window, mode="center", wait_end=0.25, arg=None):        
     rect = window.element_info.rectangle
     click_x = 0
     click_y = 0
@@ -123,10 +124,40 @@ def win_click(window, mode="center", wait_end=0.25):
     if (mode=='grid_row1'):
         click_x = (rect.left +30)
         click_y = (rect.top + 26) 
+    
+    if (mode=='grid_row'):
+        click_x = (rect.left +10)
+        click_y = (rect.top + 10+(18*arg)) 
+
+    if (mode=='grid_col1'):
+        click_x = (rect.left +30)
+        click_y = (rect.top + 10) 
 
     window.click_input(coords=(click_x - rect.left, click_y - rect.top))    # usa coord relative
     time.sleep(wait_end)
     return (click_x, click_y)                                               # abs cord
+
+######################################################################################################
+# Grid
+######################################################################################################
+
+def grid_select_all(grid):
+    win_click(grid, mode='grid_col1')
+    win_click(grid, mode='grid_tl')
+
+def grid_select_rows(grid, num, page =False, home=True):
+    if num==0:
+        return grid_select_all(grid)
+    if(home):
+        win_click(grid)
+        keyboard.press_and_release('ctrl+home')
+    win_click(grid, mode='grid_row', arg=1)
+    keyboard.press('shift')
+    #win_click(grid, mode='grid_row', arg=10)
+    for i in range(num):
+        keyboard.press_and_release("pagedown" if page else "down")
+        time.sleep(0.05)
+    keyboard.release('shift')
 
 def popup_click(popupmenu, name):
     cmd = get_child(popupmenu, name=name, ctrl_type='MenuItem', deep=2)
@@ -144,6 +175,14 @@ def popup_reply(wtop, selects):
 def butt_is_checked(butt):
     state = butt.legacy_properties()['State']
     return ((state & WIN_BUTT_STATE_CHECKED)!=0)
+
+def win_copy_to_clip(delay = .5):
+    keyboard.press_and_release('ctrl+c')
+    time.sleep(delay)
+    win32clipboard.OpenClipboard()
+    new_data = win32clipboard.GetClipboardData()
+    win32clipboard.CloseClipboard()
+    return new_data
 
 ######################################################################################################
 # find_window
