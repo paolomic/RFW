@@ -19,7 +19,7 @@ import utl_grid as ug
 
 ############################################
 #region - TODO
-#    - PEEK ORDER   Sistemare utl_grid. funzioni click + nRow, pulizia
+#    - PEEK ORDER   Sistemare utl_grid. move funzioni click + nRow, pulizia
 #    - MEM EXCEPT   click su headerrow Orders 
 #    - CELL CLICK   Clic su cella - keyword - coordinate cella/colonna (?)
 #    - MOVEWIN      sistemare move_win
@@ -338,15 +338,18 @@ def run_session_simple_2():         # ===== Test Invoke Keyword =====
     page = uw.get_child(env[K_TOP], name='Orders', ctrl_type='Pane', usere=0, deep=3)
     grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
     print(f'page {page}, grid{grid}')
-    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
+
     ##print(f'ROBOT_CMD_GET_HEADER result: [{response}]') 
+    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
     jsgrid = ug.create_grid(response) 
     uw.grid_select_rows(grid, 0, page=1)
-    rows = uw.win_copy_to_clip(delay=5)
+    rows = uw.win_copy_to_clip(wait_init=1)
     added_rows = ug.add_grid_rows(jsgrid, rows)
+    # Use Data
+    print (f'Collected {jsgrid.get_row_count()} Orders')
     result = jsgrid.search_first_match({"Order ID": "C10022501140000022677"})      # piu segmenti con , 
     print(f'Trovata row {result}')
-    print (f'Il Prezzo dell Ordine e` {result['Price']}'   )
+    print (f'Il Prezzo dell Ordine e` {result['Price']} Minder State: {result['Minder State']}'   )
 
 
 def run_session_simple_3():        # ===== Test Grid Analisi =====

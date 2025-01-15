@@ -7,7 +7,7 @@ import time
 import re
 import win32clipboard
 
-from win32gui import FindWindow, PostMessage
+from win32gui import FindWindow, PostMessage, GetCursorInfo
 import win32.lib.win32con as win32con
 
 ## TODO #####################
@@ -75,6 +75,21 @@ def get_today_iso():
 def get_log_path(wsp_path, logname):
   filename = f'{logname}_{get_today_iso()}.log'
   return f'{wsp_path}_wrk\\Logs\\{filename}'
+
+def wait_cursor_normal(wait_init=0.1, wait_in=0.5, wait_end=0.1, timeout=15):
+    time.sleep(wait_init)
+    start = datetime.now()
+    while (1):
+        cursor_info = GetCursorInfo()
+        handle = cursor_info[1]
+        #print(f'handle {handle}')       # Debug
+        if (handle!=65545):
+            break
+        if (datetime.now()-start).seconds > timeout :
+            break
+        time.sleep(wait_in)     # retry
+
+    time.sleep(wait_end)
 
 ######################################################################################################
 # WIN
@@ -176,9 +191,9 @@ def butt_is_checked(butt):
     state = butt.legacy_properties()['State']
     return ((state & WIN_BUTT_STATE_CHECKED)!=0)
 
-def win_copy_to_clip(delay = .5):
+def win_copy_to_clip(wait_init = .5):
     keyboard.press_and_release('ctrl+c')
-    time.sleep(delay)
+    wait_cursor_normal(wait_init=wait_init)
     win32clipboard.OpenClipboard()
     new_data = win32clipboard.GetClipboardData()
     win32clipboard.CloseClipboard()
