@@ -94,28 +94,35 @@ def get_env(app):
     print (env)
     return env
 
-def hang_app():
-    # prova ad agganciarla
-    try:
-        app = Application(backend="uia").connect(path=COH_EXE, title=COH_TITLE_PATT)
-        wtop = app.top_window()
-    except Exception:
+def hang_app(mode='hang_or_lunch'):         # mode= hang / lunch / hang_or_lunch
+    hang_ok = 0
+    
+    if (mode=='hang' or mode=='hang_or_lunch'):
         try:
-            print('Avvio nuova istanza...')
-            app = Application(backend="uia").start(COH_PATH)
-            time.sleep(1)  # Attende che l'app si avvii completamente
+            app = Application(backend="uia").connect(path=COH_EXE, title=COH_TITLE_PATT)
             wtop = app.top_window()
-        except Exception as e:
-            print(f"Start Error: {str(e)}")
-            raise
-    
-    if not wtop:
-        raise Exception("Open Error")
-    
-    print(f'app {app}')
-    print(f'wtop {wtop}')
-    return get_env(app)
+            hang_ok = 1
+        except Exception:
+            pass
 
+        if ((not hang_ok and mode=='hang_or_lunch') or mode=='lunch'):
+            try:
+                print('Avvio nuova istanza...')
+                app = Application(backend="uia").start(COH_PATH)
+                time.sleep(1)  # Attende che l'app si avvii completamente
+                wtop = app.top_window()
+            except Exception as e:
+                print(f"Start Error: {str(e)}")
+                raise
+        
+        if not wtop:
+            raise Exception("Open Error")
+        
+        print(f'app {app}')
+        print(f'wtop {wtop}')
+        return get_env(app)
+    
+    
 def done():
     print ('## Test Done ##')
     exit()
@@ -334,23 +341,23 @@ def run_session():
 ################# Test RobotCall
 
 def run_session_simple_2():         # ===== Test Invoke Keyword =====
-    env = hang_app()
+    env = hang_app(mode='hang_or_lunch')
     page = uw.get_child(env[K_TOP], name='Orders', ctrl_type='Pane', usere=0, deep=3)
     grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
     print(f'page {page}, grid{grid}')
 
-    ##print(f'ROBOT_CMD_GET_HEADER result: [{response}]') 
+    # Call Page Keyword
     response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
+    ##print(f'ROBOT_CMD_GET_HEADER result: [{response}]') 
     jsgrid = ug.create_grid(response) 
-    uw.grid_select_rows(grid, 0, page=1)
+    uw.grid_select_rows(grid, 6, mode="page")
     rows = uw.win_copy_to_clip(wait_init=1)
-    added_rows = ug.add_grid_rows(jsgrid, rows)
+    res = ug.add_grid_rows(jsgrid, rows)
     # Use Data
-    print (f'Collected {jsgrid.get_row_count()} Orders')
-    result = jsgrid.search_first_match({"Order ID": "C10022501140000022677"})      # piu segmenti con , 
-    print(f'Trovata row {result}')
-    print (f'Il Prezzo dell Ordine e` {result['Price']} Minder State: {result['Minder State']}'   )
-
+    print (f'Collected Orders: {jsgrid.get_row_count()}')
+    order = jsgrid.search_first_match({"Order ID": "C10022501030000022054"})      # piu segmenti con , 
+    print(f'Trovata row {order}')
+    print (f'Il Prezzo dell Ordine e` {order['Price']}, Minder State: {order['Minder State']}'   )
 
 def run_session_simple_3():        # ===== Test Grid Analisi =====
     env = hang_app()

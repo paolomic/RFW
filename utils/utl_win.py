@@ -160,7 +160,7 @@ def grid_select_all(grid):
     win_click(grid, mode='grid_col1')
     win_click(grid, mode='grid_tl')
 
-def grid_select_rows(grid, num, page =False, home=True):
+def grid_select_rows(grid, num, mode="row", home=True):
     if num==0:
         return grid_select_all(grid)
     if(home):
@@ -170,7 +170,7 @@ def grid_select_rows(grid, num, page =False, home=True):
     keyboard.press('shift')
     #win_click(grid, mode='grid_row', arg=10)
     for i in range(num):
-        keyboard.press_and_release("pagedown" if page else "down")
+        keyboard.press_and_release("pagedown" if mode=="page" else "down")
         time.sleep(0.05)
     keyboard.release('shift')
 

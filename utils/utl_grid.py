@@ -50,7 +50,7 @@ class GridManager:
         # Add the rest of the values
         for header, value in zip(self.data["headers"][1:], values):  # Skip 'nRow' header
             value = value.strip()
-            row[header] = value if value else None
+            row[header] = value if value else ''    # Void Input map to None or ''
             
         self.data["rows"].append(row)
         return row
@@ -73,7 +73,7 @@ class GridManager:
                     self._row_counter -= 1  # Decrement counter for removed rows
                 raise ValueError(f"Errore nella riga '{row_string}': {str(e)}")
                 
-        return added_rows
+        return self.get_row_count()
     
     def clear(self) -> None:
         """Pulisce tutti i dati del grid mantenendo gli headers e resettando il contatore righe"""
