@@ -452,12 +452,15 @@ def warning_replay(wtop, mess, butt):
     return False
 #endregion
 
-ROBOT_MAX_BUFFER_SIZE   = 4096                              # ?
-#WM_ROBOT_GRID_COMMAND = win32con.WM_USER + 199
-ROBOT_PORT              = 63888                             # reply
-ROBOT_SIGNATURE         = 55555                             # check sender
-ROBOT_CMD_BASE          = 22220                             # aske fun
-ROBOT_CMD_GET_HEADER    = ROBOT_CMD_BASE + 0
+ROBOT_MAX_BUFFER_SIZE       = 4096                              # ?
+#WM_ROBOT_GRID_COMMAND      = win32con.WM_USER + 199
+ROBOT_PORT                  = 63888                             # reply
+ROBOT_SIGNATURE             = 55555                             # check sender
+ROBOT_CMD_BASE              = 22220                             # aske fun
+ROBOT_CMD_GET_HEADER        = ROBOT_CMD_BASE + 0
+ROBOT_CMD_GET_PROP          = ROBOT_CMD_BASE + 1
+ROBOT_CMD_IS_COL_VISIBLE    = ROBOT_CMD_BASE + 2
+ROBOT_CMD_GET_COL_POINT     = ROBOT_CMD_BASE + 3
 
 import win32gui
 import socket

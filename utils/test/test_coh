@@ -19,6 +19,8 @@ import utl_grid as ug
 
 ############################################
 #region - TODO
+#    - MOVE KWORD   Spostare Handling KW nella base class
+#    - NEW KWOD     get_cell_pos get_col_pos, get_cell_value
 #    - PEEK ORDER   Sistemare utl_grid. move funzioni click + nRow, pulizia
 #    - MEM EXCEPT   click su headerrow Orders 
 #    - CELL CLICK   Clic su cella - keyword - coordinate cella/colonna (?)
@@ -360,14 +362,23 @@ def run_session_simple_2():         # ===== Test Invoke Keyword =====
     print (f'Il Prezzo dell Ordine e` {order['Price']}, Minder State: {order['Minder State']}'   )
 
 def run_session_simple_3():        # ===== Test Grid Analisi =====
-    env = hang_app()
+    env = hang_app(mode='hang_or_lunch')
     page = uw.get_child(env[K_TOP], name='Orders', ctrl_type='Pane', usere=0, deep=3)
-    grid = uw.get_child(page, automation_id='59648', usere=0, deep=9)
+    grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
+    print(f'page {page}, grid{grid}')
+
+    # Call Page Keyword
+    #response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")   
+    #response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_PROP, input_str="")   
+    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_COL_POINT, input_str="23\t1")   
+    print(f'KWORD result: [{response}]') 
+    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_COL_POINT, input_str="23\t1")   
+    print(f'KWORD result: [{response}]') 
     
 
 
 # TEST TEST TEST TEST TEST TEST TEST TEST
-coice = 2
+coice = 3
 if (coice==1):
     run_session()
 if (coice==2):

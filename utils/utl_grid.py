@@ -1,111 +1,106 @@
-class GridManager:
-    def __init__(self, newline='\r\n'):
+class GridMng:
+    EMPTY = ''
+    
+    def __init__(self, nl='\r\n'):
         self.data = {
             "headers": [],
             "rows": []
         }
-        self.newline = newline
-        self._row_counter = 0  # Counter for row numbering
+        self.points = {}  # header coordinates
+        self.props = {}   # grid properties
+        self.nl = nl      
+        self.row_num = 0
     
-    def set_headers_from_string(self, header_string: str) -> None:
-        """
-        Imposta gli headers del grid da una stringa TAB-separated, aggiungendo 'nRow' come prima colonna
-        
-        Args:
-            header_string (str): Stringa con headers separati da tab
-        """
-        # Add 'nRow' as first column
-        headers = ['nRow'] + [h.strip() for h in header_string.split('\t')]
-        self.data["headers"] = headers
+    def set_props(self, prop_str: str) -> None:
+        """Set properties from 'key1=val1\tkey2=val2' string"""
+        for prop in prop_str.split('\t'):
+            if '=' in prop:
+                key, val = prop.split('=', 1)
+                self.props[key.strip()] = val.strip()
     
-    def _split_with_trailing_tabs(self, value_string: str) -> list:
-        """
-        Divide una stringa mantenendo i campi vuoti anche in coda,
-        ignorando correttamente \r\n finali
-        """
-        value_string = value_string.rstrip('\r\n')
-        return value_string.split('\t')
+    def get_prop(self, name: str) -> str:
+        """Get property value by name"""
+        return self.props.get(name)
     
-    def add_row_from_string(self, value_string: str) -> dict:
-        """
-        Aggiunge una riga al grid da una stringa TAB-separated,
-        aggiungendo automaticamente il numero progressivo della riga
-        """
-        values = self._split_with_trailing_tabs(value_string)
+    def get_point(self, header: str) -> tuple:
+        """Get coordinates (x,y) for header"""
+        return self.points.get(header)
+    
+    def get_props(self) -> dict:
+        """Get all properties"""
+        return self.props.copy()
+    
+    def get_points(self) -> dict:
+        """Get all header coordinates"""
+        return self.points.copy()
+    
+    def set_headers(self, hdr_str: str) -> None:
+        hdrs = ['nRow']
+        self.points = {'nRow': None}
         
-        # Check length against expected headers (excluding 'nRow' which we'll add)
-        if len(values) != len(self.data["headers"]) - 1:  # -1 because 'nRow' is extra
-            raise ValueError(
-                f"Il numero di valori ({len(values)}) non corrisponde al numero di headers ({len(self.data['headers']) - 1}). " +
-                f"Headers: {len(self.data['headers']) - 1}, " +
-                f"Values: {len(values)}"
-            )
+        for hdr_item in hdr_str.split('\t'):
+            name, point = self._parse_header_coords(hdr_item)
+            hdrs.append(name)
+            self.points[name] = point
+            
+        self.data["headers"] = hdrs
+    
+    def _parse_header_coords(self, hdr_str: str) -> tuple:
+        import re
         
-        # Increment row counter
-        self._row_counter += 1
+        hdr_str = hdr_str.strip()
+        match = re.match(r'^(.*?)\s*,\s*(\d+)\s*,\s*(\d+)\)$', hdr_str)
         
-        # Create row dictionary with row number
-        row = {'nRow': str(self._row_counter)}  # Convert to string to maintain consistency
+        if match:
+            name = match.group(1).strip()
+            try:
+                x = int(match.group(2))
+                y = int(match.group(3))
+                return name, (x, y)
+            except ValueError:
+                return hdr_str, None
+        return hdr_str, None
+    
+    def add_row(self, val_str: str) -> dict:
+        vals = val_str.rstrip(self.nl).split('\t')
         
-        # Add the rest of the values
-        for header, value in zip(self.data["headers"][1:], values):  # Skip 'nRow' header
-            value = value.strip()
-            row[header] = value if value else ''    # Void Input map to None or ''
+        if len(vals) != len(self.data["headers"]) - 1:
+            raise ValueError("Values count doesn't match headers count")
+        
+        self.row_num += 1
+        row = {'nRow': str(self.row_num)}
+        
+        for hdr, val in zip(self.data["headers"][1:], vals):
+            row[hdr] = val.strip() or self.EMPTY
             
         self.data["rows"].append(row)
         return row
     
-    def add_rows_from_string(self, rows_string: str) -> list:
-        """
-        Aggiunge multiple righe al grid da una stringa con righe separate da newline
-        """
-        rows = [row for row in rows_string.split(self.newline) if row]
-        added_rows = []
+    def add_rows(self, rows_str: str) -> list:
+        rows = [row for row in rows_str.split(self.nl) if row]
+        added = []
         
-        for row_string in rows:
+        for row_str in rows:
             try:
-                row = self.add_row_from_string(row_string)
-                added_rows.append(row)
+                row = self.add_row(row_str)
+                added.append(row)
             except ValueError as e:
-                # Se c'è un errore in una riga, rimuovi le righe già aggiunte
-                for _ in range(len(added_rows)):
+                for _ in range(len(added)):
                     self.data["rows"].pop()
-                    self._row_counter -= 1  # Decrement counter for removed rows
-                raise ValueError(f"Errore nella riga '{row_string}': {str(e)}")
+                    self.row_num -= 1
+                raise ValueError(f"Error in row '{row_str}': {str(e)}")
                 
-        return self.get_row_count()
-    
-    def clear(self) -> None:
-        """Pulisce tutti i dati del grid mantenendo gli headers e resettando il contatore righe"""
-        self.data["rows"] = []
-        self._row_counter = 0  # Reset row counter
-    
-    # Altri metodi rimangono invariati
-    def search_first_match(self, search_criteria: dict) -> dict:
-        invalid_headers = [h for h in search_criteria.keys() if h not in self.data["headers"]]
-        if invalid_headers:
-            raise ValueError(f"Headers non validi: {invalid_headers}")
-            
-        for row in self.data["rows"]:
-            if all(row.get(header) == value for header, value in search_criteria.items()):
-                return row
-                
-        return None
+        return added
     
     def get_json(self) -> dict:
-        return self.data
-    
-    def get_row_count(self) -> int:
-        return len(self.data["rows"])
+        """Get grid data and properties as dict"""
+        return {
+            "data": self.data,
+            "props": self.props
+        }
 
-# Helper functions
-def create_grid(header_string: str, newline='\r\n') -> GridManager:
-    grid = GridManager(newline=newline)
-    grid.set_headers_from_string(header_string)
+def create_grid(hdr_str: str, nl='\r\n') -> GridMng:
+    """Create and initialize grid with headers"""
+    grid = GridMng(nl=nl)
+    grid.set_headers(hdr_str)
     return grid
-
-def add_grid_row(grid: GridManager, value_string: str) -> dict:
-    return grid.add_row_from_string(value_string)
-
-def add_grid_rows(grid: GridManager, rows_string: str) -> list:
-    return grid.add_rows_from_string(rows_string)

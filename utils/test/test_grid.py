@@ -9,21 +9,17 @@ sys.path.append(_path_import)
 
 import utl_grid as ug
 
-# Creiamo un grid con gli headers
-s1 = "tipo\tstato"
-grid = ug.create_grid(s1)  # Default newline='\r\n' per Windows
+# Test con il codice corretto
+grid = ug.create_grid("nome,(1,2)\tcognome,(3,4)\tetà")
 
-# Stringa con multiple righe (usando il newline di Windows \r\n)
-rows = "Corporate bond\tNo\r\nCorporate bond\tNo\r\nCorporate bond\tNo\r\nCorporate bond\tNo\r\nCorporate bond\tNo"
+print("Test completo degli headers:")
+for i in range(len(grid.data["headers"])):
+    name = grid.get_header_name(i)
+    point = grid.get_header_point(i)
+    print(f"Header {i}: {name} -> Point: {point}")
 
-# Aggiungiamo tutte le righe in una volta
-added_rows = ug.add_grid_rows(grid, rows)
-print(f"Aggiunte {len(added_rows)} righe")
+# Aggiungiamo una riga per verificare che tutto funzioni
+ug.add_grid_row(grid, "Mario\tRossi\t30")
 
-# Verifichiamo il contenuto
+print("\nJSON completo:")
 print(grid.get_json())
-
-s1 = "SecType\tSecurityRef"                 # get with keyword
-ug.grid = ug.create_grid(s1) 
-# Se volessimo usare un grid con newline Unix
-#unix_grid = ug.create_grid(s1, newline='\n')
