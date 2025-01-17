@@ -368,12 +368,13 @@ def run_session_simple_3():        # ===== Test Grid Analisi =====
     print(f'page {page}, grid{grid}')
 
     # Call Page Keyword
-    #response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")   
-    #response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_PROP, input_str="")   
-    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_COL_POINT, input_str="23\t1")   
+    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")   
     print(f'KWORD result: [{response}]') 
-    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_COL_POINT, input_str="23\t1")   
+    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_PROP, input_str="")   
+    
+    #response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_COL_POINT, input_str="23\t1")   
     print(f'KWORD result: [{response}]') 
+    
     
 
 

@@ -1,0 +1,584 @@
+Index: src/Common/util.cpp
+===================================================================
+--- src/Common/util.cpp	(revision 11679)
++++ src/Common/util.cpp	(working copy)
+@@ -1744,17 +1744,17 @@
+ 	return lvalue == FTCX_CTX_TRUE;
+ }
+ 
+-int LoadListFromPipedString(CStringList* strList, CString &str)
++int LoadListFromPipedString(CStringList* strList, CString &str, LPCTSTR sep /*= "|"*/)
+ {
+ 	CString strOrderID;
+ 	CString strToken;
+ 	int nCurPos = 0;
+ 	int nSortPos = 1;	// must start from 1
+-	strToken = str.Tokenize("|", nCurPos);
++	strToken = str.Tokenize(sep, nCurPos);
+ 	while (!strToken.IsEmpty())
+ 	{
+ 		strOrderID = strToken;
+-		strToken = str.Tokenize("|", nCurPos);
++		strToken = str.Tokenize(sep, nCurPos);
+ 		strList->AddTail(strOrderID);
+ 	}
+ 
+@@ -1761,6 +1761,19 @@
+ 	return strList->GetCount();
+ }
+ 
++int LoadPipedStringFromString(CString& strOutput, CStringList* List_out, LPCTSTR sep /*= "|"*/)
++{
++	strOutput = "";
++
++	for (POSITION pos = List_out->GetHeadPosition(); pos != NULL; )
++	{
++		CString item = List_out->GetNext(pos);
++		strOutput = strOutput + (strOutput.IsEmpty()? "" : sep) + item;
++	}
++
++	return List_out->GetCount();
++}
++
+ int LoadListFromContext(LPCTSTR strKey, CStringList* pstrList, CFTCXContext* pContext)
+ {
+ 	CString strValue;
+Index: src/Common/util.h
+===================================================================
+--- src/Common/util.h	(revision 11679)
++++ src/Common/util.h	(working copy)
+@@ -227,7 +227,9 @@
+ 	return false;
+ }
+ 
+-int LoadListFromPipedString( CStringList* strList, CString &str);
++int LoadListFromPipedString( CStringList* strList, CString &str, LPCTSTR sep = "|");
++int LoadPipedStringFromString(CString &strOutput, CStringList *List_out, LPCTSTR sep="|");
++
+ int LoadListFromContext(LPCTSTR strKey, CStringList* strList, CFTCXContext* pContext);
+ 
+ BOOL ClientBelongsToOperator(LPCTSTR strOperator, LPCTSTR strClientID);
+Index: src/SQL/MMSQLite.cpp
+===================================================================
+--- src/SQL/MMSQLite.cpp	(revision 11679)
++++ src/SQL/MMSQLite.cpp	(working copy)
+@@ -4,7 +4,7 @@
+ #include "MMSQLite.h"
+ #include "MMSQL.h"
+ 
+-#define SQLITE_DBNAME_DICTIONARY		"MetaMarketDICT"
++#define SQLITE_DBNAME_DICTIONARY	 	"MetaMarketDICT"
+ #define SQLITE_DBNAME					"MetaMarket"
+ #define SQLITE_SCRIPT_SOURCE			"MetaMarket"
+ 
+Index: src/Views/MMTradingOrderView.cpp
+===================================================================
+--- src/Views/MMTradingOrderView.cpp	(revision 11679)
++++ src/Views/MMTradingOrderView.cpp	(working copy)
+@@ -1807,7 +1807,7 @@
+ 
+ BOOL CMMTradingOrderView::CanSortCol(ROWCOL nCol, long* pCurSorOrder /*= NULL*/)
+ {
+-	CLSkField*		pField;
++	CLSkField* pField = nullptr;
+ 	long			fieldID;
+ 	BOOL			bCanSort = FALSE;
+ 
+@@ -1838,7 +1838,7 @@
+ void CMMTradingOrderView::OnSheetSortColAsc()
+ {
+ 	CRowColArray	awCols;
+-	CLSkField*		pField;
++	CLSkField* pField = nullptr;
+ 	long			fieldID;
+ 
+ 	BOOL bReorder = FALSE;
+@@ -1881,7 +1881,7 @@
+ void CMMTradingOrderView::OnSheetSortColDesc()
+ {
+ 	CRowColArray	awCols;
+-	CLSkField*		pField;
++	CLSkField* pField = nullptr;
+ 	long			fieldID;
+ 	BOOL bReorder = FALSE;
+ 
+@@ -4822,7 +4822,7 @@
+ 	if (nRow<GetFirstDataRow())
+ 		return CMMSheetView::OnLButtonClickedRowCol(nRow, nCol, nFlags, pt);
+ 
+-	CLSkField *hField;
++	CLSkField* hField = nullptr;
+ 	long mID;
+ 	GetFieldByCol(nCol, &hField, &mID);
+ 	if (mID == MM_ORDER_DELETE_FID)
+@@ -4925,7 +4925,7 @@
+ 	if (nRow<GetFirstDataRow())
+ 		return CMMSheetView::OnLButtonDblClkRowCol(nRow, nCol, nFlags, pt);
+ 
+-	CLSkField*		pField;
++	CLSkField* pField = nullptr;
+ 	long	fieldID;
+ 	BOOL bEditable = FALSE;
+ 	
+@@ -5046,10 +5046,60 @@
+ 	return bIsEnabled;
+ }
+ 
++int CMMTradingOrderView::__TEST(ROWCOL nRow, ROWCOL nCol, UINT nFlags, CPoint pt)
++{
++	CRect allrec, leftrec;
++	GetClientRect(&allrec);
++	
++	leftrec = allrec;
++	leftrec.right = leftrec.left + 38;
++
++	ROWCOL col1, col2;
++
++	col1 = CalcRightColFromRect(leftrec);											// left cell
++	col2 = CalcRightColFromRect(allrec);											// right cell
++
++	TRACE("RANGE %d-%d\n", col1, col2);
++
++	return TRUE;
++	
++	
++	CRect rec = CalcRectFromClientRowCol(nRow, nCol);
++	TRACE("%d %d %d %d \n", rec.top, rec.bottom, rec.left, rec.right);				// Coordinate della cella
++
++	rec = CalcRectFromClientRowCol(nRow, nCol+10);
++	TRACE("%d %d %d %d \n", rec.top, rec.bottom, rec.left, rec.right);
++
++	
++	//col1 = GetFirstVisibleCol();
++	col2 = GetLastVisibleCol();
++	TRACE("RANGE %d\n", col2);
++
++	ScrollCellInView(nRow, nCol+10);												// La mette visibile
++
++	col2 = GetLastVisibleCol();
++	TRACE("RANGE %d\n", col2);
++	
++
++	
++	
++	return TRUE;
++}
++
+ BOOL CMMTradingOrderView::OnRButtonClickedRowCol(ROWCOL nRow, ROWCOL nCol, UINT nFlags, CPoint pt)
+ {
+ 	if (nRow < GetFirstDataRow())
++	{
++#ifdef DEBUG
++		//if (nCol ==5) 
++		{
++			return __TEST(nRow, nCol, nFlags, pt);
++		}
++		
++#endif // DEBUG
+ 		return CMMSheetView::OnRButtonClickedRowCol(nRow, nCol, nFlags, pt);
++	}
++		
+ 
+ 	// check tick selector settins
+ 	if (GetRowValues(nRow, &m_client_order))
+@@ -6372,7 +6422,7 @@
+ 
+ 	BOOL bRet = FALSE;
+ 
+-	CLSkField*		pField;
++	CLSkField* pField = nullptr;
+ 	long			fieldID;
+ 
+ 	if (GetFieldByCol(nCol,&pField,&fieldID) && pField) 
+@@ -10297,7 +10347,7 @@
+ 		return TRUE;
+ 
+ 	ROWCOL nRow, nCol;
+-	CLSkField*		pField;
++	CLSkField* pField = nullptr;
+ 	long			fieldID;
+ 	double nVal;
+ 
+@@ -10440,7 +10490,7 @@
+ 
+ 	CLFWSheetData* pSheetData = GetSheetData();
+ 
+-	CLSkField*		pField;
++	CLSkField* pField = nullptr;
+ 	long			fieldID;
+ 
+ 	BOOL bRet = FALSE;
+Index: src/Views/MMTradingOrderView.h
+===================================================================
+--- src/Views/MMTradingOrderView.h	(revision 11679)
++++ src/Views/MMTradingOrderView.h	(working copy)
+@@ -609,6 +609,8 @@
+ 	BOOL IsSettlementDateMenuVisible(CLIENT_ORDER* pclient_order);
+ 	BOOL IsEditSettlementDateEnabled(CLIENT_ORDER* pclient_order);
+ 
++	int __TEST(ROWCOL nRow, ROWCOL nCol, UINT nFlags, CPoint pt);
++
+ protected:
+ 	CMMMrkInfoImpl				m_capOddLotQtyDecimals;
+ 	CMMMrkInfoImpl				m_capOrderLock;
+Index: src/Views/MMView.cpp
+===================================================================
+--- src/Views/MMView.cpp	(revision 11679)
++++ src/Views/MMView.cpp	(working copy)
+@@ -14,6 +14,7 @@
+ #include "VersionDefs.h"
+ 
+ #include "FTCXStorageNodePath.h"
++#include "robot.h"
+ 
+ #ifdef _DEBUG
+ #undef THIS_FILE
+@@ -190,7 +191,7 @@
+ 	// Lock scroll when scrollbar are not visible (view m_bDisableScrollWhenScrollbarsAreHidden)
+ 	ON_COMMAND(ID_SHEET_SHOWHIDE_SCROLLBARS, OnShowHideScrollBar)
+ 
+-
++	ON_MESSAGE(WM_COPYDATA, OnCopyData)				// Robot
+   //}}AFX_MSG_MAP
+ 
+ END_MESSAGE_MAP()
+@@ -2290,6 +2291,9 @@
+ 	CLFWSheetView::OnMouseMove(nFlags, point);
+ }
+ 
++// Robot Call KeyWord
++afx_msg LRESULT OnCopyData(WPARAM wParam, LPARAM lParam);
++
+ LRESULT CMMSheetView::OnSrcAlive(WPARAM wParam, LPARAM lParam)
+ {
+ 	CFTCMultiObserver *pObserver = GetFTCMultiObserver();
+@@ -2935,7 +2939,245 @@
+ 	return TRUE;
+ }
+ 
++//////////////////////////////////////////////////////////////////////////
++// Robot Call
++#pragma region
++/*
++	ROBOT COMMANDS
++	=============================
+ 
++	Note:	'|' means '\t'
++
++	ROBOT_CMD_GET_HEADER:
++	========================
++		''
++		'tcol1,(x1,y1)|col2,(x2,y2)'
++
++
++	ROBOT_CMD_GET_PROP :
++	========================
++		''
++		'x_off=x|y_top=y|y_bot=y|col_from=c1|col_to=c2'
++
++
++	ROBOT_CMD_IS_COL_VISIBLE :
++	========================
++		'ncol'
++		'res'						0 / 1
++
++	ROBOT_CMD_GET_COL_POINT
++	========================
++		'ncol' or 'ncol|scroll'
++		'x|y|s'						x|y|scrolled
++*/
++
++
++#define ROBOT_SEP		"\t"
++
++int CMMSheetView::GetCellCenter(ROWCOL row, ROWCOL col, CPoint& p)
++{
++	CRect rec = CalcRectFromClientRowCol(row, col);
++
++	p.x = (rec.left + rec.right) / 2;
++	p.y = (rec.top + rec.bottom) / 2;
++
++	return 0;
++}
++
++int CMMSheetView::GetColRange(ROWCOL& col1, ROWCOL& col2)
++{
++	CRect allrec, leftrec;
++	GetClientRect(&allrec);
++
++	leftrec = allrec;
++	leftrec.right = leftrec.left + 38;
++
++	col1 = CalcRightColFromRect(leftrec);											// left cell - cam be trunc
++	col2 = CalcRightColFromRect(allrec);											// right cell - cam be trunc
++	
++	// TODO controllo troncamenti col1 e col2, centro nel grid
++	CRect rec = CalcRectFromClientRowCol(GetHeaderRows(), GetHeaderCols());
++	CPoint p1, p2;
++	GetCellCenter(GetHeaderRows(), col1, p1);
++	GetCellCenter(GetHeaderRows(), col2, p2);
++
++	if (p1.x < rec.left)
++		col1++;
++
++	if (p2.x > rec.right)
++		col2--;
++
++	return 0;
++}
++
++
++int CMMSheetView::GetHeader(CStringList* List_in, CStringList* List_out)
++{
++	ROWCOL col1, col2;
++	GetColRange(col1, col2);
++
++	CMMSheetData* pSheetData = (CMMSheetData*)GetSheetData();
++	CLFWFieldData* pdata;
++
++	ROWCOL nCol = 1;
++	while (pdata = pSheetData->GetFieldByCol(nCol))
++	{
++		if (!IsColHidden(nCol))
++		{
++			CString name = GetValueRowCol(GetHeaderRows(), nCol);
++
++			if (nCol >= col1 && nCol <= col2)
++			{
++				CPoint p;
++				GetCellCenter(GetHeaderRows(), nCol, p);
++			
++				CString point;
++				point.Format(",(%d,%d)", p.x, p.y);
++
++				name = name + point;
++			}
++
++			List_out->AddTail(name);
++		}
++		nCol++;
++	}
++
++	return 0;
++}
++
++int CMMSheetView::GetProperties(CStringList* List_in, CStringList* List_out)
++{
++	CString str;
++	
++	// geometry
++	CRect rec = CalcRectFromClientRowCol(GetHeaderRows(), GetHeaderCols());
++	str.Format("x_off=%d", rec.right);
++	List_out->AddTail(str);
++
++	str.Format("y_top=%d", rec.top);
++	List_out->AddTail(str);
++
++	str.Format("y_bot=%d", rec.bottom);
++	List_out->AddTail(str);
++
++	str.Format("y_mid=%d", (rec.top+rec.bottom)/2);
++	List_out->AddTail(str);
++
++	// range visible
++	
++	ROWCOL col1, col2;
++	GetColRange(col1, col2);
++	
++	str.Format("col_from=%d", col1);
++	List_out->AddTail(str);
++
++	str.Format("col_to=%d", col2);
++	List_out->AddTail(str);
++
++	return 0;
++}
++
++
++int CMMSheetView::GetColPoint(CStringList* List_in, CStringList* List_out)
++{
++	ROWCOL col = atoi(List_in->GetHead());
++	BOOL scroll = List_in->GetCount()>1;
++
++	CPoint p;
++	GetCellCenter(GetHeaderRows(), col, p);
++
++	ROWCOL col1, col2;
++	GetColRange(col1, col2);
++
++	BOOL scrolled = 0;
++
++	if (col<col1 || col>col2)
++	{
++		if (scroll)
++		{
++			// scroll - cambia tutto
++			ScrollCellInView(GetHeaderRows(), col);
++			GetCellCenter(GetHeaderRows(), col, p);	
++			scrolled = 1;
++		}
++		else
++		{
++			p = CPoint(0, 0);			// None
++		}
++	}
++
++	CString str;
++	str.Format("%d", p.x);
++	List_out->AddTail(str);
++	str.Format("%d", p.y);
++	List_out->AddTail(str);
++	str.Format("%d", scrolled);
++	List_out->AddTail(str);
++
++	return 0;
++}
++
++
++int CMMSheetView::RobotCall_Reply(int command, CStringList *List_in, CStringList* List_out)
++{
++	int res = -1;
++
++	switch (command)
++	{
++	case ROBOT_CMD_GET_HEADER:	// GetHeader
++	{
++		res = GetHeader(List_in, List_out);
++		return res;
++	}
++	case ROBOT_CMD_GET_PROP:	// GetHeader
++	{
++		res = GetProperties(List_in, List_out);
++		return res;
++	}
++	//case ROBOT_CMD_IS_COL_VISIBLE:	// GetHeader
++	//{
++	//	res = GetHeader(List_out);
++	//	return res;
++	//}
++	case ROBOT_CMD_GET_COL_POINT:		// GetHeader
++	{
++		res = GetColPoint(List_in, List_out);
++		return res;
++	}
++
++	default:
++		break;
++	}
++
++	return res;
++}
++
++LRESULT CMMSheetView::OnCopyData(WPARAM wParam, LPARAM lParam)							// RobotCall_Query Handler
++{
++	CString strInput;
++	int command = 0;
++	int reply_port = 0;
++
++	int res = RobotCommunication::ParseKeyword(wParam, lParam, command, reply_port, strInput);
++	if (res < 0)
++		return res;
++
++	TRACE("#### ROBOT REPLY [%d][%s]\n", command, strInput);
++
++	CStringList List_in, List_out;
++	LoadListFromPipedString(&List_in, strInput, ROBOT_SEP);
++
++	int result = RobotCall_Reply(command, &List_in, &List_out);
++
++	CString strOutput;
++	LoadPipedStringFromString(strOutput, &List_out, ROBOT_SEP);
++
++	return RobotCommunication::ReplyKeyword(result, reply_port, strOutput);
++}
++
++#pragma endregion
++
++
+ //////////////////////////////////////////////////////////////////////////
+ // Disable Scroll when ScrollBars are Hidden
+ BOOL CMMSheetView::CanSelectCurrentCell(BOOL bSelect, ROWCOL dwSelectRow, ROWCOL dwSelectCol, ROWCOL dwOldRow, ROWCOL dwOldCol)
+Index: src/Views/MMView.h
+===================================================================
+--- src/Views/MMView.h	(revision 11679)
++++ src/Views/MMView.h	(working copy)
+@@ -402,6 +402,16 @@
+ 	virtual BOOL OnRButtonHitRowCol(ROWCOL nHitRow, ROWCOL nHitCol, ROWCOL nDragRow, ROWCOL nDragCol, CPoint point, UINT flags, WORD nHitState);
+ 	virtual BOOL OnMouseMoveOver(ROWCOL nRow, ROWCOL nCol, UINT flags, CPoint pt);
+ 
++	// Robot Call KeyWord
++	virtual int GetCellCenter(ROWCOL col1, ROWCOL col2, CPoint &p);
++	virtual int GetColRange(ROWCOL &col1, ROWCOL& col2);
++
++	virtual int GetHeader(CStringList* List_in, CStringList* List_out);
++	virtual int GetProperties(CStringList* List_in, CStringList* List_out);
++	virtual int GetColPoint(CStringList* List_in, CStringList* List_out);
++	
++	virtual int RobotCall_Reply(int command, CStringList* List_in, CStringList* List_out);				// Override to serve local Page Reply
++
+ // Operations
+ public:
+ 	CMMMultiDocument* GetDocument();
+@@ -488,7 +498,8 @@
+ 	afx_msg void OnUnlinkWindow();
+ 	afx_msg void OnUpdateUnlinkWindow(CCmdUI* pCmdUI);
+ 
+-
++	// Robot Call KeyWord
++	afx_msg LRESULT OnCopyData(WPARAM wParam, LPARAM lParam);			// Use Protocol CopyData
+ 	//}}AFX_MSG
+ 	DECLARE_MESSAGE_MAP()
+ 
+Index: workspace/MetaMarket160.vcxproj
+===================================================================
+--- workspace/MetaMarket160.vcxproj	(revision 11679)
++++ workspace/MetaMarket160.vcxproj	(working copy)
+@@ -321,7 +321,7 @@
+       <AdditionalOptions>/Zm200 /bigobj
+  %(AdditionalOptions)</AdditionalOptions>
+       <Optimization>Disabled</Optimization>
+-      <AdditionalIncludeDirectories>.\;..\MMPublicInclude;..\FTCInclude;..\SOPublicInclude;..\GOVPublicInclude;..\UPInclude;..\RMPublicInclude;..\XFTPublicInclude;..\BOMPublicInclude;..\src;..\src\Common;..\src\Common\HttpRequest;..\src\Common\Zip;..\src\DataModels;..\src\Controls;..\src\CustomControls;..\src\Deprecated;..\src\Settings;..\src\Views\Order Dlg;..\src\Views\Multi Execution Order Dlg;..\src\Views\Release Multi RFQs Dlg;..\src\Views;..\src\SQL;..\src\FIXatdl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
++      <AdditionalIncludeDirectories>.\;..\MMPublicInclude;..\FTCInclude;..\SOPublicInclude;..\GOVPublicInclude;..\UPInclude;..\RMPublicInclude;..\XFTPublicInclude;..\BOMPublicInclude;..\src;..\src\Common;..\src\Common\HttpRequest;..\src\Common\Zip;..\src\DataModels;..\src\Controls;..\src\CustomControls;..\src\Deprecated;..\src\Settings;..\src\Views\Order Dlg;..\src\Views\Multi Execution Order Dlg;..\src\Views\Release Multi RFQs Dlg;..\src\Views;..\src\SQL;..\src\FIXatdl;C:\work\disks\D\boost_1_60_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+       <PreprocessorDefinitions>_OBJCHART_DLL;_DEBUG;WIN32;_WINDOWS;_AFXEXT;_EQ__FTC120;_FTC_ENABLE_DOTNET;NO_WARN_MBCS_MFC_DEPRECATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -474,6 +474,7 @@
+     <ClCompile Include="..\src\Common\CmdUtil.cpp" />
+     <ClCompile Include="..\src\Common\MMGridHelper.cpp" />
+     <ClCompile Include="..\src\Common\MMMultiExecMrkFilterMng.cpp" />
++    <ClCompile Include="..\src\Common\robot.cpp" />
+     <ClCompile Include="..\src\CustomControls\MMAcceptEditRfqQuotePopup.cpp" />
+     <ClCompile Include="..\src\CustomControls\MMAuctionDataCtrl.cpp" />
+     <ClCompile Include="..\src\CustomControls\MMBrokerRelPercCombo.cpp" />
+@@ -1013,6 +1014,7 @@
+     <ClInclude Include="..\src\Common\MMMultiExecMrkFilterMng.h" />
+     <ClInclude Include="..\MMPublicInclude\MMConnector.h" />
+     <ClInclude Include="..\src\Common\MMTickButtonMenuUtils.h" />
++    <ClInclude Include="..\src\Common\robot.h" />
+     <ClInclude Include="..\src\CustomControls\MMAcceptEditRfqQuotePopup.h" />
+     <ClInclude Include="..\src\CustomControls\MMAuctionDataCtrl.h" />
+     <ClInclude Include="..\src\CustomControls\MMBrokerRelPercCombo.h" />
+Index: workspace/MetaMarket160.vcxproj.filters
+===================================================================
+--- workspace/MetaMarket160.vcxproj.filters	(revision 11679)
++++ workspace/MetaMarket160.vcxproj.filters	(working copy)
+@@ -1746,6 +1746,9 @@
+     <ClCompile Include="..\src\Views\MMReleaseCrossOrdersDlg.cpp">
+       <Filter>Views\Care</Filter>
+     </ClCompile>
++    <ClCompile Include="..\src\Common\robot.cpp">
++      <Filter>Common\Utils</Filter>
++    </ClCompile>
+   </ItemGroup>
+   <ItemGroup>
+     <None Include="MetaMarket.def">
+@@ -3202,6 +3205,9 @@
+     <ClInclude Include="..\src\Views\MMReleaseCrossOrdersDlg.h">
+       <Filter>Views\Care</Filter>
+     </ClInclude>
++    <ClInclude Include="..\src\Common\robot.h">
++      <Filter>Common\Utils</Filter>
++    </ClInclude>
+   </ItemGroup>
+   <ItemGroup>
+     <Image Include="res\mm_ribbon_category_large.png">
