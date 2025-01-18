@@ -1,3 +1,12 @@
+import utl_win as uw
+
+#
+# ROBOT_CMD_GET_PROP result: [x_off=22    y_top=0 y_bot=19        y_mid=9 col_from=2      col_to=4]
+
+
+#############################################################
+# GridMng AI
+#############################################################
 class GridMng:
     EMPTY = ''
     
@@ -6,7 +15,7 @@ class GridMng:
             "headers": [],
             "rows": []
         }
-        self.points = {}  # header coordinates
+        self.col_xs = {}  # column x positions
         self.props = {}   # grid properties
         self.nl = nl      
         self.row_num = 0
@@ -22,44 +31,34 @@ class GridMng:
         """Get property value by name"""
         return self.props.get(name)
     
-    def get_point(self, header: str) -> tuple:
-        """Get coordinates (x,y) for header"""
-        return self.points.get(header)
-    
-    def get_props(self) -> dict:
-        """Get all properties"""
-        return self.props.copy()
-    
-    def get_points(self) -> dict:
-        """Get all header coordinates"""
-        return self.points.copy()
+    def get_col_point(self, header: str) -> int:
+        """Get x coordinate for column"""
+        return (self.col_xs.get(header), self.get_prop('y_mid') )
     
     def set_headers(self, hdr_str: str) -> None:
+        """Set headers from 'name,x\tname2,x2' string. X coordinate is optional"""
         hdrs = ['nRow']
-        self.points = {'nRow': None}
+        self.col_xs = {'nRow': None}
         
         for hdr_item in hdr_str.split('\t'):
-            name, point = self._parse_header_coords(hdr_item)
+            name, x = self._parse_header_x(hdr_item)
             hdrs.append(name)
-            self.points[name] = point
+            self.col_xs[name] = x
             
         self.data["headers"] = hdrs
     
-    def _parse_header_coords(self, hdr_str: str) -> tuple:
-        import re
+    def _parse_header_x(self, hdr_str: str) -> tuple:
+        """Parse 'name,x' string. Returns (name, x) where x can be None"""
+        parts = hdr_str.strip().split(',', 1)
+        name = parts[0].strip()
         
-        hdr_str = hdr_str.strip()
-        match = re.match(r'^(.*?)\s*,\s*(\d+)\s*,\s*(\d+)\)$', hdr_str)
-        
-        if match:
-            name = match.group(1).strip()
+        if len(parts) > 1:
             try:
-                x = int(match.group(2))
-                y = int(match.group(3))
-                return name, (x, y)
+                x = int(parts[1].strip())
+                return name, x
             except ValueError:
-                return hdr_str, None
-        return hdr_str, None
+                return name, None
+        return name, None
     
     def add_row(self, val_str: str) -> dict:
         vals = val_str.rstrip(self.nl).split('\t')
@@ -96,7 +95,8 @@ class GridMng:
         """Get grid data and properties as dict"""
         return {
             "data": self.data,
-            "props": self.props
+            "props": self.props,
+            "col_xs": self.col_xs
         }
 
 def create_grid(hdr_str: str, nl='\r\n') -> GridMng:
@@ -104,3 +104,13 @@ def create_grid(hdr_str: str, nl='\r\n') -> GridMng:
     grid = GridMng(nl=nl)
     grid.set_headers(hdr_str)
     return grid
+
+def create_by_win(win_grid) -> GridMng:
+    grid = GridMng()
+    res = uw.robot_send(win_grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")
+    #print(f'ROBOT_CMD_GET_HEADER result: [{res}]')                                 # <== Debug
+    jsgrid = create_grid(res) 
+    res = uw.robot_send(win_grid.handle, uw.ROBOT_CMD_GET_PROP, input_str="")   
+    #print(f'ROBOT_CMD_GET_PROP result: [{res}]')                                   # <== Debug
+    jsgrid.set_props(res)
+    return jsgrid

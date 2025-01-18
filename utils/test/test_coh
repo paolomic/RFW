@@ -257,7 +257,7 @@ def handle_NewCareOrder(env):
         
     ### Note
     start_time = ul.get_now_sec()
-    mytag = f'pwa_{start_time.replace(':','_')}' 
+    mytag = f'pwa_{start_time.replace(":","_")}' 
     edit = uw.get_child(dlgadv, automation_id='12954')  
     uw.edit_set(edit, mytag)
 
@@ -348,18 +348,19 @@ def run_session_simple_2():         # ===== Test Invoke Keyword =====
     grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
     print(f'page {page}, grid{grid}')
 
-    # Call Page Keyword
-    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
-    ##print(f'ROBOT_CMD_GET_HEADER result: [{response}]') 
-    jsgrid = ug.create_grid(response) 
+    # Esempio Get sheet info
+    grid_mng = ug.create_by_win(grid)
+    (x,y) = grid_mng.get_col_point('Service')
+    print (x,y)=
+    
     uw.grid_select_rows(grid, 6, mode="page")
     rows = uw.win_copy_to_clip(wait_init=1)
-    res = ug.add_grid_rows(jsgrid, rows)
+    res = ug.add_grid_rows(grid_mng, rows)
     # Use Data
-    print (f'Collected Orders: {jsgrid.get_row_count()}')
-    order = jsgrid.search_first_match({"Order ID": "C10022501030000022054"})      # piu segmenti con , 
+    print (f'Collected Orders: {grid_mng.get_row_count()}')
+    order = grid_mng.search_first_match({"Order ID": "C10022501030000022054"})      # piu segmenti con , 
     print(f'Trovata row {order}')
-    print (f'Il Prezzo dell Ordine e` {order['Price']}, Minder State: {order['Minder State']}'   )
+    print (f'Il Prezzo dell Ordine e` {order["Price"]}, Minder State: {order["Minder State"]}'   )
 
 def run_session_simple_3():        # ===== Test Grid Analisi =====
     env = hang_app(mode='hang_or_lunch')
@@ -379,7 +380,7 @@ def run_session_simple_3():        # ===== Test Grid Analisi =====
 
 
 # TEST TEST TEST TEST TEST TEST TEST TEST
-coice = 3
+coice = 2
 if (coice==1):
     run_session()
 if (coice==2):
