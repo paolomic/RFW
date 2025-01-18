@@ -1,8 +1,9 @@
 
+import keyboard
 import keyboard.mouse
 from pywinauto import mouse
 from pywinauto import Application
-import keyboard
+
 import time
 import pywinauto
 
@@ -19,11 +20,8 @@ import utl_grid as ug
 
 ############################################
 #region - TODO
-#    - MOVE KWORD   Spostare Handling KW nella base class
-#    - NEW KWOD     get_cell_pos get_col_pos, get_cell_value
+#    - Identificazione univoca Grid (set name o automation)
 #    - PEEK ORDER   Sistemare utl_grid. move funzioni click + nRow, pulizia
-#    - MEM EXCEPT   click su headerrow Orders 
-#    - CELL CLICK   Clic su cella - keyword - coordinate cella/colonna (?)
 #    - MOVEWIN      sistemare move_win
 #    - VERS CHECK   Aggiungere Addin Versione e Check Load
 #    - AUTOM_ID     handle_NewCareOrder non corrispondono nomi why?
@@ -96,10 +94,10 @@ def get_env(app):
     print (env)
     return env
 
-def hang_app(mode='hang_or_lunch'):         # mode= hang / lunch / hang_or_lunch
+def hang_app(mode='hang_or_launch '):         # mode= hang / launch  / hang_or_launch 
     hang_ok = 0
     
-    if (mode=='hang' or mode=='hang_or_lunch'):
+    if (mode=='hang' or mode=='hang_or_launch '):
         try:
             app = Application(backend="uia").connect(path=COH_EXE, title=COH_TITLE_PATT)
             wtop = app.top_window()
@@ -107,7 +105,7 @@ def hang_app(mode='hang_or_lunch'):         # mode= hang / lunch / hang_or_lunch
         except Exception:
             pass
 
-        if ((not hang_ok and mode=='hang_or_lunch') or mode=='lunch'):
+        if ((not hang_ok and mode=='hang_or_launch ') or mode=='launch '):
             try:
                 print('Avvio nuova istanza...')
                 app = Application(backend="uia").start(COH_PATH)
@@ -257,7 +255,7 @@ def handle_NewCareOrder(env):
         
     ### Note
     start_time = ul.get_now_sec()
-    mytag = f'pwa_{start_time.replace(':','_')}' 
+    mytag = f'pwa_{start_time.replace(":","_")}' 
     edit = uw.get_child(dlgadv, automation_id='12954')  
     uw.edit_set(edit, mytag)
 
@@ -303,14 +301,14 @@ env = {}
 
 def run_session():
     ############################################################################## Hang app
-    env = hang_app()
+    env = hang_app(mode='hang_or_launch ')
 
     ############################################################################## Starting Dialg
     is_create = handle_start_dialog(env[K_TOP])
     time.sleep(2.5)                       
 
     ############################################################################## New env nodes
-    env = hang_app()
+    env = hang_app(mode='hang_or_launch ')
 
     ############################################################################## Init Wsp - 
     #if is_create:
@@ -340,46 +338,48 @@ def run_session():
     done()
 
 
-################# Test RobotCall
+################# Test 
 
-def run_session_simple_2():         # ===== Test Invoke Keyword =====
-    env = hang_app(mode='hang_or_lunch')
+def run_session_simple_2():         # ===== Test Grid Operations =====
+    env = hang_app(mode='hang')
+    page = uw.get_child(env[K_TOP], name='Security Browser', ctrl_type='Pane', usere=0, deep=3)
+    grid = uw.get_child(page, name='StingrayGrid', usere=0, deep=8)
+    #print(f'page {page}, grid{grid}')
+
+    # Esempio Get sheet info
+    grid_mng = ug.create_by_win(grid)
+    (x,y) = grid_mng.get_col_point('Section')
+    print (x,y)
+
+    # semepio scroll
+    ug.scroll_home(grid_mng)
+
+    # semepio sort
+    ug.set_sort(grid_mng,'default')
+    ug.set_sort(grid_mng, [['Section','DESC'],['Security Ref.','ASC']])
+
+    #esempio LoaD
+    ug.import_rows(grid_mng, 5, mode='page')
+    
+    # esempio Data Search-Use
+    print (f'Collected Rows: {grid_mng.get_row_num()}')
+    sel = grid_mng.search_first_match({"Security Ref.": "MARR"})      # piu segmenti con , 
+    print(f'Find Row: {sel}')
+    print(f'Security Status {sel["Status"]}')
+
+
+
+def run_session_simple_3():        # ===== Test Order Grid =====
+    env = hang_app(mode='hang_or_launch ')
     page = uw.get_child(env[K_TOP], name='Orders', ctrl_type='Pane', usere=0, deep=3)
     grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
-    print(f'page {page}, grid{grid}')
-
-    # Call Page Keyword
-    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
-    ##print(f'ROBOT_CMD_GET_HEADER result: [{response}]') 
-    jsgrid = ug.create_grid(response) 
-    uw.grid_select_rows(grid, 6, mode="page")
-    rows = uw.win_copy_to_clip(wait_init=1)
-    res = ug.add_grid_rows(jsgrid, rows)
-    # Use Data
-    print (f'Collected Orders: {jsgrid.get_row_count()}')
-    order = jsgrid.search_first_match({"Order ID": "C10022501030000022054"})      # piu segmenti con , 
-    print(f'Trovata row {order}')
-    print (f'Il Prezzo dell Ordine e` {order['Price']}, Minder State: {order['Minder State']}'   )
-
-def run_session_simple_3():        # ===== Test Grid Analisi =====
-    env = hang_app(mode='hang_or_lunch')
-    page = uw.get_child(env[K_TOP], name='Orders', ctrl_type='Pane', usere=0, deep=3)
-    grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
-    print(f'page {page}, grid{grid}')
-
-    # Call Page Keyword
-    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")   
-    print(f'KWORD result: [{response}]') 
-    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_PROP, input_str="")   
-    
-    #response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_COL_POINT, input_str="23\t1")   
-    print(f'KWORD result: [{response}]') 
+    #print(f'page {page}, grid{grid}')
+    grid_mng = ug.create_by_win(grid)
     
     
-
 
 # TEST TEST TEST TEST TEST TEST TEST TEST
-coice = 3
+coice = 2
 if (coice==1):
     run_session()
 if (coice==2):

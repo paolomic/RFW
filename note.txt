@@ -1,0 +1,14 @@
+ciao sto scrivendo una app pywinauto per pilotare un app C++ MFC che contiene grid Stingray.
+Allora accedo all UIA3 con FlaUInspect.
+vedo che la windows (nodo) grid non ha nessun figlio ed e' abbastanza anonima.
+Come identification ho solo questi key:
+-AutomationId 59661
+-Name ""
+-ClassName AfxFrameOrView140d
+-ControlType Pane
+
+Come viene assegnato AutomationId?
+Sono sicuro che rimarra invariato se faccio modifiche alla mia app cpp?
+come lo posso impostare dalla app cpp o impostare un Name per il grid?
+
+Considera che ho i sorgenti stingray del grid

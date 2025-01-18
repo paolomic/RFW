@@ -118,7 +118,7 @@ def win_coord(window, where='c'):
     if where=='c':
         x = (rect.left + rect.right) // 2
         y = (rect.top + rect.bottom) // 2
-        return(x,y)   # absolute
+        return(x,y)   # absolute                                           # abs cord
 
 def win_click(window, mode="center", wait_end=0.25, arg=None):        
     rect = window.element_info.rectangle
@@ -150,7 +150,24 @@ def win_click(window, mode="center", wait_end=0.25, arg=None):
 
     window.click_input(coords=(click_x - rect.left, click_y - rect.top))    # usa coord relative
     time.sleep(wait_end)
-    return (click_x, click_y)                                               # abs cord
+    return (click_x, click_y)       
+
+def win_mouse_move(window, client_x, client_y, wait_end=0.25, arg=None): 
+    rect = window.element_info.rectangle
+    abs_x = rect.left+client_x
+    abs_y = rect.top+client_y
+    keyboard.mouse.move(abs_x,abs_y)
+
+def win_get_top(win):
+    go = 1
+    while (go):
+        p = win.parent()
+        if not p or win.element_info.control_type == "Window":
+            break
+        win = p
+    
+    return win
+
 
 ######################################################################################################
 # Grid
@@ -174,18 +191,28 @@ def grid_select_rows(grid, num, mode="row", home=True):
         time.sleep(0.05)
     keyboard.release('shift')
 
-def popup_click(popupmenu, name):
-    cmd = get_child(popupmenu, name=name, ctrl_type='MenuItem', deep=2)
+def popup_click(popupmenu, name, skip_disabled=False):
+    cmd = get_child(popupmenu, name=name, ctrl_type='MenuItem', deep=2, enable_only=False)
+    if (skip_disabled and not cmd.is_enabled()):
+        keyboard.press_and_release('esc')
+        return -1
     win_click(cmd)
     #cmd.click()
+    return 1
 
-def popup_reply(wtop, selects):
+def popup_reply(wtop, selects, wait_init=0.2, wait_end=0.2, skip_disabled=False):
+    time.sleep(wait_init)
     sel = selects.split('#')
     menuname = 'PopupMenu'          # level0
     for s in sel:
-        popupmenu  = get_child(wtop, name=menuname, ctrl_type='Menu')
-        popup_click(popupmenu, s)
+        popupmenu  = get_child(wtop, name=menuname, ctrl_type='Menu', enable_only=False)
+        if (skip_disabled and not popupmenu.is_enabled()):
+            keyboard.press_and_release('esc')
+            return -1
+        popup_click(popupmenu, s, skip_disabled=skip_disabled)
         menuname = s
+    time.sleep(wait_end)
+    return 1
 
 def butt_is_checked(butt):
     state = butt.legacy_properties()['State']
@@ -277,10 +304,14 @@ def match_value(pattern, value, usere=False, case_sens=True):
         return False
   
 def check_control(control, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
-                         usere=False, case_sens=True, visible_only=False):
+                         usere=False, case_sens=True, visible_only=False, enable_only=True):
     try:
-        if not control.is_enabled():
-          return False
+        if enable_only:
+            try:
+                if not control.is_enabled():
+                    return False
+            except Exception:
+                pass
         
         if visible_only:
             try:
@@ -344,7 +375,7 @@ def check_control(control, name=None, ctrl_type=None, class_name=None, automatio
 DEEP_ALL = -1
 
 def get_child(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
-                         deep=1, usere=False, case_sens=True, visible_only=False):
+                         deep=1, usere=False, case_sens=True, visible_only=False, enable_only=True):
     
     if not parent_wnd:
         return None
@@ -354,14 +385,14 @@ def get_child(parent_wnd, name=None, ctrl_type=None, class_name=None, automation
         
         for element in elements:
             if check_control(element, name, ctrl_type, class_name, automation_id, handle, texts,
-                              usere, case_sens, visible_only):
+                              usere, case_sens, visible_only, enable_only):
                 return element
             
         # voglio ricercare top-first, non deep-first
         if (deep!=DEEP_ALL and deep > 1):
             for element in elements:     
                 subres = get_child(element, name, ctrl_type, class_name, automation_id, handle, texts,
-                                     deep-1, usere, case_sens, visible_only)
+                                     deep-1, usere, case_sens, visible_only, enable_only)
                 if (subres):
                     return subres
     except Exception:
@@ -370,13 +401,13 @@ def get_child(parent_wnd, name=None, ctrl_type=None, class_name=None, automation
     return None
 
 def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
-                         deep=1, usere=False, case_sens=True, visible_only=False,
+                         deep=1, usere=False, case_sens=True, visible_only=False, enable_only=True,
                          attempt=5, wait_init=0.25,  delay=1, wait_end=0.25):
     time.sleep(wait_init)
     while attempt>0:
         #print (attempt)
         cld = get_child(parent_wnd, name, ctrl_type, class_name, automation_id, handle, texts,
-                         deep, usere, case_sens, visible_only)
+                         deep, usere, case_sens, visible_only, enable_only)
         if (cld):
             time.sleep(wait_end) 
             return cld
