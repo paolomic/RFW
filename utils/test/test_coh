@@ -222,49 +222,40 @@ def handle_order(order_id):
     print(f'ROBOT_CMD_GET_HEADER result: [{response}]')
 
 ######################################################
-### Complete Session
+### New Session - Insert Care
 
 def run_session():
-    ############################################################################## Hang app
     env.hang_app(COH_PATH, COH_TITLE_PATT, mode='hang_or_launch')
 
-    ############################################################################## Starting Dialg
     is_create = handle_start_dialog(env.wtop)
     time.sleep(2.5)                       
 
-    ############################################################################## New env nodes
-    env.hang_app(COH_PATH, COH_TITLE_PATT, mode='hang')
+    env.hang_app(COH_PATH, COH_TITLE_PATT, mode='hang')                         # need reload UIA
 
-    ############################################################################## Init Wsp - 
     #if is_create:
-    #    #workspace_init(env.wtop)        
+    #    #workspace_init(env.wtop)                                              # todo inir wsp is it is new
     #    pass
 
-    ############################################################################## init settings
-    handle_setting_init(env.wtop)
+    handle_setting_init(env.wtop)                                               # works on Settings page
     
-    ############################################################################## Connection - Opening-check
-    start_connections(['MetaMarket'])
+    start_connections(['MetaMarket'])                                           # Starts Connections
 
-    ############################################################################## Wait for Connection Ready
-    if uw.statusbar_wait(env.st_bar, 'Ready', attempt=15, delay=2):
+    if uw.statusbar_wait(env.st_bar, 'Ready', attempt=15, delay=2):             # Wait for Connection Ready
         print ('Connection Ready')
     else:
         raise Exception("Connection Fail")
 
-    ############################################################################## Peek Security and Open New Care Order
-    click_ribbon_butt('Trading', 'Security Browser')
+    click_ribbon_butt('Trading', 'Security Browser')                            # Works on Security Browser
     handle_SecurityBrowser(env.wtop)
 
-    ############################################################################## Fill Order
-    res = handle_NewCareOrder(env)
+    res = handle_NewCareOrder(env)                                              # Insert Care Order
     handle_order(res['fields']['OrderID'])
 
     uw.end_ession()
 
 
 ######################################################
-### Grid Operations
+### Grid Operations Sample
 
 def run_session_2():
     env.hang_app(COH_PATH, COH_TITLE_PATT, mode='hang')
@@ -294,6 +285,7 @@ def run_session_2():
     print(f'Security Status {sel["Status"]}')
 
     uw.end_ession()
+
 
 ######################################################
 ### Test
