@@ -5,8 +5,8 @@ import time
 # Import Path - Assudo
 import sys
 from pathlib import Path
-_path_import = str(Path(__file__).parent.parent)
-sys.path.append(_path_import) 
+_new_path = str(Path(__file__).parent.parent)
+sys.path.append(_new_path) 
 
 from utl_app import env
 import utl_win as uw
@@ -225,15 +225,15 @@ def handle_order(order_id):
 ### New Session - Insert Care
 
 def run_session():
-    env.hang_app(COH_PATH, COH_TITLE_PATT, mode='hang_or_launch')
+    env.init(COH_PATH, COH_TITLE_PATT)
+    env.hang_app(mode='hang_or_launch')
 
     is_create = handle_start_dialog(env.wtop)
-    time.sleep(2.5)                       
-
-    env.hang_app(COH_PATH, COH_TITLE_PATT, mode='hang')                         # need reload UIA
+    time.sleep(2.5)                                                             # todo : Active Wait                     
+    env.reload()                                                                # need reload UIA
 
     #if is_create:
-    #    #workspace_init(env.wtop)                                              # todo inir wsp is it is new
+    #    #workspace_init(env.wtop)                                              # todo : inir wsp is it is new
     #    pass
 
     handle_setting_init(env.wtop)                                               # works on Settings page
@@ -251,14 +251,15 @@ def run_session():
     res = handle_NewCareOrder(env)                                              # Insert Care Order
     handle_order(res['fields']['OrderID'])
 
-    uw.end_ession()
+    uw.end_session()
 
 
 ######################################################
 ### Grid Operations Sample
 
 def run_session_2():
-    env.hang_app(COH_PATH, COH_TITLE_PATT, mode='hang')
+    env.init(COH_PATH, COH_TITLE_PATT)
+    env.hang_app(mode='hang')
     page = uw.get_child(env.wtop, name='Security Browser', ctrl_type='Pane', usere=0, deep=3)
     grid = uw.get_child(page, name='StingrayGrid', usere=0, deep=8)
     #print(f'page {page}, grid{grid}')
@@ -284,20 +285,21 @@ def run_session_2():
     print(f'Find Row: {sel}')
     print(f'Security Status {sel["Status"]}')
 
-    uw.end_ession()
+    uw.end_session()
 
 
 ######################################################
 ### Test
 
 def run_session_3(): 
-    env = hang_app(COH_PATH, COH_TITLE_PATT, mode='hang_or_launch ')
+    env.init(COH_PATH, COH_TITLE_PATT)
+    env.hang_app(mode='hang_or_launch ')
     page = uw.get_child(env.wtop, name='Orders', ctrl_type='Pane', usere=0, deep=3)
-    grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
+    grid = uw.get_child(page, name='StingrayGrid', usere=0, deep=8)
     #print(f'page {page}, grid{grid}')
     grid_mng = ug.create_by_win(grid)
 
-    uw.end_ession()
+    uw.end_session()
     
     
 ######################################################

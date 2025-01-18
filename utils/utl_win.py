@@ -92,7 +92,7 @@ def wait_cursor_normal(wait_init=0.1, wait_in=0.5, wait_end=0.1, timeout=15):
 
     time.sleep(wait_end)
 
-def end_ession():
+def end_session():
     print ('## Session End ##')
     exit()
 
