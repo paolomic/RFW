@@ -1,22 +1,18 @@
-
 import keyboard
-import keyboard.mouse
-from pywinauto import mouse
-from pywinauto import Application
-
+import keyboard.mouse as mouse
 import time
-import pywinauto
 
-
-# import da altri path - MAMMAMIA :(
+# Import Path - Assudo
 import sys
 from pathlib import Path
 _path_import = str(Path(__file__).parent.parent)
 sys.path.append(_path_import) 
 
+from utl_app import env
 import utl_win as uw
 import utl_log as ul
 import utl_grid as ug
+
 
 ############################################
 #region - TODO
@@ -34,8 +30,9 @@ import utl_grid as ug
 #endregion
 
 ############################################
-#region - PARAMETER
-COH_EXE =           'Coherence.exe'
+##  Parameter
+#region 
+
 COH_PATH =          r'C:\work\disks\D\COH_x64\bin\Coherence.exe'
 COH_TITLE_PATT=     "Starting Coherence"
 COH_ADDIN=           ['MetaMarket','UserPages']
@@ -57,75 +54,6 @@ COH_CLIENTACC =     'TEST'
 ##
 #endregion
 
-############################################
-#region - Env Key
-K_APP =           'app'
-K_TOP =           'wtop'
-K_RTAB=           "ribbon_tab"
-K_RGRP=           "ribbon_group"
-K_SBAR=           "statusbar"
-#endregion
-
-############################################
-#region - Common
-
-#endregion
-
-
-def get_env(app):
-    env={}
-    env[K_APP] = app
-    try:
-        env[K_TOP] = app.top_window()
-    except:
-        pass
-    try:
-        env[K_RTAB] = uw.get_child(env[K_TOP], name='Ribbon Tabs', ctrl_type='Group', deep=3)
-    except:
-        pass
-    try:
-        env[K_RGRP] = uw.get_child(env[K_TOP], automation_id='59398', ctrl_type='ToolBar', deep=3)
-    except:
-        pass
-    try:
-        env[K_SBAR] = uw.get_child(env[K_TOP], name='StatusBar', ctrl_type='StatusBar')
-    except:
-        pass
-    print (env)
-    return env
-
-def hang_app(mode='hang_or_launch '):         # mode= hang / launch  / hang_or_launch 
-    hang_ok = 0
-    
-    if (mode=='hang' or mode=='hang_or_launch '):
-        try:
-            app = Application(backend="uia").connect(path=COH_EXE, title=COH_TITLE_PATT)
-            wtop = app.top_window()
-            hang_ok = 1
-        except Exception:
-            pass
-
-        if ((not hang_ok and mode=='hang_or_launch ') or mode=='launch '):
-            try:
-                print('Avvio nuova istanza...')
-                app = Application(backend="uia").start(COH_PATH)
-                time.sleep(1)  # Attende che l'app si avvii completamente
-                wtop = app.top_window()
-            except Exception as e:
-                print(f"Start Error: {str(e)}")
-                raise
-        
-        if not wtop:
-            raise Exception("Open Error")
-        
-        print(f'app {app}')
-        print(f'wtop {wtop}')
-        return get_env(app)
-    
-    
-def done():
-    print ('## Test Done ##')
-    exit()
 
 def handle_start_dialog(wtop):
     edit = uw.get_child(wtop, automation_id='12429', ctrl_type='Edit', deep=3)
@@ -172,32 +100,32 @@ def handle_setting_init(wtop):
     keyboard.press("enter")
     time.sleep(.25)
 
-def start_connections(env, addins):
+def start_connections(addins):
     for addin in addins:
-        butt = select_ribbon_butt(env, addin, 'Auto Connect')
+        butt = select_ribbon_butt(addin, 'Auto Connect')
         if not uw.butt_is_checked(butt):
             uw.win_click(butt)
 
-    butt = select_ribbon_butt(env, 'Home', 'Auto Connect')
+    butt = select_ribbon_butt('Home', 'Auto Connect')
     if not uw.butt_is_checked(butt):
         uw.win_click(butt)
 
-def select_ribbon(env, ribb):
-    rib_sel = uw.get_child(env[K_RTAB], name=ribb, ctrl_type='TabItem')
+def select_ribbon(ribb):
+    rib_sel = uw.get_child(env.rib_tab, name=ribb, ctrl_type='TabItem')
     uw.win_click(rib_sel)
-    toolbar = uw.get_child(env[K_RGRP], name=ribb, ctrl_type='ToolBar')
+    toolbar = uw.get_child(env.rib_grp, name=ribb, ctrl_type='ToolBar')
     print(f'toolbar {toolbar}')
     return toolbar
 
-def select_ribbon_butt(env, ribb, butt):
-    toolbar = select_ribbon(env, ribb)
+def select_ribbon_butt(ribb, butt):
+    toolbar = select_ribbon(ribb)
     print(f'toolbar {toolbar}')
     bt = uw.get_child(toolbar, name=butt, ctrl_type='Button', deep=2)
     print(f'bt {bt}')
     return bt
 
-def click_ribbon_butt(env, ribb, butt):
-    bt = select_ribbon_butt(env, ribb, butt)
+def click_ribbon_butt(ribb, butt):
+    bt = select_ribbon_butt(ribb, butt)
     uw.win_click(bt)
     return bt
 
@@ -226,7 +154,7 @@ def handle_SecurityBrowser(wtop):
     grid = status_num = uw.get_child(page, automation_id='59661', ctrl_type='Pane', deep=10, usere=True)
     # hide
     uw.win_click(grid, mode='grid_row1')
-    keyboard.mouse.click('right')
+    mouse.click('right')
     time.sleep(0.25)
 
     # Il popup viene generato sotto level top - anche il sotto menu
@@ -234,7 +162,7 @@ def handle_SecurityBrowser(wtop):
     uw.popup_reply(wtop, 'New#Care Order')
 
 def handle_NewCareOrder(env):
-    dlg = uw.get_child(env[K_TOP], name="New Care Order.*", ctrl_type="Pane", usere=1)
+    dlg = uw.get_child(env.wtop, name="New Care Order.*", ctrl_type="Pane", usere=1)
     adv = uw.get_child(dlg, automation_id='13652', ctrl_type="CheckBox", usere=1)
     if not uw.butt_is_checked(adv):
         uw.win_click(adv)
@@ -277,10 +205,10 @@ def handle_NewCareOrder(env):
     
     return res
 
-def handle_order(env, order_id):
-    click_ribbon_butt(env, 'Trading', 'Orders')
+def handle_order(order_id):
+    click_ribbon_butt('Trading', 'Orders')
     time.sleep(.5)
-    page = uw.get_child(env[K_TOP], name='Orders.*', ctrl_type='Pane', usere=1, deep=2)
+    page = uw.get_child(env.wtop, name='Orders.*', ctrl_type='Pane', usere=1, deep=2)
     
     edit = uw.get_child(page, name='Order ID', ctrl_type='Edit', deep=5)  
     uw.edit_set(edit, order_id)
@@ -293,56 +221,54 @@ def handle_order(env, order_id):
     response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
     print(f'ROBOT_CMD_GET_HEADER result: [{response}]')
 
-############################################################################################################################################################
-### Main Run
-############################################################################################################################################################
-
-env = {}
+######################################################
+### Complete Session
 
 def run_session():
     ############################################################################## Hang app
-    env = hang_app(mode='hang_or_launch ')
+    env.hang_app(COH_PATH, COH_TITLE_PATT, mode='hang_or_launch')
 
     ############################################################################## Starting Dialg
-    is_create = handle_start_dialog(env[K_TOP])
+    is_create = handle_start_dialog(env.wtop)
     time.sleep(2.5)                       
 
     ############################################################################## New env nodes
-    env = hang_app(mode='hang_or_launch ')
+    env.hang_app(COH_PATH, COH_TITLE_PATT, mode='hang')
 
     ############################################################################## Init Wsp - 
     #if is_create:
-    #    #workspace_init(env[K_TOP])        
+    #    #workspace_init(env.wtop)        
     #    pass
 
     ############################################################################## init settings
-    handle_setting_init(env[K_TOP])
+    handle_setting_init(env.wtop)
     
     ############################################################################## Connection - Opening-check
-    start_connections(env, ['MetaMarket'])
+    start_connections(['MetaMarket'])
 
     ############################################################################## Wait for Connection Ready
-    if uw.statusbar_wait(env[K_SBAR], 'Ready', attempt=15, delay=2):
+    if uw.statusbar_wait(env.st_bar, 'Ready', attempt=15, delay=2):
         print ('Connection Ready')
     else:
         raise Exception("Connection Fail")
 
     ############################################################################## Peek Security and Open New Care Order
-    click_ribbon_butt(env, 'Trading', 'Security Browser')
-    handle_SecurityBrowser(env[K_TOP])
+    click_ribbon_butt('Trading', 'Security Browser')
+    handle_SecurityBrowser(env.wtop)
 
     ############################################################################## Fill Order
     res = handle_NewCareOrder(env)
-    handle_order(env, res['fields']['OrderID'])
+    handle_order(res['fields']['OrderID'])
 
-    done()
+    uw.end_ession()
 
 
-################# Test 
+######################################################
+### Grid Operations
 
-def run_session_simple_2():         # ===== Test Grid Operations =====
-    env = hang_app(mode='hang')
-    page = uw.get_child(env[K_TOP], name='Security Browser', ctrl_type='Pane', usere=0, deep=3)
+def run_session_2():
+    env.hang_app(COH_PATH, COH_TITLE_PATT, mode='hang')
+    page = uw.get_child(env.wtop, name='Security Browser', ctrl_type='Pane', usere=0, deep=3)
     grid = uw.get_child(page, name='StingrayGrid', usere=0, deep=8)
     #print(f'page {page}, grid{grid}')
 
@@ -363,28 +289,35 @@ def run_session_simple_2():         # ===== Test Grid Operations =====
     
     # esempio Data Search-Use
     print (f'Collected Rows: {grid_mng.get_row_num()}')
-    sel = grid_mng.search_first_match({"Security Ref.": "MARR"})      # piu segmenti con , 
+    sel = grid_mng.search_first_match({"Security Ref.": "AV"})      # piu segmenti con , 
     print(f'Find Row: {sel}')
     print(f'Security Status {sel["Status"]}')
 
+    uw.end_ession()
 
+######################################################
+### Test
 
-def run_session_simple_3():        # ===== Test Order Grid =====
-    env = hang_app(mode='hang_or_launch ')
-    page = uw.get_child(env[K_TOP], name='Orders', ctrl_type='Pane', usere=0, deep=3)
+def run_session_3(): 
+    env = hang_app(COH_PATH, COH_TITLE_PATT, mode='hang_or_launch ')
+    page = uw.get_child(env.wtop, name='Orders', ctrl_type='Pane', usere=0, deep=3)
     grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
     #print(f'page {page}, grid{grid}')
     grid_mng = ug.create_by_win(grid)
-    
-    
 
-# TEST TEST TEST TEST TEST TEST TEST TEST
-coice = 2
-if (coice==1):
+    uw.end_ession()
+    
+    
+######################################################
+### Main
+
+select = 1
+
+if (select==1):
     run_session()
-if (coice==2):
-    run_session_simple_2()
-if (coice==3):
-    run_session_simple_3()
+if (select==2):
+    run_session_2()
+if (select==3):
+    run_session_3()
 
 

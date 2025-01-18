@@ -1,7 +1,8 @@
-from pywinauto.application import Application
-from pywinauto import Desktop
-from pywinauto import mouse
 import keyboard
+import keyboard.mouse as mouse
+
+from pywinauto import Desktop
+
 from datetime import datetime
 import time
 import re
@@ -91,6 +92,10 @@ def wait_cursor_normal(wait_init=0.1, wait_in=0.5, wait_end=0.1, timeout=15):
 
     time.sleep(wait_end)
 
+def end_ession():
+    print ('## Session End ##')
+    exit()
+
 ######################################################################################################
 # WIN
 ######################################################################################################
@@ -156,7 +161,7 @@ def win_mouse_move(window, client_x, client_y, wait_end=0.25, arg=None):
     rect = window.element_info.rectangle
     abs_x = rect.left+client_x
     abs_y = rect.top+client_y
-    keyboard.mouse.move(abs_x,abs_y)
+    mouse.move(abs_x,abs_y)
 
 def win_get_top(win):
     go = 1
