@@ -1,5 +1,5 @@
 import keyboard
-import keyboard.mouse as mouse
+import mouse
 
 from pywinauto import Desktop
 

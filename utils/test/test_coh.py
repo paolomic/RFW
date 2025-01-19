@@ -1,5 +1,5 @@
 import keyboard
-import keyboard.mouse as mouse
+import mouse
 import time
 
 # Import Path - Assudo
@@ -243,8 +243,7 @@ def run_session():
     res = handle_NewCareOrder(env)                                              # Insert Care Order
     handle_order(res['fields']['OrderID'])
 
-    uw.end_session()
-
+    return "ok"
 
 ######################################################
 ### Grid Operations Sample
@@ -277,7 +276,7 @@ def run_session_2():
     print(f'Find Row: {sel}')
     print(f'Security Status {sel["Status"]}')
 
-    uw.end_session()
+    return "ok"
 
 
 ######################################################
@@ -290,20 +289,30 @@ def run_session_3():
     grid = uw.get_child(page, name='StingrayGrid', deep=8)
     #print(f'page {page}, grid{grid}')
     grid_mng = ug.create_by_win(grid)
-
-    uw.end_session()
+    return "ok"
     
+
+######################################################
+### Robot Interface
+
+def robot_test(argument):
+    res = 'ok'
+    print (f'Robot Test Start: [{argument}]' )
+    try:
+        res = run_session()
+    except Exception as e:
+        res = f'Err: {str(e)}'
+    return res
     
 ######################################################
 ### Main
 
-select = 2
+if __name__ == '__main__':
+    select = 2
 
-if (select==1):
-    run_session()
-if (select==2):
-    run_session_2()
-if (select==3):
-    run_session_3()
-
-
+    if (select==1):
+        run_session()
+    if (select==2):
+        run_session_2()
+    if (select==3):
+        run_session_3()

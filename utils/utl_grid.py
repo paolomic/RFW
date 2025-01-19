@@ -1,5 +1,5 @@
 import keyboard
-import keyboard.mouse as mouse
+import mouse
 import time
 
 
@@ -9,7 +9,7 @@ import utl_robot as ur
 #############################################################
 # Util  GridMng - My
 #############################################################
-#region
+#regionpip
 
 # ROBOT_CMD_GET_PROP result: [x_off=22    y_top=0 y_bot=19        y_mid=9 col_from=2      col_to=4]
 
@@ -44,7 +44,7 @@ def set_sort(grid_mng, key):
     def set_sort_default():
         (x,y) = grid_mng.get_header_point()
         uw.win_mouse_move(grid, x,y)
-        keyboard.mouse.click('right')
+        mouse.click('right')
         uw.popup_reply(wtop, 'Sort Default', skip_disabled=1)        # se gia def is disabled
 
     if (key=='default'):
