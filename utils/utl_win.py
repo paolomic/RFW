@@ -11,12 +11,12 @@ import win32clipboard
 from win32gui import FindWindow, PostMessage, GetCursorInfo
 import win32.lib.win32con as win32con
 
-
 WIN_BUTT_STATE_CHECKED          = (1<<4)
 
-######################################################################################################
-# COMMON
-######################################################################################################
+##########################################################
+# Generic
+##########################################################
+#region
 def is_array(a):
     if isinstance(a, (list, tuple)):
         return True
@@ -92,11 +92,12 @@ def wait_cursor_normal(wait_init=0.1, wait_in=0.5, wait_end=0.2, timeout=15):
 def end_session():
     print ('## Session End ##')
     exit()
+#endregion
 
-######################################################################################################
-# WINDOW
-######################################################################################################
-
+##########################################################
+# Windows
+##########################################################
+#region
 def win_close(handle: int):
     PostMessage(handle, win32con.WM_CLOSE, 0, 0)
 
@@ -170,10 +171,12 @@ def win_get_top(win):
     
     return win
 
-######################################################################################################
-# PopUp
-######################################################################################################
+#endregion
 
+##########################################################
+# PopUp - Warning
+##########################################################
+#region
 def popup_click(popupmenu, name, skip_disabled=False):
     cmd = get_child(popupmenu, name=name, ctrl_type='MenuItem', deep=2, enable_only=False)
     if (skip_disabled and not cmd.is_enabled()):
@@ -206,10 +209,13 @@ def warning_replay(wtop, mess, butt):
         win_click(butt)
         return True
     return False
-######################################################################################################
-# Grid
-######################################################################################################
 
+#endregion
+
+##########################################################
+# Grid
+##########################################################
+#region
 def grid_select_all(grid):
     win_click(grid, mode='grid_col1')
     win_click(grid, mode='grid_tl')
@@ -236,9 +242,12 @@ def win_copy_to_clip(wait_init = .5):
     win32clipboard.CloseClipboard()
     return new_data
 
-######################################################################################################
+#endregion
+
+##########################################################
 # find_window
-######################################################################################################
+##########################################################
+#region
 def find_window(name=None, class_name=None, handle=None, process_id=None, exact_match=False):
     """
     Trova una finestra di primo livello basata sui criteri specificati.
@@ -297,11 +306,12 @@ def find_window(name=None, class_name=None, handle=None, process_id=None, exact_
     except Exception as e:
         print(f"Error in find_window: {str(e)}")
         return None
+#endregion
 
-
-######################################################################################################
+##########################################################
 # get_child
-######################################################################################################
+##########################################################
+#region
 def match_value(pattern, value, use_re=False, use_case=True):
     try:          
         if (not use_case):
@@ -440,10 +450,12 @@ def win_reload_bytype(item):
     return get_child(item.parent(), ctrl_type=ctrltype)
 
 
-######################################################################################################
-#region List - Chrome
-######################################################################################################
+#endregion
 
+##########################################################
+#List - Chrome
+##########################################################
+#region
 def list_select(list_control, value, use_re=False):
     list_item = get_child(list_control, name=value, use_re=use_re)
     
@@ -463,10 +475,10 @@ def list_select_texts(list_control, text_values, use_re=False):
 
 #endregion
 
-######################################################################################################
-#region List - Windows 
-######################################################################################################
-
+##########################################################
+# List - Windows 
+##########################################################
+#region
 def list_check(list_control, Names="*", value:bool=True, wait_end=0.25):
     items = list_control.children()
     

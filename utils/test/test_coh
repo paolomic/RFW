@@ -30,7 +30,7 @@ import utl_dump as ud
 #endregion
 
 ############################################
-##  Parameter
+##  Session Parameter
 #region 
 
 COH_PATH =          r'C:\work\disks\D\COH_x64\bin\Coherence.exe'
@@ -54,6 +54,9 @@ COH_CLIENTACC =     'TEST'
 ##
 #endregion
 
+############################################
+##  Page Handler
+#region 
 
 def handle_start_dialog(wtop):
     edit = uw.get_child(wtop, automation_id='12429', ctrl_type='Edit', deep=3)
@@ -208,7 +211,7 @@ def handle_order(order_id):
     butt = uw.get_child(page, name='Apply', ctrl_type='Button', deep=5)  
     uw.win_click(butt)
 
-  
+  #endregion
 
 ######################################################
 ### New Session - Insert Care
