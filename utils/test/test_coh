@@ -12,12 +12,12 @@ from utl_app import env
 import utl_win as uw
 import utl_log as ul
 import utl_grid as ug
+import utl_dump as ud
 
 
 ############################################
 #region - TODO
-#    - Identificazione univoca Grid (set name o automation)
-#    - PEEK ORDER   Sistemare utl_grid. move funzioni click + nRow, pulizia
+#    - Identificazione univoca Grid (set name o automation) - e altri controlli
 #    - MOVEWIN      sistemare move_win
 #    - VERS CHECK   Aggiungere Addin Versione e Check Load
 #    - AUTOM_ID     handle_NewCareOrder non corrispondono nomi why?
@@ -26,7 +26,7 @@ import utl_grid as ug
 #    - CLOSE SESS   Fare close_session - controlla warning
 #    - WAIT WIN     dopo handle_start_dialog attesa retry
 #    - NEW WSP      settare il new wsp - is_create
-#    - NODE RELOAD  fare reload_node affidabile (serve?)
+#    - NODE RELOAD  fare reload_node affidabile (???)
 #endregion
 
 ############################################
@@ -57,18 +57,13 @@ COH_CLIENTACC =     'TEST'
 
 def handle_start_dialog(wtop):
     edit = uw.get_child(wtop, automation_id='12429', ctrl_type='Edit', deep=3)
-    print(f'edit {edit}')
     uw.edit_set(edit, COH_WSP)
-    time.sleep(0.25)
 
     list = uw.get_child(wtop, name='Import From', ctrl_type='List', deep=3)
-    print(f'list {list}')
-
     uw.list_check(list, '*', False)
     uw.list_check(list, COH_ADDIN, True)
 
     butt = uw.get_child(wtop, automation_id='1', ctrl_type='Button', deep=3)
-    print(f'butt {butt}')
     is_create = butt.window_text()=='Create'
     uw.win_click(butt, wait_end=0.5)
 
@@ -92,7 +87,7 @@ def handle_setting_init(wtop):
     uw.win_click(trace, mode='combo')
 
     #time.sleep(.25)
-    #uw.dump_uia_tree(wtop)         # non c'e' lista popup
+    #ud.dump_uia_tree(wtop)         # non c'e' lista popup
 
     uw.hide_select(-1)      # detail
     keyboard.press("enter")
@@ -131,7 +126,7 @@ def click_ribbon_butt(ribb, butt):
 
 def handle_SecurityBrowser(wtop):
      # la pg viene generata sotto main-node coherence
-    page = uw.get_child(wtop, name='Security Browser.*', ctrl_type='Pane', usere=1)
+    page = uw.get_child(wtop, name='Security Browser.*', ctrl_type='Pane', use_re=1)
     print(f'page {page}')
     #uw.win_resize(page, 600,400)
 
@@ -147,23 +142,21 @@ def handle_SecurityBrowser(wtop):
     butt = uw.get_child(page, name='Search', ctrl_type='Button', deep=10)
     uw.win_click(butt)
 
-    status_num = uw.get_child(page, name='No. of Rows: .*', ctrl_type='Text', deep=10, usere=True)
+    status_num = uw.get_child(page, name='No. of Rows: .*', ctrl_type='Text', deep=10, use_re=True)
     print(f'status_num {status_num}')
     assert status_num.window_text()=='No. of Rows: 1'       # UNIQUE 
 
-    grid = status_num = uw.get_child(page, automation_id='59661', ctrl_type='Pane', deep=10, usere=True)
+    grid = status_num = uw.get_child(page, automation_id='59661', ctrl_type='Pane', deep=10, use_re=True)
     # hide
     uw.win_click(grid, mode='grid_row1')
     mouse.click('right')
     time.sleep(0.25)
 
-    # Il popup viene generato sotto level top - anche il sotto menu
-
-    uw.popup_reply(wtop, 'New#Care Order')
+    uw.popup_reply(wtop, 'New#Care Order')          # Il popup viene generato sotto level top - anche il sotto menu
 
 def handle_NewCareOrder(env):
-    dlg = uw.get_child(env.wtop, name="New Care Order.*", ctrl_type="Pane", usere=1)
-    adv = uw.get_child(dlg, automation_id='13652', ctrl_type="CheckBox", usere=1)
+    dlg = uw.get_child(env.wtop, name="New Care Order.*", ctrl_type="Pane", use_re=1)
+    adv = uw.get_child(dlg, automation_id='13652', ctrl_type="CheckBox", use_re=1)
     if not uw.butt_is_checked(adv):
         uw.win_click(adv)
     dlgadv = uw.get_child(dlg, name="Order Advanced Parameters", ctrl_type="Pane")
@@ -198,7 +191,6 @@ def handle_NewCareOrder(env):
 
     log_path = uw.get_log_path(COH_WSP, 'MetaMarket')
     res = ul.GetLogRows(log_path, 'CLIENT_ORDER', 'ComplianceText', mytag, start_time, retry = 4, wait_s = 1)
-    print (res)
 
     if (not res):
         raise Exception("Order not Found")
@@ -208,7 +200,7 @@ def handle_NewCareOrder(env):
 def handle_order(order_id):
     click_ribbon_butt('Trading', 'Orders')
     time.sleep(.5)
-    page = uw.get_child(env.wtop, name='Orders.*', ctrl_type='Pane', usere=1, deep=2)
+    page = uw.get_child(env.wtop, name='Orders.*', ctrl_type='Pane', use_re=1, deep=2)
     
     edit = uw.get_child(page, name='Order ID', ctrl_type='Edit', deep=5)  
     uw.edit_set(edit, order_id)
@@ -216,10 +208,7 @@ def handle_order(order_id):
     butt = uw.get_child(page, name='Apply', ctrl_type='Button', deep=5)  
     uw.win_click(butt)
 
-    # Keywords: ROBOT_CMD_GET_HEADER
-    grid = uw.get_child(page, automation_id='59648', usere=1, deep=5)
-    response = uw.robot_send(grid.handle, uw.ROBOT_CMD_GET_HEADER, input_str="")    # input_str = 'arg1|arg2|...'
-    print(f'ROBOT_CMD_GET_HEADER result: [{response}]')
+  
 
 ######################################################
 ### New Session - Insert Care
@@ -260,8 +249,8 @@ def run_session():
 def run_session_2():
     env.init(COH_PATH, COH_TITLE_PATT)
     env.hang_app(mode='hang')
-    page = uw.get_child(env.wtop, name='Security Browser', ctrl_type='Pane', usere=0, deep=3)
-    grid = uw.get_child(page, name='StingrayGrid', usere=0, deep=8)
+    page = uw.get_child(env.wtop, name='Security Browser', ctrl_type='Pane', deep=3)
+    grid = uw.get_child(page, name='StingrayGrid', deep=9)
     #print(f'page {page}, grid{grid}')
 
     # Esempio Get sheet info
@@ -294,8 +283,8 @@ def run_session_2():
 def run_session_3(): 
     env.init(COH_PATH, COH_TITLE_PATT)
     env.hang_app(mode='hang_or_launch ')
-    page = uw.get_child(env.wtop, name='Orders', ctrl_type='Pane', usere=0, deep=3)
-    grid = uw.get_child(page, name='StingrayGrid', usere=0, deep=8)
+    page = uw.get_child(env.wtop, name='Orders', ctrl_type='Pane', deep=3)
+    grid = uw.get_child(page, name='StingrayGrid', deep=8)
     #print(f'page {page}, grid{grid}')
     grid_mng = ug.create_by_win(grid)
 
@@ -305,7 +294,7 @@ def run_session_3():
 ######################################################
 ### Main
 
-select = 1
+select = 2
 
 if (select==1):
     run_session()

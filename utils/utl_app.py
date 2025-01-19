@@ -2,12 +2,6 @@ import time
 from pywinauto import Application
 import os
 
-# import da altri path - Mammamia :(
-import sys
-from pathlib import Path
-_new_path = str(Path(__file__).parent.parent)
-sys.path.append(_new_path) 
-
 import utl_win as uw
 
 class AppEnv:
