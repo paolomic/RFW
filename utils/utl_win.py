@@ -98,18 +98,10 @@ def end_session():
 # Robot
 ##########################################################
 
-def ROBOT_OK(data='', info=''):
+def ROBOT_RES(status='ok', info=''):
     return {
-        "status": 'ok',
-        'data': data,
+        "status": status,
         'info': info}
-   
-def ROBOT_FAIL(info=''):
-    return {
-        "status": 'no',
-        'data': '',
-        'info': info}
-
 
 def RAISE(message):
     raise Exception(message)

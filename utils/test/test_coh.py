@@ -9,7 +9,7 @@ _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
 from utl_app import env
-from utl_win import VERIFY, RAISE, ROBOT_OK, ROBOT_FAIL
+from utl_win import VERIFY, RAISE, ROBOT_RES
 import utl_win as uw
 import utl_log as ul
 import utl_grid as ug
@@ -115,9 +115,9 @@ def robot_launch_new_session(arg):
     
     try:
         env.launch_app(COH_PATH, COH_TITLE_PATT)
-        return ROBOT_OK()                  
+        return ROBOT_RES('ok')                  
     except Exception as e:
-        return ROBOT_FAIL(str(e)) 
+        return ROBOT_RES('no', str(e)) 
     
 
 ######################################################
@@ -145,9 +145,9 @@ def robot_start_dialog(arg):
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
         do()
-        return ROBOT_OK('')                  
+        return ROBOT_RES('ok')                  
     except Exception as e:
-        return ROBOT_FAIL(str(e)) 
+        return ROBOT_RES('no', str(e)) 
 
 
 ######################################################
@@ -178,9 +178,9 @@ def robot_setting_init(arg):
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
         do()
-        return ROBOT_OK('')                  
+        return ROBOT_RES('ok')                  
     except Exception as e:
-        return ROBOT_FAIL(str(e)) 
+        return ROBOT_RES('no', str(e)) 
 
 ######################################################
 ### Test: Start Connection
@@ -205,9 +205,9 @@ def robot_start_connections(arg):
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
         do()
-        return ROBOT_OK('')                  
+        return ROBOT_RES('ok')                  
     except Exception as e:
-        return ROBOT_FAIL(str(e)) 
+        return ROBOT_RES('no', str(e)) 
 
 ######################################################
 ### Test: Security Browser
@@ -245,9 +245,9 @@ def robot_security_browser(arg):
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
         do()
-        return ROBOT_OK('')                  
+        return ROBOT_RES('ok')                  
     except Exception as e:
-        return ROBOT_FAIL(str(e)) 
+        return ROBOT_RES('no', str(e)) 
 
 ### Test: New Care Order
 
@@ -291,9 +291,9 @@ def robot_new_care_order(arg):
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
         orderid = do()
-        return ROBOT_OK(orderid)                  
+        return ROBOT_RES('ok', orderid)                 # return orderid to robot   
     except Exception as e:
-        return ROBOT_FAIL(str(e))  
+        return ROBOT_RES('no', str(e)) 
 
 
 def robot_select_order(arg):
@@ -311,9 +311,9 @@ def robot_select_order(arg):
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
         do(arg)
-        return ROBOT_OK()                  
+        return ROBOT_RES('ok')                  
     except Exception as e:
-        return ROBOT_FAIL(str(e))  
+        return ROBOT_RES('no', str(e)) 
 
 
 def grid_operation_sample(arg):
@@ -347,9 +347,9 @@ def grid_operation_sample(arg):
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
         do(arg)
-        return ROBOT_OK()
+        return ROBOT_RES('ok')                  
     except Exception as e:
-        return ROBOT_FAIL(str(e))                
+        return ROBOT_RES('no', str(e)) 
 
     
 

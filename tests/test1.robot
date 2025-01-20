@@ -5,6 +5,9 @@ Library             Collections
 Library             test.py
 Library  ../utils/test/test_coh.py  AS  test_coh
 
+**Variables**
+${orderid}          000000000000
+
 *** Test Cases ***
 Launch New Session
     [Documentation]     Start Coherence Session
@@ -12,7 +15,6 @@ Launch New Session
     ${arg}=             Set Variable    no need any var
     &{result}=          evaluate        test_coh.robot_launch_new_session('${arg}')  modules=test_coh
     ${status}=  evaluate      $result.status
-    ${data}=  evaluate      $result.data
     ${info}=  evaluate      $result.info
     Should Be Equal As Strings  ${status}  ok
 
@@ -22,7 +24,6 @@ Starting Dialog
     ${arg}=             Set Variable    no need any var
     &{result}=          evaluate        test_coh.robot_start_dialog('${arg}')  modules=test_coh
     ${status}=  evaluate      $result.status
-    ${data}=  evaluate      $result.data
     ${info}=  evaluate      $result.info
     Should Be Equal As Strings  ${status}  ok
 
@@ -32,7 +33,6 @@ Setting Dialog
     ${arg}=             Set Variable    no need any var
     &{result}=          evaluate        test_coh.robot_setting_init('${arg}')  modules=test_coh
     ${status}=  evaluate      $result.status
-    ${data}=  evaluate      $result.data
     ${info}=  evaluate      $result.info
     Should Be Equal As Strings  ${status}  ok
 
@@ -42,7 +42,6 @@ Start Connections
     ${arg}=             Set Variable    MetaMarket
     &{result}=          evaluate        test_coh.robot_start_connections('${arg}')  modules=test_coh
     ${status}=  evaluate      $result.status
-    ${data}=  evaluate      $result.data
     ${info}=  evaluate      $result.info
     Should Be Equal As Strings  ${status}  ok
 
@@ -53,7 +52,6 @@ Security Browser
     &{result}=          evaluate        test_coh.robot_security_browser('${arg}')  modules=test_coh
     log                 result: &{result}
     ${status}=  evaluate      $result.status
-    ${data}=  evaluate      $result.data
     ${info}=  evaluate      $result.info
     Should Be Equal As Strings  ${status}  ok
 
@@ -62,18 +60,18 @@ New Care Order
     [Timeout]           2 minutes
     ${arg}=             Set Variable    noarg
     &{result}=          evaluate        test_coh.robot_new_care_order('${arg}')  modules=test_coh
+    log  result: ${result}
     ${status}=  evaluate    $result.status
-    ${data}=  evaluate      $result.data
     ${info}=  evaluate      $result.info
+    Set Suite Variable  ${orderid}  ${info}
     Should Be Equal As Strings  ${status}  ok
 
-Select Order Row
+Select Order Row - Use OrderId
     [Documentation]     Select Order Row 
     [Timeout]           2 minutes
-    ${arg}=             Set Variable    C10022501200000023109
+    ${arg}=             Set Variable    ${orderid}
     &{result}=          evaluate        test_coh.robot_select_order('${arg}')  modules=test_coh
     ${status}=  evaluate      $result.status
-    ${data}=  evaluate      $result.data
     ${info}=  evaluate      $result.info
     Should Be Equal As Strings  ${status}  ok
 
@@ -83,6 +81,5 @@ Grid Operation Sample
     ${arg}=             Set Variable    Nope
     &{result}=          evaluate        test_coh.grid_operation_sample('${arg}')  modules=test_coh
     ${status}=  evaluate      $result.status
-    ${data}=  evaluate      $result.data
     ${info}=  evaluate      $result.info
     Should Be Equal As Strings  ${status}  ok
