@@ -62,7 +62,7 @@ New Care Order
     &{result}=          evaluate        test_coh.robot_new_care_order('${arg}')  modules=test_coh
     log  result: ${result}
     ${status}=  evaluate    $result.status
-    ${info}=  evaluate      $result.info
+    ${info}=    evaluate      $result.info
     Set Suite Variable  ${orderid}  ${info}
     Should Be Equal As Strings  ${status}  ok
 
@@ -72,7 +72,7 @@ Select Order Row - Use OrderId
     ${arg}=             Set Variable    ${orderid}
     &{result}=          evaluate        test_coh.robot_select_order('${arg}')  modules=test_coh
     ${status}=  evaluate      $result.status
-    ${info}=  evaluate      $result.info
+    ${info}=    evaluate      $result.info
     Should Be Equal As Strings  ${status}  ok
 
 Grid Operation Sample
@@ -81,5 +81,5 @@ Grid Operation Sample
     ${arg}=             Set Variable    Nope
     &{result}=          evaluate        test_coh.grid_operation_sample('${arg}')  modules=test_coh
     ${status}=  evaluate      $result.status
-    ${info}=  evaluate      $result.info
+    ${info}=    evaluate      $result.info
     Should Be Equal As Strings  ${status}  ok

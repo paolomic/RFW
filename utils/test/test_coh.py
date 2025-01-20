@@ -224,7 +224,6 @@ def robot_security_browser(arg):
         uw.win_click(item)
 
         edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # POTEVO USARE -1 
-        print(f'edit {edit}')
         uw.edit_set(edit, COH_SEC)
 
         butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
@@ -317,16 +316,21 @@ def robot_select_order(arg):
 
 
 def grid_operation_sample(arg):
-    def do(order_id):
+    def do():
         env.hang_app(COH_PATH, COH_TITLE_PATT)
         page = uw.get_child_chk(env.wtop, name='Security Browser', ctrl_type='Pane', deep=3)
         grid = uw.get_child_chk(page, name='StingrayGrid', deep=9)
         #print(f'page {page}, grid{grid}')
+        
+        edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # reset search 
+        uw.edit_set(edit, '')
+
+        butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
+        uw.win_click(butt, wait_end=.5)
 
         # Esempio Get sheet info
         grid_mng = ug.create_by_win(grid)
         (x,y) = grid_mng.get_col_point('Section')
-        #print (x,y)
 
         # esempio scroll
         ug.scroll_home(grid_mng)
@@ -336,19 +340,20 @@ def grid_operation_sample(arg):
         ug.set_sort(grid_mng, [['Section','DESC'],['Security Ref.','ASC']])
 
         #esempio LoaD
-        ug.import_rows(grid_mng, 5, mode='page')
+        ug.import_rows(grid_mng, 5, mode='row')
         
         # esempio Data Search-Use
         print (f'Collected Rows: {grid_mng.get_row_num()}')
-        sel = grid_mng.search_first_match({"Security Ref.": "AV"})      # piu segmenti con , 
+        sel = grid_mng.search_first_match({"Security Ref.": "ABT"})      # piu segmenti con , 
         print(f'Find Row: {sel}')
-        print(f'Security Status {sel["Status"]}')
+        #print(f'Security Status {sel["Status"]}')
 
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
-        do(arg)
+        do()
         return ROBOT_RES('ok')                  
     except Exception as e:
+        print(str(e))
         return ROBOT_RES('no', str(e)) 
 
     

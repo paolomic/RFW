@@ -99,6 +99,7 @@ def end_session():
 ##########################################################
 
 def ROBOT_RES(status='ok', info=''):
+    time.sleep(0.3)
     return {
         "status": status,
         'info': info}
