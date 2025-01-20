@@ -52,7 +52,7 @@ def hide_select(n):
 def statusbar_wait(statusbar, state, attempt=5, wait_init=0.25,  delay=1, wait_end=0.25):
     time.sleep(wait_init)
     while attempt>0:
-        cld = get_child(statusbar, name=state, ctrl_type='Text')
+        cld = get_child_chk(statusbar, name=state, ctrl_type='Text', verify=False)
         if (cld):
             time.sleep(wait_end) 
             return True
@@ -93,6 +93,31 @@ def end_session():
     print ('## Session End ##')
     exit()
 #endregion
+
+##########################################################
+# Robot
+##########################################################
+
+def ROBOT_OK(data='', info=''):
+    return {
+        "status": 'ok',
+        'data': data,
+        'info': info}
+   
+def ROBOT_FAIL(info=''):
+    return {
+        "status": 'no',
+        'data': '',
+        'info': info}
+
+
+def RAISE(message):
+    raise Exception(message)
+
+def VERIFY(data, message):
+    if not data:
+        RAISE(message)
+
 
 ##########################################################
 # Windows
@@ -178,7 +203,7 @@ def win_get_top(win):
 ##########################################################
 #region
 def popup_click(popupmenu, name, skip_disabled=False):
-    cmd = get_child(popupmenu, name=name, ctrl_type='MenuItem', deep=2, enable_only=False)
+    cmd = get_child_chk(popupmenu, name=name, ctrl_type='MenuItem', deep=2, enable_only=False)
     if (skip_disabled and not cmd.is_enabled()):
         keyboard.press_and_release('esc')
         return -1
@@ -191,7 +216,7 @@ def popup_reply(wtop, selects, wait_init=0.2, wait_end=0.2, skip_disabled=False)
     sel = selects.split('#')
     menuname = 'PopupMenu'          # level0
     for s in sel:
-        popupmenu  = get_child(wtop, name=menuname, ctrl_type='Menu', enable_only=False)
+        popupmenu  = get_child_chk(wtop, name=menuname, ctrl_type='Menu', enable_only=False)
         if (skip_disabled and not popupmenu.is_enabled()):
             keyboard.press_and_release('esc')
             return -1
@@ -201,11 +226,11 @@ def popup_reply(wtop, selects, wait_init=0.2, wait_end=0.2, skip_disabled=False)
     return 1
 
 def warning_replay(wtop, mess, butt):
-    warning = get_child(wtop, name='Coherence', ctrl_type='Pane')
+    warning = get_child_chk(wtop, name='Coherence', ctrl_type='Pane', verify=False)
     if warning:
-        message = get_child(warning, ctrl_type='Text', use_re=False).window_text()
+        message = get_child_chk(warning, ctrl_type='Text', use_re=False).window_text()
         assert (mess in message)
-        butt = get_child(warning, name=butt, ctrl_type='Button')
+        butt = get_child_chk(warning, name=butt, ctrl_type='Button')
         win_click(butt)
         return True
     return False
@@ -396,7 +421,6 @@ DEEP_ALL = -1
 
 def get_child(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
                          deep=1, use_re=False, use_case=True, visible_only=False, enable_only=True):
-    
     if not parent_wnd:
         return None
             
@@ -420,6 +444,16 @@ def get_child(parent_wnd, name=None, ctrl_type=None, class_name=None, automation
         
     return None
 
+def get_child_chk(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
+                         deep=1, use_re=False, use_case=True, visible_only=False, enable_only=True, verify=True):
+    cld = get_child(parent_wnd, name, ctrl_type, class_name, automation_id, handle, texts,
+                         deep, use_re, use_case, visible_only, enable_only)
+    
+    if(verify and not cld):
+        RAISE(f'Item Not Found: Name:{name} Ctrl:{ctrl_type} Class:{class_name} AutId:{automation_id} ')
+    
+    return cld
+
 def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
                          deep=1, use_re=False, use_case=True, visible_only=False, enable_only=True,
                          attempt=5, wait_init=0.25,  delay=1, wait_end=0.25):
@@ -427,7 +461,7 @@ def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, auto
     while attempt>0:
         #print (attempt)
         cld = get_child(parent_wnd, name, ctrl_type, class_name, automation_id, handle, texts,
-                         deep, use_re, use_case, visible_only, enable_only)
+                         deep, use_re, use_case, visible_only, enable_only, verify=False)
         if (cld):
             time.sleep(wait_end) 
             return cld
@@ -447,7 +481,7 @@ def win_reload_bytype(item):
     if ctrltype=='':
         ctrltype=None
 
-    return get_child(item.parent(), ctrl_type=ctrltype)
+    return get_child_chk(item.parent(), ctrl_type=ctrltype)
 
 
 #endregion
@@ -457,16 +491,16 @@ def win_reload_bytype(item):
 ##########################################################
 #region
 def list_select(list_control, value, use_re=False):
-    list_item = get_child(list_control, name=value, use_re=use_re)
+    list_item = get_child_chk(list_control, name=value, use_re=use_re)
     
     if (not list_item):
         return False
     win_click(list_item, wait_end=0.5)
-    print("click")
+    #print("click")
     return True
 
 def list_select_texts(list_control, text_values, use_re=False):
-    list_item = get_child(list_control, texts=text_values, use_re=use_re)
+    list_item = get_child_chk(list_control, texts=text_values, use_re=use_re)
 
     if (not list_item):
       return False

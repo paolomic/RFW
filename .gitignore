@@ -1,6 +1,4 @@
 out.txt
-utils/__pycache__/utl_log.cpython-313.pyc
-utils/__pycache__/utl_win.cpython-313.pyc
 *.pyc
 *.xml
 *.html
