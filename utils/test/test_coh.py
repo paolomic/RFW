@@ -124,7 +124,7 @@ def robot_launch_new_session(arg):
 ### Test: Start Dialog
     
 def robot_start_dialog(arg):
-    def do():
+    def do(arg):
         env.hang_app(COH_PATH, COH_TITLE_PATT)
         VERIFY(env.app and env.wtop, "Hang Session Failed")
         edit = uw.get_child_chk(env.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
@@ -132,7 +132,7 @@ def robot_start_dialog(arg):
 
         list = uw.get_child_chk(env.wtop, name='Import From', ctrl_type='List', deep=3)
         uw.list_check(list, '*', False)
-        uw.list_check(list, COH_ADDIN, True)
+        uw.list_check(list, arg, True)
 
         butt = uw.get_child_chk(env.wtop, automation_id='1', ctrl_type='Button', deep=3)
         is_create = butt.window_text()=='Create'
@@ -144,7 +144,7 @@ def robot_start_dialog(arg):
         
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
-        do()
+        do(arg)
         return ROBOT_RES('ok')                  
     except Exception as e:
         return ROBOT_RES('no', str(e)) 
