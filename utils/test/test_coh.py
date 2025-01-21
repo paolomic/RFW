@@ -59,41 +59,12 @@ COH_CLIENTACC =     'TEST'
 ##  Util
 #region 
 
-def select_ribbon(ribb):
-    rib_sel = uw.get_child_chk(env.rib_tab, name=ribb, ctrl_type='TabItem')
-    uw.win_click(rib_sel)
-    toolbar = uw.get_child_chk(env.rib_grp, name=ribb, ctrl_type='ToolBar')
-    print(f'toolbar {toolbar}')
-    return toolbar
-
-def select_ribbon_butt(ribb, butt):
-    toolbar = select_ribbon(ribb)
-    print(f'toolbar {toolbar}')
-    bt = uw.get_child_chk(toolbar, name=butt, ctrl_type='Button', deep=2)
-    return bt
-
-def click_ribbon_butt(ribb, butt):
-    bt = select_ribbon_butt(ribb, butt)
-    uw.win_click(bt)
-    return bt
-
 #endregion
 
-######################################################
-### New Session - Insert Care
-def run_session():
-    # todo Montare i vari Test Step\
-    pass
-
-######################################################
-### Grid Operations Sample
-
-def run_session_2():
-    pass    
 
 
 ######################################################
-### Test
+### Local Test - Session 3
 
 def run_session_3(): 
     env.hang_app(COH_PATH, COH_TITLE_PATT)
@@ -103,11 +74,8 @@ def run_session_3():
     grid_mng = ug.create_by_win(grid)
     return 'ok'
     
-
 ######################################################
 ### Test: New Session
-
-
 
 def robot_launch_new_session(arg):
     def do():
@@ -119,13 +87,11 @@ def robot_launch_new_session(arg):
     except Exception as e:
         return ROBOT_RES('no', str(e)) 
     
-
 ######################################################
 ### Test: Start Dialog
     
 def robot_start_dialog(arg):
-    def do(arg):
-        env.hang_app(COH_PATH, COH_TITLE_PATT)
+    def do():
         VERIFY(env.app and env.wtop, "Hang Session Failed")
         edit = uw.get_child_chk(env.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
         uw.edit_set(edit, COH_WSP)
@@ -139,16 +105,15 @@ def robot_start_dialog(arg):
         uw.win_click(butt, wait_end=0.5)
         uw.warning_replay(env.wtop, 'This workspace has not been closed properly', 'No')
 
-        time.sleep(3.5)                                                             # todo : Active Wait                     
+        time.sleep(3.5)                                                                         # todo : Smart Wait                     
         env.reload()  
         
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
-        do(arg)
+        do()
         return ROBOT_RES('ok')                  
     except Exception as e:
         return ROBOT_RES('no', str(e)) 
-
 
 ######################################################
 ### Test: Setting Dialog
@@ -169,7 +134,7 @@ def robot_setting_init(arg):
         #time.sleep(.25)
         #ud.dump_uia_tree(env.wtop)         # non c'e' lista popup
 
-        uw.hide_select(-1)      # detail
+        uw.hide_select(-1)                  # Todo Control Inside
         keyboard.press("enter")
         time.sleep(.25)
         keyboard.press("enter")
@@ -187,13 +152,13 @@ def robot_setting_init(arg):
 
 def robot_start_connections(arg):
     def do():
-        addins = ['MetaMarket']                                     # can be generic
+        addins = ['MetaMarket']                                                     # TODO pass form Robot ?
         for addin in addins:
-            butt = select_ribbon_butt(addin, 'Auto Connect')
+            butt = env.select_ribbon_butt(addin, 'Auto Connect')
             if not uw.butt_is_checked(butt):
                 uw.win_click(butt)
 
-        butt = select_ribbon_butt('Home', 'Auto Connect')
+        butt = env.select_ribbon_butt('Home', 'Auto Connect')
         if not uw.butt_is_checked(butt):
             uw.win_click(butt)
 
@@ -248,6 +213,7 @@ def robot_security_browser(arg):
     except Exception as e:
         return ROBOT_RES('no', str(e)) 
 
+######################################################
 ### Test: New Care Order
 
 def robot_new_care_order(arg):
@@ -294,10 +260,12 @@ def robot_new_care_order(arg):
     except Exception as e:
         return ROBOT_RES('no', str(e)) 
 
+######################################################
+### Test: Select Order
 
 def robot_select_order(arg):
     def do(order_id):
-        click_ribbon_butt('Trading', 'Orders')
+        env.click_ribbon_butt('Trading', 'Orders')
         time.sleep(.5)
         page = uw.get_child_chk(env.wtop, name='Orders.*', ctrl_type='Pane', use_re=1, deep=2)
         
@@ -314,6 +282,8 @@ def robot_select_order(arg):
     except Exception as e:
         return ROBOT_RES('no', str(e)) 
 
+######################################################
+### Test: Grip Operations Sample
 
 def grid_operation_sample(arg):
     def do():
@@ -356,17 +326,15 @@ def grid_operation_sample(arg):
         print(str(e))
         return ROBOT_RES('no', str(e)) 
 
-    
-
 ######################################################
-### Main
+### Main - Local Test
 
 if __name__ == '__main__':
-    select = 2
+    select = 3
 
     if (select==1):
-        run_session()
+        pass
     if (select==2):
-        print(robot_start_dialog(None))
+        pass
     if (select==3):
-        run_session_3()
+        print(robot_launch_new_session(None))

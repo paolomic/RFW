@@ -61,6 +61,15 @@ class AppEnv:
         self.init(coh_path, coh_title)
         exe_name = os.path.basename(self.coh_path)
 
+        found = 0
+        try:
+            app = Application(backend="uia").connect(path=self.coh_exe)
+            found = 1
+        except:
+            pass
+        
+        VERIFY(not found, 'Coherence Already Started')
+        
         try:
             print('Starting new instance...')
             app = Application(backend="uia").start(self.coh_path)
@@ -80,7 +89,7 @@ class AppEnv:
         exe_name = os.path.basename(self.coh_path)
         
         try:
-            app = Application(backend="uia").connect(path=self.coh_exe, title=self.coh_title)
+            app = Application(backend="uia").connect(path=self.coh_exe)
             wtop = app.top_window()
             hang_ok = 1
         except Exception as e:
@@ -90,34 +99,24 @@ class AppEnv:
         print(f'wtop {wtop}')
         self.set(app)
 
-    def hang_app_2(self, mode='hang_or_launch'):         # mode= hang / launch  / hang_or_launch 
-        hang_ok = 0
-        self.reset()
-        exe_name = os.path.basename(self.coh_path)
-        if (mode=='hang' or mode=='hang_or_launch'):
-            try:
-                app = Application(backend="uia").connect(path=self.coh_exe, title=self.coh_title)
-                wtop = app.top_window()
-                hang_ok = 1
-            except Exception:
-                pass
+    def select_ribbon(self, ribb):
+        rib_sel = uw.get_child_chk(self.rib_tab, name=ribb, ctrl_type='TabItem')
+        uw.win_click(rib_sel)
+        toolbar = uw.get_child_chk(self.rib_grp, name=ribb, ctrl_type='ToolBar')
+        print(f'toolbar {toolbar}')
+        return toolbar
 
-            if ((not hang_ok and mode=='hang_or_launch') or mode=='launch '):
-                try:
-                    print('Starting new instance...')
-                    app = Application(backend="uia").start(self.coh_path)
-                    time.sleep(1)  # Attende che l'app si avvii completamente
-                    wtop = app.top_window()
-                except Exception as e:
-                    print(f"Start Error: {str(e)}")
-                    raise
-            
-            if not wtop:
-                raise Exception("Open Error")
-            
-            print(f'app {app}')
-            print(f'wtop {wtop}')
-        self.set(app)
+    def select_ribbon_butt(self, ribb, butt):
+        toolbar = self.select_ribbon(ribb)
+        print(f'toolbar {toolbar}')
+        bt = uw.get_child_chk(toolbar, name=butt, ctrl_type='Button', deep=2)
+        return bt
+
+    def click_ribbon_butt(self, ribb, butt):
+        bt = self.select_ribbon_butt(ribb, butt)
+        uw.win_click(bt)
+        return bt
+
 
     def reload(self):         # mode= hang / launch  / hang_or_launch 
         self.hang_app(self.coh_path, self.coh_title)
