@@ -16,22 +16,26 @@ import utl_grid as ug
 import utl_dump as ud
 
 
-############################################
-#region - TODO
-#    - Identificazione univoca Grid (set name o automation) - e altri controlli
-#    - MOVEWIN      sistemare move_win
-#    - VERS CHECK   Aggiungere Addin Versione e Check Load
-#    - AUTOM_ID     handle_NewCareOrder non corrispondono nomi why?
-#    - MESSAGE      COntrollare Message-Barra alle Tx
+######################################################
+### TODO
+#region 
+#    - SUITE NEW    con New Wsp - aggiungere setting new wsp
+#    - SUITER INST. Installer (admin)
+#    - CTRL ID      COme identificare univocamente controlli
+#    - WIN_MOVE     customize win size, pos
+#    - VERS CHECK   Aggiungere Addin Versione-Check e Load-check
+#    - AUTOM_ID     Dlg NewOrder: handler sfalsati (non corrispondono nomi) why?
+#    - MESSAGE      COntrollare Message-Barra alle Tx (?)
 #    - CLOSE PAGE   Fare win_close_page() che controlla warning
-#    - CLOSE SESS   Fare close_session - controlla warning
-#    - WAIT WIN     dopo handle_start_dialog attesa retry
-#    - NEW WSP      settare il new wsp - is_create
-#    - NODE RELOAD  fare reload_node affidabile (???)
+#    - CLOSE SESS   Fare close_session - che controlla warning
+#    - WAIT WIN     dopo handle_start_dialog attesa retry - vedi todo
+#    - NODE RELOAD  fare reload_node affidabile (serve?)
+#    - FAIL-GRID    grid import fail in suite ?
+#    - PARS         Mantenere Pars in Robot o file json, ... ?
 #endregion
 
-############################################
-##  Session Parameter
+######################################################
+###  Session Parameter
 #region 
 
 COH_PATH =          r'C:\work\disks\D\COH_x64\bin\Coherence.exe'
@@ -49,24 +53,13 @@ COH_ALIAS =         'KATIA'
 COH_CLIENTID =      'MARI'
 COH_CLIENTACC =     'TEST'
 
-##
-#COH_WSP=            r"C:\work\disks\D\wsp_c\FTX_GOV_TEQ.wsp4"
-#COH_SEC=            'BCC CREDIFRIULI 1,85%16/3/25 222'
-##
 #endregion
-
-############################################
-##  Util
-#region 
-
-#endregion
-
 
 
 ######################################################
 ### Local Test - Session 3
 
-def run_session_3(): 
+def run_session_TEST(): 
     env.hang_app(COH_PATH, COH_TITLE_PATT)
     page = uw.get_child_chk(env.wtop, name='Orders', ctrl_type='Pane', deep=3)
     grid = uw.get_child_chk(page, name='StingrayGrid', deep=8)
@@ -333,7 +326,7 @@ if __name__ == '__main__':
     select = 3
 
     if (select==1):
-        pass
+        print(run_session_TEST())
     if (select==2):
         pass
     if (select==3):

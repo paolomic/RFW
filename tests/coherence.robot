@@ -19,7 +19,7 @@ Launch New Session
     &{result}=          evaluate      test_coh.robot_launch_new_session('${arg}')  modules=test_coh
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
-    Should Be Equal As Strings  ${status}  ok
+    Should Be Equal As Strings        ${status}     ok
 
 Starting Dialog
     [Documentation]     Starting Dialog
@@ -28,7 +28,7 @@ Starting Dialog
     &{result}=          evaluate      test_coh.robot_start_dialog("${arg}")  modules=test_coh
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
-    Should Be Equal As Strings  ${status}  ok
+    Should Be Equal As Strings        ${status}     ok
 
 Setting Dialog
     [Documentation]     Workspace Setting Initialization
@@ -37,7 +37,7 @@ Setting Dialog
     &{result}=          evaluate      test_coh.robot_setting_init('${arg}')  modules=test_coh
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
-    Should Be Equal As Strings  ${status}  ok
+    Should Be Equal As Strings        ${status}     ok
 
 Start Connections
     [Documentation]     Start Connections - Starting Addins and Console Connections
@@ -46,7 +46,7 @@ Start Connections
     &{result}=          evaluate      test_coh.robot_start_connections('${arg}')  modules=test_coh
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
-    Should Be Equal As Strings  ${status}  ok
+    Should Be Equal As Strings        ${status}     ok
 
 Security Browser
     [Documentation]     Security Browser - Search Security - command New Care Order
@@ -56,7 +56,7 @@ Security Browser
     log                               result: &{result}
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
-    Should Be Equal As Strings  ${status}  ok
+    Should Be Equal As Strings        ${status}     ok
 
 New Care Order
     [Documentation]     New Care Order 
@@ -67,7 +67,8 @@ New Care Order
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
     Set Suite Variable  ${orderid}    ${info}
-    Should Be Equal As Strings  ${status}  ok
+    Should Not Be Empty               ${orderid}
+    Should Be Equal As Strings        ${status}     ok
 
 Select Order Row
     [Documentation]     Select Order Row - Use Prev Test OrderID
@@ -76,7 +77,7 @@ Select Order Row
     &{result}=          evaluate      test_coh.robot_select_order('${arg}')  modules=test_coh
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
-    Should Be Equal As Strings  ${status}  ok
+    Should Be Equal As Strings        ${status}  ok
 
 Grid Operation Sample
     [Documentation]     Grid Operation Sample - remote MFC Calls 
@@ -85,4 +86,4 @@ Grid Operation Sample
     &{result}=          evaluate      test_coh.grid_operation_sample('${arg}')  modules=test_coh
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
-    Should Be Equal As Strings  ${status}  ok
+    Should Be Equal As Strings        ${status}  ok
