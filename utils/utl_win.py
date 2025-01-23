@@ -17,6 +17,9 @@ WIN_BUTT_STATE_CHECKED          = (1<<4)
 # Generic
 ##########################################################
 #region
+def sleep(sec):
+    time.sleep(sec)
+
 def is_array(a):
     if isinstance(a, (list, tuple)):
         return True
@@ -50,22 +53,22 @@ def hide_select(n):
             keyboard.press("up")
 
 def statusbar_wait(statusbar, state, attempt=5, wait_init=0.25,  delay=1, wait_end=0.25):
-    time.sleep(wait_init)
+    sleep(wait_init)
     while attempt>0:
         cld = get_child_chk(statusbar, name=state, ctrl_type='Text', verify=False)
         if (cld):
-            time.sleep(wait_end) 
+            sleep(wait_end) 
             return True
         
         attempt -= 1
         if attempt==0:
             return None
-        time.sleep(delay) 
+        sleep(delay) 
     return False
 
-def edit_set(edit, value, wait_end=0.2):
+def edit_set(edit, value, wait_end=0.3):
     edit.iface_value.SetValue(value)
-    time.sleep(wait_end)
+    sleep(wait_end)
 
 def get_today_iso():
   return datetime.now().strftime('%Y%m%d')
@@ -75,7 +78,7 @@ def get_log_path(wsp_path, logname):
   return f'{wsp_path}_wrk\\Logs\\{filename}'
 
 def wait_cursor_normal(wait_init=0.1, wait_in=0.5, wait_end=0.2, timeout=15):
-    time.sleep(wait_init)
+    sleep(wait_init)
     start = datetime.now()
     while (1):
         cursor_info = GetCursorInfo()
@@ -85,9 +88,9 @@ def wait_cursor_normal(wait_init=0.1, wait_in=0.5, wait_end=0.2, timeout=15):
             break
         if (datetime.now()-start).seconds > timeout :
             break
-        time.sleep(wait_in)     # retry
+        sleep(wait_in)     # retry
 
-    time.sleep(wait_end)
+    sleep(wait_end)
 
 def end_session():
     print ('## Session End ##')
@@ -99,7 +102,7 @@ def end_session():
 ##########################################################
 
 def ROBOT_RES(status='ok', info=''):
-    time.sleep(0.3)
+    sleep(0.3)
     return {
         "status": status,
         'info': info}
@@ -130,8 +133,8 @@ def win_activate(window, unminimize = True, wait_end=0.25, wait_restore=0.5):
    
     if unminimize and window.element_info.control_type == 'Window' and window.is_minimized():
         window.restore()
-        time.sleep(wait_restore)  # Attende il ripristino
-    time.sleep(wait_end)
+        sleep(wait_restore)  # Attende il ripristino
+    sleep(wait_end)
 
 def win_coord(window, where='c'):
     rect = window.element_info.rectangle
@@ -170,7 +173,7 @@ def win_click(window, mode="center", wait_end=0.25, arg=None):
         click_y = (rect.top + 10) 
 
     window.click_input(coords=(click_x - rect.left, click_y - rect.top))    # usa coord relative
-    time.sleep(wait_end)
+    sleep(wait_end)
     return (click_x, click_y)       
 
 def win_mouse_move(window, client_x, client_y, wait_end=0.25, arg=None): 
@@ -205,7 +208,7 @@ def popup_click(popupmenu, name, skip_disabled=False):
     return 1
 
 def popup_reply(wtop, selects, wait_init=0.2, wait_end=0.2, skip_disabled=False):
-    time.sleep(wait_init)
+    sleep(wait_init)
     sel = selects.split('#')
     menuname = 'PopupMenu'          # level0
     for s in sel:
@@ -215,7 +218,7 @@ def popup_reply(wtop, selects, wait_init=0.2, wait_end=0.2, skip_disabled=False)
             return -1
         popup_click(popupmenu, s, skip_disabled=skip_disabled)
         menuname = s
-    time.sleep(wait_end)
+    sleep(wait_end)
     return 1
 
 def warning_replay(wtop, mess, butt):
@@ -249,7 +252,7 @@ def grid_select_rows(grid, num, mode="row", home=True):
     #win_click(grid, mode='grid_row', arg=10)
     for i in range(num):
         keyboard.press_and_release("pagedown" if mode=="page" else "down")
-        time.sleep(0.05)
+        sleep(0.05)
     keyboard.release('shift')
 
 def win_copy_to_clip(wait_init = .5):
@@ -450,19 +453,19 @@ def get_child_chk(parent_wnd, name=None, ctrl_type=None, class_name=None, automa
 def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
                          deep=1, use_re=False, use_case=True, visible_only=False, enable_only=True,
                          attempt=5, wait_init=0.25,  delay=1, wait_end=0.25):
-    time.sleep(wait_init)
+    sleep(wait_init)
     while attempt>0:
         #print (attempt)
         cld = get_child(parent_wnd, name, ctrl_type, class_name, automation_id, handle, texts,
                          deep, use_re, use_case, visible_only, enable_only, verify=False)
         if (cld):
-            time.sleep(wait_end) 
+            sleep(wait_end) 
             return cld
         
         attempt -= 1
         if attempt==0:
             return None
-        time.sleep(delay) 
+        sleep(delay) 
     return None
 
 #TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST 
@@ -514,7 +517,7 @@ def list_check(list_control, Names="*", value:bool=True, wait_end=0.25):
             if (Names=='*' or item.window_text() in Names):
                 if item.iface_toggle.CurrentToggleState != int(value):
                     item.iface_toggle.Toggle()
-    time.sleep(wait_end)
+    sleep(wait_end)
 
 def butt_is_checked(butt):
     state = butt.legacy_properties()['State']

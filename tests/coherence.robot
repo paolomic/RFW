@@ -83,7 +83,7 @@ Grid Operation Sample
     [Documentation]     Grid Operation Sample - remote MFC Calls 
     [Timeout]           2 minutes
     ${arg}=             Set Variable  ${EMPTY}
-    &{result}=          evaluate      test_coh.grid_operation_sample('${arg}')  modules=test_coh
+    &{result}=          evaluate      test_coh.robot_grid_sample('${arg}')  modules=test_coh
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
     Should Be Equal As Strings        ${status}  ok

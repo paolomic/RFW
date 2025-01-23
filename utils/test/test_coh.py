@@ -9,7 +9,7 @@ _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
 from utl_app import env
-from utl_win import VERIFY, RAISE, ROBOT_RES
+from utl_win import sleep, VERIFY, RAISE, ROBOT_RES
 import utl_win as uw
 import utl_log as ul
 import utl_grid as ug
@@ -98,7 +98,7 @@ def robot_start_dialog(arg):
         uw.win_click(butt, wait_end=0.5)
         uw.warning_replay(env.wtop, 'This workspace has not been closed properly', 'No')
 
-        time.sleep(3.5)                                                                         # todo : Smart Wait                     
+        sleep(3.5)                                                                         # todo : Smart Wait                     
         env.reload()  
         
     try:
@@ -124,14 +124,14 @@ def robot_setting_init(arg):
         trace = uw.get_child_chk(pane, name='Trace Level', ctrl_type='Custom', deep=3)
         uw.win_click(trace, mode='combo')
 
-        #time.sleep(.25)
+        #sleep(.25)
         #ud.dump_uia_tree(env.wtop)         # non c'e' lista popup
 
         uw.hide_select(-1)                  # Todo Control Inside
         keyboard.press("enter")
-        time.sleep(.25)
+        sleep(.25)
         keyboard.press("enter")
-        time.sleep(.25)
+        sleep(.25)
 
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
@@ -174,8 +174,14 @@ def robot_security_browser(arg):
     def do():
          # la pg viene generata sotto main-node coherence
         page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=1)
-        print(f'page {page}')
+        uw.win_activate(page)                                               # todo portare in front
         #uw.win_resize(page, 600,400)
+
+        edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # reset search 
+        uw.edit_set(edit, '')
+
+        butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
+        uw.win_click(butt, wait_end=.5)
 
         treekey = f'{COH_EXC} - {COH_MRK}'
         item = uw.get_child_chk(page, name=treekey, ctrl_type='TreeItem', deep=10) 
@@ -195,7 +201,7 @@ def robot_security_browser(arg):
         # hide
         uw.win_click(grid, mode='grid_row1')
         mouse.click('right')
-        time.sleep(0.25)
+        sleep(0.25)
 
         uw.popup_reply(env.wtop, 'New#Care Order')          # Il popup viene generato sotto level top - anche il sotto menu
 
@@ -259,7 +265,6 @@ def robot_new_care_order(arg):
 def robot_select_order(arg):
     def do(order_id):
         env.click_ribbon_butt('Trading', 'Orders')
-        time.sleep(.5)
         page = uw.get_child_chk(env.wtop, name='Orders.*', ctrl_type='Pane', use_re=1, deep=2)
         
         edit = uw.get_child_chk(page, name='Order ID', ctrl_type='Edit', deep=5)  
@@ -276,11 +281,11 @@ def robot_select_order(arg):
         return ROBOT_RES('no', str(e)) 
 
 ######################################################
-### Test: Grip Operations Sample
+### Test: Grid Sample Sort Import
 
-def grid_operation_sample(arg):
+def robot_grid_sample(arg):
     def do():
-        env.hang_app(COH_PATH, COH_TITLE_PATT)
+        #env.click_ribbon_butt('Trading', 'Security Browser')
         page = uw.get_child_chk(env.wtop, name='Security Browser', ctrl_type='Pane', deep=3)
         grid = uw.get_child_chk(page, name='StingrayGrid', deep=9)
         #print(f'page {page}, grid{grid}')
@@ -291,9 +296,14 @@ def grid_operation_sample(arg):
         butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
         uw.win_click(butt, wait_end=.5)
 
+        treekey = f'{COH_EXC} - {COH_MRK}'
+        item = uw.get_child_chk(page, name=treekey, ctrl_type='TreeItem', deep=10) 
+        uw.win_click(item)
+
         # Esempio Get sheet info
+
         grid_mng = ug.create_by_win(grid)
-        (x,y) = grid_mng.get_col_point('Section')
+        ug.set_show_all(grid_mng)
 
         # esempio scroll
         ug.scroll_home(grid_mng)
@@ -303,13 +313,15 @@ def grid_operation_sample(arg):
         ug.set_sort(grid_mng, [['Section','DESC'],['Security Ref.','ASC']])
 
         #esempio LoaD
-        ug.import_rows(grid_mng, 5, mode='row')
+        ug.import_rows(grid_mng, 50, mode='row')
         
         # esempio Data Search-Use
         print (f'Collected Rows: {grid_mng.get_row_num()}')
         sel = grid_mng.search_first_match({"Security Ref.": "ABT"})      # piu segmenti con , 
-        print(f'Find Row: {sel}')
-        #print(f'Security Status {sel["Status"]}')
+        VERIFY(sel, 'Security not Found')
+        #print(f'Find Row: {sel}')
+        print(f'Find {1 if sel else 0} Row')
+        print(f'Security Status {sel["Status"]}')
 
     try:
         env.hang_app(COH_PATH, COH_TITLE_PATT)
@@ -330,4 +342,4 @@ if __name__ == '__main__':
     if (select==2):
         pass
     if (select==3):
-        print(robot_launch_new_session(None))
+        print(robot_new_care_order(None))

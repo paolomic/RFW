@@ -3,7 +3,7 @@ from pywinauto import Application
 import os
 
 import utl_win as uw
-from utl_win import VERIFY, RAISE
+from utl_win import sleep, VERIFY, RAISE
 
 class AppEnv:
     app = None
@@ -112,9 +112,10 @@ class AppEnv:
         bt = uw.get_child_chk(toolbar, name=butt, ctrl_type='Button', deep=2)
         return bt
 
-    def click_ribbon_butt(self, ribb, butt):
+    def click_ribbon_butt(self, ribb, butt, wait_end=1):
         bt = self.select_ribbon_butt(ribb, butt)
         uw.win_click(bt)
+        sleep(wait_end)
         return bt
 
 

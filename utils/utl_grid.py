@@ -15,7 +15,7 @@ import utl_robot as ur
 
 def create_by_win(win_grid):
     res = ur.robot_send(win_grid.handle, ur.ROBOT_CMD_GET_HEADER, input_str="")
-    #print(f'ROBOT_CMD_GET_HEADER result: [{res}]')                                 # <== Debug
+    print(f'ROBOT_CMD_GET_HEADER result: [{res}]')                                 # <== Debug
     grid_mng = create_grid(win_grid, res) 
     res = ur.robot_send(win_grid.handle, ur.ROBOT_CMD_GET_PROP, input_str="")   
     #print(f'ROBOT_CMD_GET_PROP result: [{res}]')                                   # <== Debug
@@ -30,6 +30,15 @@ def import_rows(grid_mng, num, mode="row", home=True):
 def scroll_home(grid_mng):
     res = ur.robot_send(grid_mng.win_grid.handle, ur.ROBOT_CMD_GET_COL_POINT, input_str="1\t1")
     # manca scroll verticale
+
+def set_show_all(grid_mng):
+    grid = grid_mng.win_grid
+    wtop = grid_mng.win_top
+
+    (x,y) = grid_mng.get_header_point()
+    uw.win_mouse_move(grid_mng.win_grid, x,y)
+    mouse.click('right')
+    uw.popup_reply(wtop, 'Columns Settings#Show All', skip_disabled=1)        # se gia def is disabl
 
 def set_sort(grid_mng, key):
     grid = grid_mng.win_grid
@@ -87,6 +96,9 @@ class GridMng:
     def get_row_num(self) -> int:
         return self.row_num
     
+    def get_header_size(self):
+        return len(self.data["headers"])
+    
     def get_prop(self, name: str) -> int:
         """Get property value by name"""
         return int(self.props.get(name))
@@ -94,10 +106,10 @@ class GridMng:
     def get_col_point(self, header: str) -> int:
         """Get x coordinate for column"""
         return (self.col_xs.get(header), self.get_prop('y_mid') )
-    
-    def get_header_point(grid_mng):
-        x = grid_mng.get_prop('x_off') + 10
-        y = grid_mng.get_prop('y_mid')
+       
+    def get_header_point(self):
+        x = self.get_prop('x_off') + 10
+        y = self.get_prop('y_mid')
         return (x,y)
     
     def set_headers(self, hdr_str: str) -> None:
