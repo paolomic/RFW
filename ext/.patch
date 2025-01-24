@@ -1,3 +1,160 @@
+Index: src/Common/robot.cpp
+===================================================================
+--- src/Common/robot.cpp	(nonexistent)
++++ src/Common/robot.cpp	(working copy)
+@@ -0,0 +1,124 @@
++#include "stdafx.h"
++#include <ctime>
++#include <assert.h>
++#include <fstream>
++#include <playsoundapi.h>
++#include "DTHash.h"
++#include "winsock.h"
++#include "MMPrefsImpl.h"
++
++#include "FTCStyles.h"
++
++
++#include "Util.h"
++#include "robot.h"
++#include "MetaMarket.h"
++
++// ROBOT FRAMEWORK  -- Invoke Keyword
++#include <WinSock2.h>
++#include <WS2tcpip.h>
++
++#define ROBOT_SIGNATURE				55555		// check
++#define ROBOT_PORT					63888		// check
++#define ROBOT_MAX_BUFFER_SIZE		4096		// check
++
++
++SOCKET RobotCommunication::CreateClientSocket(int port)
++{
++	WSADATA wsaData;
++	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
++		return INVALID_SOCKET;
++	}
++
++	SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, 0);
++	if (clientSocket == INVALID_SOCKET) {
++		WSACleanup();
++		return INVALID_SOCKET;
++	}
++
++	return clientSocket;
++}
++
++bool RobotCommunication::ConnectSocket(SOCKET socket, int port)
++{
++	sockaddr_in server;
++	server.sin_family = AF_INET;
++	server.sin_addr.s_addr = inet_addr("127.0.0.1");
++	server.sin_port = htons(port);
++
++	return connect(socket, (struct sockaddr*)&server, sizeof(server)) != SOCKET_ERROR;
++}
++
++int RobotCommunication::ParseKeyword(WPARAM wParam, LPARAM lParam, int& command, int &reply_port, CString& strInput)
++{
++	strInput = "";
++	command = 0;
++	reply_port = 0;
++	
++	PCOPYDATASTRUCT pCDS = (PCOPYDATASTRUCT)lParam;
++	if (!pCDS)
++		return 0;
++
++	int signature = HIWORD(wParam);
++	reply_port = LOWORD(wParam);
++
++	// I dati sono nel nostro spazio di memoria
++	char* buffer = (char*)pCDS->lpData;
++	int dataSize = pCDS->cbData;
++	command = (int)pCDS->dwData;
++
++	if (signature != ROBOT_SIGNATURE
++		|| reply_port != ROBOT_PORT
++		|| command < ROBOT_CMD_BASE
++		|| command > ROBOT_CMD_BASE + 100)					// Check Sender
++	{
++		ASSERT(0);
++		return -1;
++	}
++
++	// 6. Copia sicura dei dati
++	if (pCDS->cbData > 0) {
++		try {
++			std::vector<char> buffer(pCDS->cbData + 1, 0);
++			memcpy_s(buffer.data(), pCDS->cbData, pCDS->lpData, pCDS->cbData);
++			strInput = buffer.data();
++		}
++		catch (...) {
++			TRACE("ERROR: Data copy failed\n");
++			return -1;
++		}
++	}
++
++	return 1;
++}
++
++
++int RobotCommunication::ReplyKeyword(int result, int reply_port, const CString& strOutput)
++{
++	SOCKET clientSocket = CreateClientSocket(reply_port);
++	if (clientSocket == INVALID_SOCKET) {
++		return 0;
++	}
++
++	//CString msg;
++	//msg.Format("### ROBOT-REPLY ### [%s]", strOutput);
++	//g_pMetaMarket->Trace(2, msg);
++
++	int success = 0;
++
++	try {
++		if (ConnectSocket(clientSocket, reply_port)) {
++			CStringA utf8String(strOutput.GetString());
++			if (send(clientSocket, utf8String.GetString(), utf8String.GetLength(), 0) != SOCKET_ERROR) {
++				success = 1;
++			}
++		}
++	}
++	catch (...) {
++		success = 0;
++	}
++
++	closesocket(clientSocket);
++	WSACleanup();
++	return success;
++}
+Index: src/Common/robot.h
+===================================================================
+--- src/Common/robot.h	(nonexistent)
++++ src/Common/robot.h	(working copy)
+@@ -0,0 +1,23 @@
++#pragma once
++
++
++// ROBOT FRAMEWORK  -- Invoke Keyword
++
++// Keyword Command
++#define ROBOT_CMD_BASE				22220
++#define ROBOT_CMD_GET_HEADER		ROBOT_CMD_BASE + 0
++#define ROBOT_CMD_GET_PROP			ROBOT_CMD_BASE + 1
++#define ROBOT_CMD_IS_COL_VISIBLE	ROBOT_CMD_BASE + 2
++#define ROBOT_CMD_GET_COL_POINT		ROBOT_CMD_BASE + 3
++
++class RobotCommunication {
++public:
++	static int ParseKeyword(WPARAM wParam, LPARAM lParam, int& command, int& reply_port, CString& strInput);
++	static int ReplyKeyword(int result, int reply_port, const CString& strOutput);
++
++private:
++	static SOCKET CreateClientSocket(int port);
++	static bool ConnectSocket(SOCKET socket, int port);
++};
++
++
 Index: src/Common/util.cpp
 ===================================================================
 --- src/Common/util.cpp	(revision 11679)
@@ -58,108 +215,146 @@ Index: src/Common/util.h
  int LoadListFromContext(LPCTSTR strKey, CStringList* strList, CFTCXContext* pContext);
  
  BOOL ClientBelongsToOperator(LPCTSTR strOperator, LPCTSTR strClientID);
-Index: src/SQL/MMSQLite.cpp
+Index: src/Views/MMSBPaneSecurityView.cpp
 ===================================================================
---- src/SQL/MMSQLite.cpp	(revision 11679)
-+++ src/SQL/MMSQLite.cpp	(working copy)
-@@ -4,7 +4,7 @@
- #include "MMSQLite.h"
- #include "MMSQL.h"
+--- src/Views/MMSBPaneSecurityView.cpp	(revision 11679)
++++ src/Views/MMSBPaneSecurityView.cpp	(working copy)
+@@ -739,6 +739,25 @@
  
--#define SQLITE_DBNAME_DICTIONARY		"MetaMarketDICT"
-+#define SQLITE_DBNAME_DICTIONARY	 	"MetaMarketDICT"
- #define SQLITE_DBNAME					"MetaMarket"
- #define SQLITE_SCRIPT_SOURCE			"MetaMarket"
+ BOOL CMMSBPaneSecurityView::OnRButtonClickedRowCol(ROWCOL nRow, ROWCOL nCol, UINT nFlags, CPoint pt)
+ {
++#ifdef DEBUG
++	if (nCol == 0 && nRow < GetFirstDataRow())
++	{
++		CStringList List_in, List_out;
++		CString strOutput;
++
++		//GetProperties(&List_in, &List_out);
++		//LoadPipedStringFromString(strOutput, &List_out, "; ");
++		//TRACE("###PROPERTY: %s \n", strOutput);
++
++		List_in.RemoveAll(); List_out.RemoveAll();
++		GetHeader(&List_in, &List_out);
++		LoadPipedStringFromString(strOutput, &List_out, "; ");
++		TRACE("###HEADER: %s \n", strOutput);
++
++		return TRUE;
++	}
++#endif // DEBUG
++	
+ 	return CMMSecurityView::OnRButtonClickedRowCol(nRow, nCol, nFlags, pt);
+ }
  
 Index: src/Views/MMTradingOrderView.cpp
 ===================================================================
 --- src/Views/MMTradingOrderView.cpp	(revision 11679)
 +++ src/Views/MMTradingOrderView.cpp	(working copy)
-@@ -1807,7 +1807,7 @@
+@@ -1807,39 +1807,35 @@
  
  BOOL CMMTradingOrderView::CanSortCol(ROWCOL nCol, long* pCurSorOrder /*= NULL*/)
  {
 -	CLSkField*		pField;
-+	CLSkField* pField = nullptr;
- 	long			fieldID;
+-	long			fieldID;
++	CLSkField*		pField = nullptr;
++	long			fieldID = 0;
  	BOOL			bCanSort = FALSE;
  
-@@ -1838,7 +1838,7 @@
+-	if(GetFieldByCol(nCol,&pField,&fieldID)) 
++	if (GetFieldByCol(nCol, &pField, &fieldID) && pField && pField->mOffset) 
+ 	{
+-		if(pField && pField->mOffset) 
++		switch (pField->mOffset) 
+ 		{
+-			switch (pField->mOffset) 
+-			{
+-				case FOFFS(CLIENT_ORDER,CareOrder):
+-				case FOFFS(CLIENT_ORDER,RejectionTime):
+-					// not sortable column
+-				break;
+-				default:
+-					bCanSort = TRUE;
+-					if (pCurSorOrder)
+-						*pCurSorOrder = GetSheetData()->IsOrderedOnField(pField->mOffset);
+-				break;
+-			}
++		case FOFFS(CLIENT_ORDER,CareOrder):
++		case FOFFS(CLIENT_ORDER,RejectionTime):
++			// not sortable column
++		break;
++		default:
++			bCanSort = TRUE;
++			if (pCurSorOrder)
++				*pCurSorOrder = GetSheetData()->IsOrderedOnField(pField->mOffset);
++		break;
++		}
+ 
+-		}
+ 	}
+ 
+ 	return bCanSort;
+-
+ }
+ 
  void CMMTradingOrderView::OnSheetSortColAsc()
  {
  	CRowColArray	awCols;
 -	CLSkField*		pField;
-+	CLSkField* pField = nullptr;
- 	long			fieldID;
+-	long			fieldID;
++	CLSkField*		pField = nullptr;
++	long			fieldID = 0;
  
  	BOOL bReorder = FALSE;
-@@ -1881,7 +1881,7 @@
+ 
+@@ -1881,8 +1877,8 @@
  void CMMTradingOrderView::OnSheetSortColDesc()
  {
  	CRowColArray	awCols;
 -	CLSkField*		pField;
-+	CLSkField* pField = nullptr;
- 	long			fieldID;
+-	long			fieldID;
++	CLSkField*		pField = nullptr;
++	long			fieldID = 0;
  	BOOL bReorder = FALSE;
  
-@@ -4822,7 +4822,7 @@
+ 	if(GetSelectedCols(awCols))
+@@ -4822,8 +4818,8 @@
  	if (nRow<GetFirstDataRow())
  		return CMMSheetView::OnLButtonClickedRowCol(nRow, nCol, nFlags, pt);
  
 -	CLSkField *hField;
-+	CLSkField* hField = nullptr;
- 	long mID;
+-	long mID;
++	CLSkField *hField = nullptr;
++	long mID = 0;
  	GetFieldByCol(nCol, &hField, &mID);
  	if (mID == MM_ORDER_DELETE_FID)
-@@ -4925,7 +4925,7 @@
+ 	{
+@@ -4925,8 +4921,8 @@
  	if (nRow<GetFirstDataRow())
  		return CMMSheetView::OnLButtonDblClkRowCol(nRow, nCol, nFlags, pt);
  
 -	CLSkField*		pField;
-+	CLSkField* pField = nullptr;
- 	long	fieldID;
+-	long	fieldID;
++	CLSkField*		pField = nullptr;
++	long	fieldID = 0;
  	BOOL bEditable = FALSE;
  	
-@@ -5046,10 +5046,60 @@
+ 	if (GetFieldByCol(nCol,&pField,&fieldID)) 
+@@ -5046,10 +5042,36 @@
  	return bIsEnabled;
  }
  
 +int CMMTradingOrderView::__TEST(ROWCOL nRow, ROWCOL nCol, UINT nFlags, CPoint pt)
 +{
-+	CRect allrec, leftrec;
-+	GetClientRect(&allrec);
-+	
-+	leftrec = allrec;
-+	leftrec.right = leftrec.left + 38;
++	CStringList List_in, List_out;
++	CString strOutput;
 +
-+	ROWCOL col1, col2;
++	GetProperties(&List_in, &List_out);
++	LoadPipedStringFromString(strOutput, &List_out, "; ");
++	TRACE("###PROPERTY: %s \n", strOutput);
 +
-+	col1 = CalcRightColFromRect(leftrec);											// left cell
-+	col2 = CalcRightColFromRect(allrec);											// right cell
-+
-+	TRACE("RANGE %d-%d\n", col1, col2);
-+
-+	return TRUE;
-+	
-+	
-+	CRect rec = CalcRectFromClientRowCol(nRow, nCol);
-+	TRACE("%d %d %d %d \n", rec.top, rec.bottom, rec.left, rec.right);				// Coordinate della cella
-+
-+	rec = CalcRectFromClientRowCol(nRow, nCol+10);
-+	TRACE("%d %d %d %d \n", rec.top, rec.bottom, rec.left, rec.right);
-+
-+	
-+	//col1 = GetFirstVisibleCol();
-+	col2 = GetLastVisibleCol();
-+	TRACE("RANGE %d\n", col2);
-+
-+	ScrollCellInView(nRow, nCol+10);												// La mette visibile
-+
-+	col2 = GetLastVisibleCol();
-+	TRACE("RANGE %d\n", col2);
-+	
-+
-+	
++	List_in.RemoveAll(); List_out.RemoveAll();
++	GetHeader(&List_in, &List_out);
++	LoadPipedStringFromString(strOutput, &List_out, "; ");
++	TRACE("###HEADER: %s \n", strOutput);
 +	
 +	return TRUE;
 +}
@@ -169,11 +364,10 @@ Index: src/Views/MMTradingOrderView.cpp
  	if (nRow < GetFirstDataRow())
 +	{
 +#ifdef DEBUG
-+		//if (nCol ==5) 
++		if (nCol == 0) 
 +		{
 +			return __TEST(nRow, nCol, nFlags, pt);
 +		}
-+		
 +#endif // DEBUG
  		return CMMSheetView::OnRButtonClickedRowCol(nRow, nCol, nFlags, pt);
 +	}
@@ -181,33 +375,59 @@ Index: src/Views/MMTradingOrderView.cpp
  
  	// check tick selector settins
  	if (GetRowValues(nRow, &m_client_order))
-@@ -6372,7 +6422,7 @@
+@@ -6021,7 +6043,7 @@
+ 	{
+ 		CRowColArray		awCols;
+ 		CLSkField*			hField = NULL;
+-		long				mID;
++		long				mID = 0;
+ 		ROWCOL				nCount;
+ 		UINT				fGray = MF_GRAYED;
+ 
+@@ -6372,8 +6394,8 @@
  
  	BOOL bRet = FALSE;
  
 -	CLSkField*		pField;
+-	long			fieldID;
 +	CLSkField* pField = nullptr;
- 	long			fieldID;
++	long	fieldID;
  
  	if (GetFieldByCol(nCol,&pField,&fieldID) && pField) 
-@@ -10297,7 +10347,7 @@
+ 	{
+@@ -10297,8 +10319,8 @@
  		return TRUE;
  
  	ROWCOL nRow, nCol;
 -	CLSkField*		pField;
-+	CLSkField* pField = nullptr;
- 	long			fieldID;
+-	long			fieldID;
++	CLSkField*		pField = nullptr;
++	long			fieldID = 0;
  	double nVal;
  
-@@ -10440,7 +10490,7 @@
+ 	GetCurrentCell(nRow, nCol);
+@@ -10440,8 +10462,8 @@
  
  	CLFWSheetData* pSheetData = GetSheetData();
  
 -	CLSkField*		pField;
-+	CLSkField* pField = nullptr;
- 	long			fieldID;
+-	long			fieldID;
++	CLSkField*		pField = nullptr;
++	long			fieldID = 0;
  
  	BOOL bRet = FALSE;
+ 
+@@ -10450,8 +10472,8 @@
+ 	{
+ 		if (pField)
+ 		{
+-			if (pField->mType == TypeNONE && pField->mOffset == FOFFS(CLIENT_ORDER, OrderType)) {
+-
++			if (pField->mType == TypeNONE && pField->mOffset == FOFFS(CLIENT_ORDER, OrderType))
++			{
+ 				char		*FieldPntr = (char *)&m_pObj->GetBA()[pField->mOffset];
+ 
+ 				if (((CLSkeletonObj *)FieldPntr)->mDType == EnumType)
 Index: src/Views/MMTradingOrderView.h
 ===================================================================
 --- src/Views/MMTradingOrderView.h	(revision 11679)
@@ -242,17 +462,488 @@ Index: src/Views/MMView.cpp
    //}}AFX_MSG_MAP
  
  END_MESSAGE_MAP()
-@@ -2290,6 +2291,9 @@
- 	CLFWSheetView::OnMouseMove(nFlags, point);
+@@ -397,8 +398,71 @@
+ 
+ 	if (m_pViewProxy && m_pViewProxy->GetVersion()>=0x0110)
+ 		m_pViewProxy->OnEnableAutoApplyColFilters(m_bAutoApplyColFilter);
++
++	Set_UIA_Attr();
  }
  
-+// Robot Call KeyWord
-+afx_msg LRESULT OnCopyData(WPARAM wParam, LPARAM lParam);
++// TEST UIA TEST UIA TEST UIA TEST UIA TEST UIA TEST UIA
 +
- LRESULT CMMSheetView::OnSrcAlive(WPARAM wParam, LPARAM lParam)
++
++void CMMSheetView::Set_UIA_Attr()
++{
++	SetWindowText("StingrayGrid");			// robot: set UIA Name
++}
++
++// UIA Access - Non va
++
++//#include <oleacc.h>
++//#include <UIAutomation.h>
++//#include <UIAutomationCore.h>
++//#include <UIAutomationClient.h>
++//
++//#pragma comment(lib, "oleacc.lib")
++//#pragma comment(lib, "UIAutomationCore.lib")
++//
++//void CMMSheetView::Set_UIA_Attr()
++//{
++//	// Per il Name usando IAccessible
++//	VARIANT varChild;
++//	varChild.vt = VT_I4;
++//	varChild.lVal = CHILDID_SELF;
++//	BSTR bstrName = SysAllocString(L"MyCustomGridName");
++//
++//	IAccessible* pAcc = NULL;
++//	if (SUCCEEDED(AccessibleObjectFromWindow(m_hWnd, OBJID_CLIENT,
++//		IID_IAccessible, (void**)&pAcc)))
++//	{
++//		pAcc->put_accName(varChild, bstrName);
++//		pAcc->Release();
++//	}
++//
++//	// Per AutomationId e ControlType usando IRawElementProviderSimple
++//	IRawElementProviderSimple* pProvider = NULL;
++//	if (SUCCEEDED(UiaHostProviderFromHwnd(m_hWnd, &pProvider)))
++//	{
++//		// Impostare AutomationId
++//		VARIANT varAutomationId;
++//		varAutomationId.vt = VT_BSTR;
++//		varAutomationId.bstrVal = SysAllocString(L"CustomGrid_001");
++//		pProvider->SetPropertyValue(UIA_AutomationIdPropertyId, varAutomationId);
++//
++//		// Impostare ControlType
++//		VARIANT varControlType;
++//		varControlType.vt = VT_I4;
++//		varControlType.lVal = UIA_DataGridControlTypeId;
++//		pProvider->SetPropertyValue(UIA_ControlTypePropertyId, varControlType);
++//
++//		// Liberare la memoria
++//		SysFreeString(varAutomationId.bstrVal);
++//		pProvider->Release();
++//	}
++//
++//	// Liberare la memoria
++//	SysFreeString(bstrName);
++//}
++
++
++
+ void CMMSheetView::EnablePageBreaks(BOOL bEnable)
  {
- 	CFTCMultiObserver *pObserver = GetFTCMultiObserver();
-@@ -2935,7 +2939,245 @@
+ 	CGXStyle*	pTableStyle = CreateStyle();
+@@ -965,8 +1029,8 @@
+ 			long lSorted = -2; // none
+ 			if (CanSortCol(nCol, &lSorted)) 
+ 			{
+-				CLSkField* pField;
+-				long fieldID;
++				CLSkField* pField = nullptr;
++				long fieldID = 0;
+ 				if(GetFieldByCol(nCol,&pField,&fieldID) && pField)
+ 				{
+ 					switch (lSorted)
+@@ -1049,22 +1113,18 @@
+ 
+ BOOL CMMSheetView::CanSortCol(ROWCOL nCol, long* pCurSorOrder /*= NULL*/)
+ {
+-	CLSkField*		pField;
+-	long			fieldID;
++	CLSkField*		pField = nullptr;
++	long			fieldID = 0;
+ 	BOOL			bCanSort = FALSE;
+ 
+-	if(GetFieldByCol(nCol,&pField,&fieldID)) 
++	if(GetFieldByCol(nCol, &pField, &fieldID) && pField && pField->mOffset) 
+ 	{
+-		if(pField && pField->mOffset) 
+-		{
+-			bCanSort = TRUE;
+-			if (pCurSorOrder)
+-				*pCurSorOrder = GetSheetData()->IsOrderedOnField(pField->mOffset);
+-		}
++		bCanSort = TRUE;
++		if (pCurSorOrder)
++			*pCurSorOrder = GetSheetData()->IsOrderedOnField(pField->mOffset);
+ 	}
+ 
+ 	return bCanSort;
+-	
+ }
+ 
+ void CMMSheetView::OnControlBarAction(CControlBar *pControlBar, long nActionID)
+@@ -1342,35 +1402,27 @@
+ 
+ void CMMSheetView::UpdateCell(CLSkeletonObj* pObj,unsigned long nOffset,long nIdx)
+ {
+-	CLFWSkDocKeyDataCustom	*Key;
+-	long					NewPosOrd;
+-	long 					ret;
+-	CLSkField*	mField;
+-	long		mID;
++	CLSkField*	mField = nullptr;
++	long		mID = 0;
+ 
+-
+-	for(int nCol=0;nCol<=GetColCount();nCol++)
++	for(int nCol = 0; nCol <= GetColCount(); nCol++)
+ 	{
+ 		mField = NULL;
+ 		mID = 0;
+-
+-		if (ret=GetFieldByCol(nCol,&mField,&mID))
++		if (GetFieldByCol(nCol,&mField,&mID))
+ 		{
+ 			if( (nIdx && mID==nIdx) || (mField && nOffset && mField->mOffset==nOffset) )
+ 			{
+-				Key	= (CLFWSkDocKeyDataCustom *)GetSheetData()->GetKey()->CreateKey(pObj);
+-
+-				if ( (NewPosOrd=GetSheetData()->GetKey()->GetInsPos(Key))>=0 )
++				CLFWSkDocKeyDataCustom	*Key = (CLFWSkDocKeyDataCustom *)GetSheetData()->GetKey()->CreateKey(pObj);
++				long NewPosOrd = GetSheetData()->GetKey()->GetInsPos(Key);
++				if (NewPosOrd >= 0)
+ 				{
+-					for (int n=0; n<GetSheetData()->GetRowPerEntity();n++)
+-						RedrawRowCol(NewPosOrd * GetSheetData()->GetRowPerEntity() + GetFirstDataRow()+n,nCol,GX_UPDATENOW,FALSE);
+-				
++					for (int n = 0; n < GetSheetData()->GetRowPerEntity(); n++)
++						RedrawRowCol(NewPosOrd * GetSheetData()->GetRowPerEntity() + GetFirstDataRow() + n, nCol, GX_UPDATENOW, FALSE);
+ 				}
+ 				delete Key;
+ 				break;
+ 			}
+-		} else {
+-			ret = 1;
+ 		}
+ 	}
+ }
+@@ -1377,8 +1429,8 @@
+ 
+ void CMMSheetView::UpdateCol(unsigned long nOffset,long nIdx)
+ {
+-	CLSkField*	mField;
+-	long		mID;
++	CLSkField*	mField = nullptr;
++	long		mID = 0;
+ 
+ 	for(int nCol=0;nCol<=GetColCount();nCol++)
+ 	{
+@@ -1399,8 +1451,8 @@
+ void CMMSheetView::UpdateColStyle()
+ {
+ 	CGXStyle sty;
+-	CLSkField* pField;
+-	long fieldID;
++	CLSkField* pField = nullptr;
++	long fieldID = 0;
+ 	BOOL bResizeToFit = FALSE;
+ 
+ 	for (ROWCOL col = GetFirstDataCol(); col <= GetLastDataCol(); col++)
+@@ -1581,30 +1633,30 @@
+ 
+ void CMMSheetView::OnSheetSortColAsc()
+ {
+-	CRowColArray	awCols;
+-	CLSkField*		pField;
+-	long			fieldID;
+ 	BOOL			bReorder = FALSE;
+ 
+-
++	CRowColArray	awCols;
+ 	if(GetSelectedCols(awCols))
+ 	{
++		CLSkField*		pField = nullptr;
++		long			fieldID = 0;
++
+ 		for(ROWCOL n = 0; n<awCols.GetSize(); n++)
+ 		{
+ 			if (CanSortCol(awCols[n], NULL)) 
+ 			{
+-				if(GetFieldByCol(awCols[n],&pField,&fieldID))
++				pField = nullptr;
++				if (GetFieldByCol(awCols[n], &pField, &fieldID) && pField && pField->mOffset)
+ 				{
+-					if(pField && pField->mOffset) {
+-						bReorder = TRUE;
+-						GetSheetData()->ReorderOnField(pField->mOffset,SkSegAscendent);
+-						if (!m_bLoadEnabled)
+-							RedrawRowCol(GetHeaderRows(), n, GX_INVALIDATE);
+-					}
++					bReorder = TRUE;
++					GetSheetData()->ReorderOnField(pField->mOffset,SkSegAscendent);
++					if (!m_bLoadEnabled)
++						RedrawRowCol(GetHeaderRows(), n, GX_INVALIDATE);
+ 				}
+ 			}
+ 		}
+ 	}
++
+ 	if (bReorder)
+ 	{
+ 		SetKeySortOnReorder();
+@@ -1634,23 +1686,25 @@
+ 
+ void CMMSheetView::OnSheetSortColDesc()
+ {
+-	CRowColArray	awCols;
+-	CLSkField*		pField;
+-	long			fieldID;
+ 	BOOL			bReorder = FALSE;
+ 
+-	if(GetSelectedCols(awCols)) {
+-		for(ROWCOL n = 0; n<awCols.GetSize(); n++) 
++	CRowColArray	awCols;
++	if(GetSelectedCols(awCols))
++	{
++		CLSkField*		pField = nullptr;
++		long			fieldID = 0;
++
++		for (ROWCOL n = 0; n<awCols.GetSize(); n++) 
+ 		{
+ 			if (CanSortCol(awCols[n], NULL)) 
+ 			{
+-				if(GetFieldByCol(awCols[n],&pField,&fieldID)) {
+-					if(pField && pField->mOffset) {
+-						bReorder = TRUE;
+-						GetSheetData()->ReorderOnField(pField->mOffset,SkSegDescendent);
+-						if (!m_bLoadEnabled)
+-							RedrawRowCol(GetHeaderRows(), n, GX_INVALIDATE);
+-					}
++				pField = nullptr;
++				if (GetFieldByCol(awCols[n], &pField, &fieldID) && pField && pField->mOffset)
++				{
++					bReorder = TRUE;
++					GetSheetData()->ReorderOnField(pField->mOffset,SkSegDescendent);
++					if (!m_bLoadEnabled)
++						RedrawRowCol(GetHeaderRows(), n, GX_INVALIDATE);
+ 				}
+ 			}
+ 		}
+@@ -1832,8 +1886,6 @@
+ {
+ 	CRowColArray		awCols;
+ 	ROWCOL				nCount;
+-	CLSkField*			hField = NULL;
+-	long				mID = 0;
+ 
+ 	nCount = GetSelectedCols(awCols);
+ 
+@@ -1842,13 +1894,19 @@
+ 		BOOL bOld = LockUpdate();
+ 
+ 		CGXStyle*	pStyle = CreateStyle();
++		CLSkField*			hField = NULL;
++		long				mID = 0;
+ 
+-		for (int i =0; i< awCols.GetSize(); i++)
++		for (int i = 0; i < awCols.GetSize(); i++)
+ 		{
+-			GetFieldByCol(awCols[i],&hField,&mID);
+-			SetDefaultDecimals(awCols[i], hField, mID, *pStyle);
++			hField = NULL;
++			mID = 0;
++			if (GetFieldByCol(awCols[i], &hField, &mID))
++			{
++				SetDefaultDecimals(awCols[i], hField, mID, *pStyle);
+ 
+-			SetStyleRange(CGXRange().SetCols(awCols[i]), *pStyle);
++				SetStyleRange(CGXRange().SetCols(awCols[i]), *pStyle);
++			}
+ 		}
+ 
+ 		RecycleStyle(pStyle);
+@@ -1865,21 +1923,20 @@
+ 	if (pCmdUI->m_pSubMenu)
+ 	{
+ 		CRowColArray		awCols;
+-		CLSkField*			hField = NULL;
+-		long				mID;
+-		ROWCOL				nCount;
+ 		UINT				fGray = MF_GRAYED;
+ 
+-
+-		nCount = GetSelectedCols(awCols);
+-		if(nCount)
++		ROWCOL nCount = GetSelectedCols(awCols);
++		if (nCount)
+ 		{
+-			for (int i =0; i< awCols.GetSize(); i++)
++			CLSkField*			hField = NULL;
++			long				mID = 0;
++			for (int i = 0; i < awCols.GetSize(); i++)
+ 			{
+-
+-				if (GetFieldByCol(awCols[i],&hField,&mID) && hField)
++				hField = NULL;
++				mID = 0;
++				if (GetFieldByCol(awCols[i], &hField, &mID) && hField)
+ 				{
+-					if (hField->mType==TypeDOUBLE || hField->mType==TypeFLOAT)
++					if (hField->mType == TypeDOUBLE || hField->mType == TypeFLOAT)
+ 					{
+ 						fGray = 0;
+ 						break;
+@@ -1889,8 +1946,9 @@
+ 		}
+ 
+          pCmdUI->m_pMenu->EnableMenuItem(pCmdUI->m_nIndex, MF_BYPOSITION|fGray);
+-
+-	} else {
++	}
++	else
++	{
+ 		// default menu
+ 		pCmdUI->Enable(TRUE);
+ 	}
+@@ -2371,9 +2429,9 @@
+ 	ROWCOL nRow, nCol;
+ 	if (GetCurrentCell(nRow, nCol)) 
+ 	{
+-		CLSkField* pField;
+-		long fieldID;
+-		if(GetFieldByCol(nCol,&pField,&fieldID)) 
++		CLSkField* pField = nullptr;
++		long fieldID = 0;
++		if (GetFieldByCol(nCol, &pField, &fieldID)) 
+ 		{
+ 			return (CanStartEditing(nRow, nCol, m_pObj, pField, fieldID) && IsClipboardFormatAvailable(CF_TEXT));
+ 		}
+@@ -2392,9 +2450,10 @@
+ 	ROWCOL nRow, nCol;
+ 	if (GetCurrentCell(nRow, nCol))
+ 	{
+-		CLSkField* pField;
+-		long fieldID;
+-		if(GetFieldByCol(nCol,&pField,&fieldID)) {
++		CLSkField* pField = nullptr;
++		long fieldID = 0;
++		if (GetFieldByCol(nCol,&pField,&fieldID))
++		{
+ 			return CanStartEditing(nRow, nCol, m_pObj, pField, fieldID);
+ 		}
+ 	}
+@@ -2432,7 +2491,7 @@
+ 	unsigned long fieldOffset;
+ 	char *P = m_pObj->GetBA();
+ 	CString ddeHeader;
+-	CLSkeletonObj *pObj;
++	CLSkeletonObj *pObj = nullptr;
+ 
+ 	ddeHeader.Format("=%s|", AfxGetAppName());
+ 
+@@ -2456,21 +2515,24 @@
+ 		colRight = rect.right;
+ 	}
+ 
+-	for (ROWCOL row= rowTop; row<=rowBottom; row++)
++	for (ROWCOL row = rowTop; row <=rowBottom; row++)
+ 	{
+ 		CLSkField* pField = NULL;
+-		long fieldID;
+-		BOOL bRet;
++		long fieldID = 0;
++		BOOL bRet = FALSE;
+ 
+ 		CMMSheetView::GetRowValues(row, m_pObj);
+ 
+-		for (ROWCOL col = colLeft; col<=colRight; col++)
++		for (ROWCOL col = colLeft; col <= colRight; col++)
+ 		{
+-			if(!IsColHidden(col))
++			if (!IsColHidden(col))
+ 			{
+-				pObj = NULL;
++				pObj = nullptr;
++				pField = nullptr;
++				fieldID = 0;
++				bRet = FALSE;
+ 
+-				if(GetFieldByCol(col,&pField,&fieldID))
++				if (GetFieldByCol(col, &pField, &fieldID))
+ 				{
+ 					keyName = "";
+ 					keyValue = "";
+@@ -2482,15 +2544,16 @@
+ 				{
+ 					objName = pObj->mName;
+ 					fieldName[0] = '\0';
+-					if (pObj->FieldOffset2Name(fieldName, fieldOffset)>0)
++					if (pObj->FieldOffset2Name(fieldName, fieldOffset) > 0)
+ 						linkBuff += ddeHeader + objName + "!'" + keyName + "&" + keyValue + "&" + fieldName + "'";
+ 					else
+ 						linkBuff += _LS(IDLS_DATA_NOT_LINKABLE);
+-				} else
++				}
++				else
+ 					linkBuff += _LS(IDLS_DATA_NOT_LINKABLE);
+ 
+-				if (col != colRight) linkBuff += "\t";
+-
++				if (col != colRight)
++					linkBuff += "\t";
+ 			}
+ 		}
+ 
+@@ -2499,7 +2562,6 @@
+ 
+ 	string str = linkBuff;
+ 	m_clipboard.PutData(CF_TEXT,str);
+-
+ }
+ 
+ void CMMSheetView::OnEditCopyRTD()
+@@ -2555,18 +2617,21 @@
+ 	for (ROWCOL row= rowTop; row<=rowBottom; row++)
+ 	{
+ 		CLSkField* pField = NULL;
+-		long fieldID;
+-		BOOL bRet;
++		long fieldID = 0;
++		BOOL bRet = FALSE;
+ 
+ 		CMMSheetView::GetRowValues(row, m_pObj);
+ 
+-		for (ROWCOL col = colLeft; col<=colRight; col++)
++		for (ROWCOL col = colLeft; col <= colRight; col++)
+ 		{
+-			if(!IsColHidden(col))
++			if (!IsColHidden(col))
+ 			{
+-				pObj = NULL;
+-				
+-				if(GetFieldByCol(col,&pField,&fieldID))
++				pObj = nullptr;
++				pField = nullptr;
++				fieldID = 0;
++				bRet = FALSE;
++
++				if (GetFieldByCol(col,&pField,&fieldID))
+ 				{
+ 					keyName = "";
+ 					keyValue = "";
+@@ -2579,14 +2644,16 @@
+ 				{
+ 					objName = pObj->mName;
+ 					fieldName[0] = '\0';
+-					if (pObj->FieldOffset2Name(fieldName, fieldOffset)>0)
++					if (pObj->FieldOffset2Name(fieldName, fieldOffset) > 0)
+ 						linkBuff += rtdHeader + objName + "\"" + charListSep + "\"" + fieldName + "\"" + charListSep + "\"" + keyName + ";" + keyValue + "\")";
+ 					else
+ 						linkBuff += _LS(IDLS_DATA_NOT_LINKABLE);
+-				} else
++				}
++				else
+ 					linkBuff += _LS(IDLS_DATA_NOT_LINKABLE);
+ 
+-				if (col != colRight) linkBuff += "\t";
++				if (col != colRight)
++					linkBuff += "\t";
+ 
+ 			}
+ 		}
+@@ -2935,7 +3002,302 @@
  	return TRUE;
  }
  
@@ -268,40 +959,40 @@ Index: src/Views/MMView.cpp
 +	ROBOT_CMD_GET_HEADER:
 +	========================
 +		''
-+		'tcol1,(x1,y1)|col2,(x2,y2)'
-+
++		'col1,x1|col2,x2'			x optional for visible only
 +
 +	ROBOT_CMD_GET_PROP :
 +	========================
 +		''
-+		'x_off=x|y_top=y|y_bot=y|col_from=c1|col_to=c2'
-+
-+
-+	ROBOT_CMD_IS_COL_VISIBLE :
-+	========================
-+		'ncol'
-+		'res'						0 / 1
++		'x_off=x|y_top=y|y_bot=y|y_mid=y|col_from=c1|col_to=c2'
 +
 +	ROBOT_CMD_GET_COL_POINT
 +	========================
 +		'ncol' or 'ncol|scroll'
-+		'x|y|s'						x|y|scrolled
++		'x_mid|scrolled|x1|x2'		
++
++	ROBOT_CMD_IS_COL_VISIBLE :
++	========================
++		'col'
++		'res'						0 / 1 - si puo usare getpoint
++
 +*/
 +
 +
 +#define ROBOT_SEP		"\t"
 +
-+int CMMSheetView::GetCellCenter(ROWCOL row, ROWCOL col, CPoint& p)
++int CMMSheetView::GetColPos(ROWCOL col, ROWCOL col_first_visible, int &x1, int &x2, int &x_mid)
 +{
-+	CRect rec = CalcRectFromClientRowCol(row, col);
++	CRect rec = CalcRectFromClientRowCol(GetHeaderRows(), col - col_first_visible + 1);			// Colonna indice dalla prima visibile - Why ???
++	
++	x1 = rec.left;
++	x2 = rec.right;
++	x_mid = (x1 + x2) / 2;
 +
-+	p.x = (rec.left + rec.right) / 2;
-+	p.y = (rec.top + rec.bottom) / 2;
-+
-+	return 0;
++	return 1;
 +}
 +
-+int CMMSheetView::GetColRange(ROWCOL& col1, ROWCOL& col2)
++int CMMSheetView::GetColViewRange(ROWCOL& col1, ROWCOL& col2)
 +{
 +	CRect allrec, leftrec;
 +	GetClientRect(&allrec);
@@ -311,56 +1002,107 @@ Index: src/Views/MMView.cpp
 +
 +	col1 = CalcRightColFromRect(leftrec);											// left cell - cam be trunc
 +	col2 = CalcRightColFromRect(allrec);											// right cell - cam be trunc
-+	
++
 +	// TODO controllo troncamenti col1 e col2, centro nel grid
 +	CRect rec = CalcRectFromClientRowCol(GetHeaderRows(), GetHeaderCols());
-+	CPoint p1, p2;
-+	GetCellCenter(GetHeaderRows(), col1, p1);
-+	GetCellCenter(GetHeaderRows(), col2, p2);
++	int x1, x2, xm1, xm2;
++	GetColPos(col1, col1, x1, x2, xm1);
++	GetColPos(col2, col1, x1, x2, xm2);
 +
-+	if (p1.x < rec.left)
++	if (xm1 < rec.left)
 +		col1++;
 +
-+	if (p2.x > rec.right)
++	if (xm2 > allrec.right)
++		col2--;
++
++	while (IsColHidden(col2))			// TEST - Da implementare 
 +		col2--;
 +
 +	return 0;
 +}
 +
++// Problema: Non Tornata tutte le colonne a vole si fermava a 13... ?
++//int CMMSheetView::GetHeader(CStringList* List_in, CStringList* List_out)
++//{
++//	ROWCOL col1, col2;
++//	GetColViewRange(col1, col2);
++//
++//	//CMMSheetData* pSheetData = (CMMSheetData*)GetSheetData();
++//	CLFWSheetData* pSheetData = GetSheetData();
++//	CLFWFieldData* pdata;
++//
++//	ROWCOL nCol = 1;
++//	while (pdata = pSheetData->GetFieldByCol(nCol) )
++//
++//	{
++//		CString msg;
++//		msg.Format("### ROBOT-HEDER [%s] Hide[%d]", GetValueRowCol(GetHeaderRows(), nCol), IsColHidden(nCol));
++//		g_pMetaMarket->Trace(2, msg);
++//		
++//		if (!IsColHidden(nCol))
++//		{
++//			CString name = GetValueRowCol(GetHeaderRows(), nCol);
++//
++//			if (nCol >= col1 && nCol <= col2)
++//			{
++//				int x1, x2, xm;
++//				GetColPos(nCol, col1, x1, x2, xm);
++//			
++//				CString position;
++//				//position.Format(",(%d,%d)", x1, p.y);
++//
++//				position.Format(",%d", xm);
++//
++//				name = name + position;
++//			}
++//
++//			List_out->AddTail(name);
++//		}
++//		nCol++;
++//	}
++//
++//	return 0;
++//}
 +
 +int CMMSheetView::GetHeader(CStringList* List_in, CStringList* List_out)
 +{
 +	ROWCOL col1, col2;
-+	GetColRange(col1, col2);
++	GetColViewRange(col1, col2);
 +
-+	CMMSheetData* pSheetData = (CMMSheetData*)GetSheetData();
++	CLFWSheetData* pSheetData = GetSheetData();
 +	CLFWFieldData* pdata;
 +
-+	ROWCOL nCol = 1;
-+	while (pdata = pSheetData->GetFieldByCol(nCol))
++	int nCol = 0;
++	for (nCol = 1; nCol < pSheetData->m_cacheFieldsSize; nCol++)
 +	{
-+		if (!IsColHidden(nCol))
++		TRY
 +		{
-+			CString name = GetValueRowCol(GetHeaderRows(), nCol);
-+
-+			if (nCol >= col1 && nCol <= col2)
++			if (!IsColHidden(nCol))
 +			{
-+				CPoint p;
-+				GetCellCenter(GetHeaderRows(), nCol, p);
-+			
-+				CString point;
-+				point.Format(",(%d,%d)", p.x, p.y);
++				CString name = GetValueRowCol(GetHeaderRows(), nCol);
 +
-+				name = name + point;
++				if (nCol >= col1 && nCol <= col2)
++				{
++					int x1, x2, xm;
++					GetColPos(nCol, col1, x1, x2, xm);
++					CString position;
++					position.Format(",%d", xm);
++					name = name + position;
++				}
++
++				List_out->AddTail(name);
 +			}
-+
-+			List_out->AddTail(name);
 +		}
-+		nCol++;
++		CATCH(CException, e)
++		{
++			ASSERT(0);
++		}
++		END_CATCH
 +	}
 +
 +	return 0;
 +}
++
 +
 +int CMMSheetView::GetProperties(CStringList* List_in, CStringList* List_out)
 +{
@@ -383,7 +1125,7 @@ Index: src/Views/MMView.cpp
 +	// range visible
 +	
 +	ROWCOL col1, col2;
-+	GetColRange(col1, col2);
++	GetColViewRange(col1, col2);
 +	
 +	str.Format("col_from=%d", col1);
 +	List_out->AddTail(str);
@@ -396,15 +1138,15 @@ Index: src/Views/MMView.cpp
 +
 +
 +int CMMSheetView::GetColPoint(CStringList* List_in, CStringList* List_out)
-+{
++{	
 +	ROWCOL col = atoi(List_in->GetHead());
 +	BOOL scroll = List_in->GetCount()>1;
 +
-+	CPoint p;
-+	GetCellCenter(GetHeaderRows(), col, p);
-+
 +	ROWCOL col1, col2;
-+	GetColRange(col1, col2);
++	GetColViewRange(col1, col2);
++
++	int x1, x2, xm;
++	GetColPos(col, col1, x1, x2, xm);
 +
 +	BOOL scrolled = 0;
 +
@@ -414,22 +1156,28 @@ Index: src/Views/MMView.cpp
 +		{
 +			// scroll - cambia tutto
 +			ScrollCellInView(GetHeaderRows(), col);
-+			GetCellCenter(GetHeaderRows(), col, p);	
++			GetColPos(col, col1, x1, x2, xm);
 +			scrolled = 1;
 +		}
 +		else
 +		{
-+			p = CPoint(0, 0);			// None
++			x1 = x2 = xm = 0;		// None
 +		}
 +	}
 +
 +	CString str;
-+	str.Format("%d", p.x);
++	
++	str.Format("%d", xm);
 +	List_out->AddTail(str);
-+	str.Format("%d", p.y);
-+	List_out->AddTail(str);
++	
 +	str.Format("%d", scrolled);
 +	List_out->AddTail(str);
++	
++	str.Format("%d", x1);
++	List_out->AddTail(str);			// non serve
++
++	str.Format("%d", x2);
++	List_out->AddTail(str);			// non serve
 +
 +	return 0;
 +}
@@ -451,16 +1199,16 @@ Index: src/Views/MMView.cpp
 +		res = GetProperties(List_in, List_out);
 +		return res;
 +	}
-+	//case ROBOT_CMD_IS_COL_VISIBLE:	// GetHeader
-+	//{
-+	//	res = GetHeader(List_out);
-+	//	return res;
-+	//}
 +	case ROBOT_CMD_GET_COL_POINT:		// GetHeader
 +	{
 +		res = GetColPoint(List_in, List_out);
 +		return res;
 +	}
++	//case ROBOT_CMD_IS_COL_VISIBLE:	// GetHeader
++	//{
++	//	res = IsColVisible(List_out);
++	//	return res;
++	//}
 +
 +	default:
 +		break;
@@ -502,13 +1250,13 @@ Index: src/Views/MMView.h
 ===================================================================
 --- src/Views/MMView.h	(revision 11679)
 +++ src/Views/MMView.h	(working copy)
-@@ -402,6 +402,16 @@
+@@ -402,8 +402,19 @@
  	virtual BOOL OnRButtonHitRowCol(ROWCOL nHitRow, ROWCOL nHitCol, ROWCOL nDragRow, ROWCOL nDragCol, CPoint point, UINT flags, WORD nHitState);
  	virtual BOOL OnMouseMoveOver(ROWCOL nRow, ROWCOL nCol, UINT flags, CPoint pt);
  
 +	// Robot Call KeyWord
-+	virtual int GetCellCenter(ROWCOL col1, ROWCOL col2, CPoint &p);
-+	virtual int GetColRange(ROWCOL &col1, ROWCOL& col2);
++	virtual int GetColPos(ROWCOL col, ROWCOL col_first_visible, int& x1, int& x2, int& x_mid);
++	virtual int GetColViewRange(ROWCOL &col1, ROWCOL &col2);
 +
 +	virtual int GetHeader(CStringList* List_in, CStringList* List_out);
 +	virtual int GetProperties(CStringList* List_in, CStringList* List_out);
@@ -518,8 +1266,11 @@ Index: src/Views/MMView.h
 +
  // Operations
  public:
++	void Set_UIA_Attr();
  	CMMMultiDocument* GetDocument();
-@@ -488,7 +498,8 @@
+ 
+ #ifdef _DEBUG
+@@ -488,7 +499,8 @@
  	afx_msg void OnUnlinkWindow();
  	afx_msg void OnUpdateUnlinkWindow(CCmdUI* pCmdUI);
  
