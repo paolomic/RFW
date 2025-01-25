@@ -2,11 +2,10 @@ import keyboard
 import mouse
 import time
 
-# Import Path - Assudo
+# Import 
 import sys
 from pathlib import Path
 _new_path = str(Path(__file__).parent.parent)
-print(_new_path)
 sys.path.append(_new_path) 
 
 from utl_app import env

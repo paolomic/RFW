@@ -6,6 +6,8 @@ import time
 import utl_win as uw
 import utl_robot as ur
 
+from utl_win import sleep, VERIFY, RAISE, ROBOT_RES
+
 #############################################################
 # Util  GridMng - My
 #############################################################
@@ -38,6 +40,12 @@ def set_show_all(grid_mng):
     (x,y) = grid_mng.get_header_point()
     uw.win_mouse_move(grid_mng.win_grid, x,y)
     mouse.click('right')
+    uw.popup_reply(wtop, 'Columns Settings#Show All', skip_disabled=1)        # se gia def is disabl
+
+def set_show_all_2(wtop, grid):   
+    uw.win_click(grid, mode='grid_header')
+    mouse.click('right')
+    sleep(0.25)
     uw.popup_reply(wtop, 'Columns Settings#Show All', skip_disabled=1)        # se gia def is disabl
 
 def set_sort(grid_mng, key):

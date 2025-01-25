@@ -133,13 +133,13 @@ def workspace_remove(wsp_path):
 
 
 def session_close (wtop):
-    win_close(wtop.handle, wait_end=0.3)
+    win_close(wtop, wait_end=0.3)
     warning_replay(wtop, 'Do you want to close current workspace?', 'OK')
     warning_replay(wtop, 'Do you want to save current workspace?', 'No')
 
 
 def page_close (page, replay='No'):
-    win_close(page.handle)
+    win_close(page)
     warning_replay(page, 'Do you want to save the page.*before closing.*', replay, use_re=True)
 
 
@@ -164,8 +164,8 @@ def win_resize(window, w, h):
 # Windows
 ##########################################################
 #region
-def win_close(handle: int):
-    PostMessage(handle, win32con.WM_CLOSE, 0, 0)
+def win_close(win):
+    PostMessage(win.handle, win32con.WM_CLOSE, 0, 0)
 
 def win_activate(window, unminimize = True, wait_end=0.25, wait_restore=0.5):
     window.set_focus()
@@ -198,6 +198,10 @@ def win_click(window, mode="center", wait_end=0.25, arg=None):
     if (mode=='grid_tl'):
         click_x = (rect.left +10)
         click_y = (rect.top + 10) 
+
+    if (mode=='grid_header'):
+        click_x = (rect.left +30)
+        click_y = (rect.top + 6) 
 
     if (mode=='grid_row1'):
         click_x = (rect.left +30)
@@ -290,7 +294,7 @@ def grid_select_rows(grid, num, mode="row", home=True):
     keyboard.press('shift')
     #win_click(grid, mode='grid_row', arg=10)
     for i in range(num):
-        keyboard.press_and_release("pagedown" if mode=="page" else "down")
+        keyboard.press_and_release("pagedown" if mode=="page" or mode=='pg' else "down")
         sleep(0.05)
     keyboard.release('shift')
 

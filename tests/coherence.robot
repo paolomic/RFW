@@ -24,7 +24,7 @@ Launch New Session
 Starting Dialog
     [Documentation]     Starting Dialog
     [Timeout]           2 minutes
-    ${arg}=             Set Variable  @{addin_list}xx
+    ${arg}=             Set Variable  @{addin_list}
     &{result}=          evaluate      test_coh.robot_start_dialog("${arg}")  modules=test_coh
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
