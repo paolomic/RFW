@@ -15,7 +15,6 @@ class AppEnv:
     #private
     coh_path = None
     coh_exe = None
-    coh_title = None
 
     def reset(self):
         self.app = None
@@ -27,7 +26,6 @@ class AppEnv:
         #private
         coh_path = None
         coh_exe = None
-        coh_title = None
 
     def set(self, app):
         self.reset()
@@ -51,24 +49,23 @@ class AppEnv:
             pass
         #print (self)
 
-    def init(self, coh_path, coh_title): 
+    def init(self, coh_path): 
         self.reset()
         self.coh_path = coh_path
-        self.coh_title = coh_title
         self.coh_exe = os.path.basename(coh_path)
 
-    def launch_app(self, coh_path, coh_title):
-        self.init(coh_path, coh_title)
+    def launch_app(self, coh_path, unique=True):
+        self.init(coh_path)
         exe_name = os.path.basename(self.coh_path)
 
-        found = 0
-        try:
-            app = Application(backend="uia").connect(path=self.coh_exe)
-            found = 1
-        except:
-            pass
-        
-        VERIFY(not found, 'Coherence Already Started')
+        if unique:
+            found = 0
+            try:
+                app = Application(backend="uia").connect(path=self.coh_exe)
+                found = 1
+            except:
+                pass
+            VERIFY(not found, 'Coherence Already Started')
         
         try:
             print('Starting new instance...')
@@ -82,8 +79,8 @@ class AppEnv:
         #print(f'wtop {wtop}')
         self.set(app)
 
-    def hang_app(self, coh_path, coh_title):
-        self.init(coh_path, coh_title)
+    def hang_app(self, coh_path):
+        self.init(coh_path)
         hang_ok = 0
         self.reset()
         exe_name = os.path.basename(self.coh_path)
@@ -120,6 +117,6 @@ class AppEnv:
 
 
     def reload(self):         # mode= hang / launch  / hang_or_launch 
-        self.hang_app(self.coh_path, self.coh_title)
+        self.hang_app(self.coh_path)
 
 env = AppEnv()              # session singleton

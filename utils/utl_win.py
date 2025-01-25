@@ -8,7 +8,9 @@ import time
 import re
 import win32clipboard
 
+import win32gui
 from win32gui import FindWindow, PostMessage, GetCursorInfo
+
 import win32.lib.win32con as win32con
 
 WIN_BUTT_STATE_CHECKED          = (1<<4)
@@ -116,17 +118,54 @@ def VERIFY(data, message):
 
 
 ##########################################################
+# Sessione and Pages
+##########################################################
+
+def workspace_remove(wsp_path):
+    path_wsp = Path(wsp_path)
+    if (path_wsp.exists()):
+        path_wsp.unlink()
+    VERIFY(not path_wsp.exists(), 'Wsp Exist')
+    #path_wsp_folder = Path(COH_WSP.replace('.wsp4', '.wsp4_wrk'))
+    #if (path_wsp_folder.exists()):
+    #    path_wsp_folder.rmdir()
+    #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
+
+
+def session_close (wtop):
+    win_close(wtop.handle, wait_end=0.3)
+    warning_replay(wtop, 'Do you want to close current workspace?', 'OK')
+    warning_replay(wtop, 'Do you want to save current workspace?', 'No')
+
+
+def page_close (page, replay='No'):
+    win_close(page.handle)
+    warning_replay(page, 'Do you want to save the page.*before closing.*', replay, use_re=True)
+
+
+##########################################################
+# Move Resize
+##########################################################
+
+#page.set_focus()
+
+# TODO implementazione UIA Wrapper?
+
+def win_move(window, x, y):
+  rect = window.element_info.rectangle
+  win32gui.MoveWindow(window.handle, x, y, rect.width(), rect.height(), True)
+
+def win_resize(window, w, h):
+  #window.iface_transform.Resize(w, h)
+  rect = window.element_info.rectangle
+  win32gui.MoveWindow(window.handle, rect.left, rect.top, w, h, True)
+
+##########################################################
 # Windows
 ##########################################################
 #region
 def win_close(handle: int):
     PostMessage(handle, win32con.WM_CLOSE, 0, 0)
-
-def win_move(window, x, y):
-  window.iface_transform.Move(x, y)
-
-def win_resize(window, w, h):
-  window.iface_transform.Resize(w, h)
 
 def win_activate(window, unminimize = True, wait_end=0.25, wait_restore=0.5):
     window.set_focus()
@@ -221,10 +260,10 @@ def popup_reply(wtop, selects, wait_init=0.2, wait_end=0.2, skip_disabled=False)
     sleep(wait_end)
     return 1
 
-def warning_replay(wtop, mess, butt):
-    warning = get_child_chk(wtop, name='Coherence', ctrl_type='Pane', verify=False)
+def warning_replay(win, mess, butt, use_re=False):
+    warning = get_child_chk(win, name='Coherence', ctrl_type='Pane', verify=False)
     if warning:
-        message = get_child_chk(warning, ctrl_type='Text', use_re=False).window_text()
+        message = get_child_chk(warning, ctrl_type='Text', use_re=use_re).window_text()
         assert (mess in message)
         butt = get_child_chk(warning, name=butt, ctrl_type='Button')
         win_click(butt)

@@ -6,6 +6,7 @@ import time
 import sys
 from pathlib import Path
 _new_path = str(Path(__file__).parent.parent)
+print(_new_path)
 sys.path.append(_new_path) 
 
 from utl_app import env
@@ -16,37 +17,7 @@ import utl_grid as ug
 import utl_dump as ud
 
 
-######################################################
-### TODO
-#region 
 
-#   Evolution:
-#    - SUITE NEW    con New Wsp - aggiungere setting new wsp
-#    - SUITER INST. Installer (admin)
-#    - CTRL ID      COme identificare univocamente controlli
-#    - WIN_MOVE     customize win size, pos
-#    - WIN_ACTIVE   Portare in Fronte
-#    - VERS CHECK   Aggiungere Addin Versione-Check e Load-check
-#    - AUTOM_ID     Dlg NewOrder: handler sfalsati (non corrispondono nomi) why?
-#    - MESSAGE      COntrollare Message-Barra alle Tx (?)
-#    - CLOSE PAGE   Fare win_close_page() che controlla warning
-#    - CLOSE SESS   Fare close_session - che controlla warning
-#    - WAIT WIN     dopo handle_start_dialog attesa retry - vedi todo
-#    - NODE RELOAD  fare reload_node affidabile (serve?)
-#    - PARS         Mantenere Pars in Robot o file json, ... ?
-#
-#   New Suite:
-#    - check    !Esit wsp
-#    - new wsp, start-dialog
-#    - new page SB
-#    - select sec
-#    - new care, link oid
-#    - New Order, order, filter, selection, search, ... dont close
-#    - New SB Grid sort import search
-#    - timer session close
-#
-
-#endregion
 
 ######################################################
 ###  Session Parameter
@@ -74,7 +45,7 @@ COH_CLIENTACC =     'TEST'
 ### Local Test - Session 3
 
 def run_session_TEST(): 
-    env.hang_app(COH_PATH, COH_TITLE_PATT)
+    env.hang_app(COH_PATH)
     page = uw.get_child_chk(env.wtop, name='Orders', ctrl_type='Pane', deep=3)
     grid = uw.get_child_chk(page, name='StingrayGrid', deep=8)
     #print(f'page {page}, grid{grid}')
@@ -89,7 +60,7 @@ def robot_launch_new_session(arg):
         VERIFY(env.app and env.wtop, "New Session Failed")
     
     try:
-        env.launch_app(COH_PATH, COH_TITLE_PATT)
+        env.launch_app(COH_PATH)
         return ROBOT_RES('ok')                  
     except Exception as e:
         return ROBOT_RES('no', str(e)) 
@@ -116,7 +87,7 @@ def robot_start_dialog(arg):
         env.reload()  
         
     try:
-        env.hang_app(COH_PATH, COH_TITLE_PATT)
+        env.hang_app(COH_PATH)
         do()
         return ROBOT_RES('ok')                  
     except Exception as e:
@@ -148,7 +119,7 @@ def robot_setting_init(arg):
         sleep(.25)
 
     try:
-        env.hang_app(COH_PATH, COH_TITLE_PATT)
+        env.hang_app(COH_PATH)
         do()
         return ROBOT_RES('ok')                  
     except Exception as e:
@@ -175,7 +146,7 @@ def robot_start_connections(arg):
             RAISE("Connection Fail")
 
     try:
-        env.hang_app(COH_PATH, COH_TITLE_PATT)
+        env.hang_app(COH_PATH)
         do()
         return ROBOT_RES('ok')                  
     except Exception as e:
@@ -220,7 +191,7 @@ def robot_security_browser(arg):
         uw.popup_reply(env.wtop, 'New#Care Order')          # Il popup viene generato sotto level top - anche il sotto menu
 
     try:
-        env.hang_app(COH_PATH, COH_TITLE_PATT)
+        env.hang_app(COH_PATH)
         do()
         return ROBOT_RES('ok')                  
     except Exception as e:
@@ -267,7 +238,7 @@ def robot_new_care_order(arg):
         return order['fields']['OrderID']
 
     try:
-        env.hang_app(COH_PATH, COH_TITLE_PATT)
+        env.hang_app(COH_PATH)
         orderid = do()
         return ROBOT_RES('ok', orderid)                 # return orderid to robot   
     except Exception as e:
@@ -288,7 +259,7 @@ def robot_select_order(arg):
         uw.win_click(butt)
 
     try:
-        env.hang_app(COH_PATH, COH_TITLE_PATT)
+        env.hang_app(COH_PATH)
         do(arg)
         return ROBOT_RES('ok')                  
     except Exception as e:
@@ -338,7 +309,7 @@ def robot_grid_sample(arg):
         print(f'Security Status {sel["Status"]}')
 
     try:
-        env.hang_app(COH_PATH, COH_TITLE_PATT)
+        env.hang_app(COH_PATH)
         do()
         return ROBOT_RES('ok')                  
     except Exception as e:
