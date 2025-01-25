@@ -94,9 +94,6 @@ def wait_cursor_normal(wait_init=0.1, wait_in=0.5, wait_end=0.2, timeout=15):
 
     sleep(wait_end)
 
-def end_session():
-    print ('## Session End ##')
-    exit()
 #endregion
 
 ##########################################################
@@ -164,8 +161,9 @@ def win_resize(window, w, h):
 # Windows
 ##########################################################
 #region
-def win_close(win):
+def win_close(win, wait_end=0.25):
     PostMessage(win.handle, win32con.WM_CLOSE, 0, 0)
+    sleep(wait_end)
 
 def win_activate(window, unminimize = True, wait_end=0.25, wait_restore=0.5):
     window.set_focus()

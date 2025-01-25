@@ -291,6 +291,19 @@ def do_grid_sample(arg):
     #print(f'Find Row: {sel}')
     print(f'Security Status {sel["Status"]}')
 
+def do_close_sessio(arg):                         
+    sleep(2)
+    uw.session_close(env.wtop)
+    sleep(1)
+    exist = 0
+    try:
+        env.hang_app(COH_PATH)
+        exist=1
+    except Exception as e:
+        pass
+    VERIFY(not exist, 'Close Session Failed')
+
+
 ############################ 
 # Generic Caller 
 def robot_run(fun_name:str, arg:str='', new_session=False):
