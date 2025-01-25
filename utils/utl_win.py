@@ -129,7 +129,8 @@ def workspace_remove(wsp_path):
     #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
 
 
-def session_close (wtop):
+def session_close (wtop, wait_init=.3):
+    sleep(wait_init)
     win_close(wtop, wait_end=0.3)
     warning_replay(wtop, 'Do you want to close current workspace?', 'OK')
     warning_replay(wtop, 'Do you want to save current workspace?', 'No')

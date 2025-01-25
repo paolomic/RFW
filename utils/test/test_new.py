@@ -292,9 +292,6 @@ def do_grid_sample(arg):
     print(f'Security Status {sel["Status"]}')
 
 def do_close_sessio(arg):                         
-    sleep(2)
-    uw.session_close(env.wtop)
-    sleep(1)
     exist = 0
     try:
         env.hang_app(COH_PATH)
@@ -306,19 +303,22 @@ def do_close_sessio(arg):
 
 ############################ 
 # Generic Caller 
-def robot_run(fun_name:str, arg:str='', new_session=False):
-    try:
-        if new_session:
+def robot_run(fun_name:str, arg:str='', session='hang'):
+    def manage_session(session):
+        if session=='new':
             env.launch_app(COH_PATH)
         else:
             env.hang_app(COH_PATH)
+        if session=='kill':
+            uw.session_close(env.wtop, wait_init=1, wait_end=1)
+    try:
+        manage_session(session)
         func = globals().get(fun_name)
         result = func(arg)
         return ROBOT_RES('ok', result)
     except Exception as e:
         return ROBOT_RES('no', str(e)) 
     
-
 
 ############## 
 # DEBUG 

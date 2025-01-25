@@ -16,7 +16,7 @@ Start New Session
     [Documentation]     nope
     [Timeout]           2 minutes
     ${arg}=             Set Variable  ${EMPTY}
-    &{result}=          evaluate      test_new.robot_run('do_new_session','${arg}',True)  
+    &{result}=          evaluate      test_new.robot_run('do_new_session','${arg}','new')  
     log                               result: ${result}
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
@@ -91,7 +91,7 @@ Session Close
     [Documentation]     nope
     [Timeout]           2 minutes
     ${arg}=             Set Variable  ${EMPTY}
-    &{result}=          evaluate      test_new.robot_run('do_close_sessio','${arg}') 
+    &{result}=          evaluate      test_new.robot_run('do_close_sessio','${arg}','kill') 
     ${status}=          evaluate      $result.status
     ${info}=            evaluate      $result.info
     Should Be Equal As Strings        ${status}     ok
