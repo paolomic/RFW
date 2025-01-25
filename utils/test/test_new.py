@@ -63,10 +63,9 @@ if (1):                 # FTX
 
 
 ############################ 
-### Robot Funz.
+### Robot Operations
 
 def do_new_session(arg):
-    env.launch_app(COH_PATH)
     VERIFY(env.app and env.wtop, "New Session Failed")
     path_wsp = Path(COH_WSP)
     if (path_wsp.exists()):
@@ -78,7 +77,6 @@ def do_new_session(arg):
     #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
 
 def do_start_dialog(arg):
-    env.hang_app(COH_PATH)
     VERIFY(env.app and env.wtop, "Hang Session Failed")
     edit = uw.get_child_chk(env.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
     uw.edit_set(edit, COH_WSP)
@@ -98,7 +96,6 @@ def do_start_dialog(arg):
     env.reload()  
         
 def do_setting_init(arg):
-    env.hang_app(COH_PATH)
     pane = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Pane', deep=3)
     list = uw.get_child_chk(pane, automation_id='103', ctrl_type='List', deep=3)
 
@@ -148,7 +145,6 @@ def do_setting_init(arg):
     uw.win_click(butt)
 
 def do_start_connections(arg):
-    env.hang_app(COH_PATH)
     addins = ['MetaMarket']                                                     # TODO pass form Robot ?
     for addin in addins:
         butt = env.select_ribbon_butt(addin, 'Auto Connect')
@@ -165,7 +161,6 @@ def do_start_connections(arg):
         RAISE("Connection Fail")
 
 def do_search_security(arg):
-    env.hang_app(COH_PATH)
     # la pg viene generata sotto main-node coherence
     env.click_ribbon_butt('Trading', 'Security Browser')
     page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
@@ -204,7 +199,6 @@ def do_search_security(arg):
     uw.page_close(page)
 
 def do_new_care_order(arg):
-    env.hang_app(COH_PATH)
     dlg = uw.get_child_chk(env.wtop, name="New Care Order.*", ctrl_type="Pane", use_re=1)
     adv = uw.get_child_chk(dlg, automation_id='13652', ctrl_type="CheckBox", use_re=1)
     if not uw.butt_is_checked(adv):
@@ -243,7 +237,7 @@ def do_new_care_order(arg):
     return order['fields']['OrderID']
 
 def do_select_order(arg):
-    env.hang_app(COH_PATH)
+    order_id = arg
     env.click_ribbon_butt('Trading', 'Orders')
     page = uw.get_child_chk(env.wtop, name='Orders.*', ctrl_type='Pane', use_re=1, deep=2)
     
@@ -258,7 +252,7 @@ def do_select_order(arg):
     VERIFY(status_num==1, 'Insert Orfed FIlter Failure')
 
 def do_grid_sample(arg):                         
-    env.hang_app(COH_PATH)
+    
     env.click_ribbon_butt('Trading', 'Security Browser')                            # todo: Gia una aperta : selezionare l utima ?
     page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
     grid = uw.get_child_chk(page, name='StingrayGrid', deep=9)
@@ -286,7 +280,7 @@ def do_grid_sample(arg):
     ug.set_sort(grid_mng,'default')
     ug.set_sort(grid_mng, [['Section','DESC'],['Security Ref.','ASC']])
 
-    #esempio LoaD
+    #esempio Import Rows
     ug.import_rows(grid_mng, 10, mode='pg')
     
     # esempio Data Search-Use
@@ -299,8 +293,12 @@ def do_grid_sample(arg):
 
 ############################ 
 # Generic Caller 
-def robot_run(fun_name:str, arg:str=''):
+def robot_run(fun_name:str, arg:str='', new_session=False):
     try:
+        if new_session:
+            env.launch_app(COH_PATH)
+        else:
+            env.hang_app(COH_PATH)
         func = globals().get(fun_name)
         result = func(arg)
         return ROBOT_RES('ok', result)

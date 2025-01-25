@@ -17,7 +17,7 @@ from utl_win import sleep, VERIFY, RAISE, ROBOT_RES
 
 def create_by_win(win_grid):
     res = ur.robot_send(win_grid.handle, ur.ROBOT_CMD_GET_HEADER, input_str="")
-    print(f'ROBOT_CMD_GET_HEADER result: [{res}]')                                 # <== Debug
+    #print(f'ROBOT_CMD_GET_HEADER result: [{res}]')                                 # <== Debug
     grid_mng = create_grid(win_grid, res) 
     res = ur.robot_send(win_grid.handle, ur.ROBOT_CMD_GET_PROP, input_str="")   
     #print(f'ROBOT_CMD_GET_PROP result: [{res}]')                                   # <== Debug
