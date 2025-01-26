@@ -102,6 +102,8 @@ def wait_cursor_normal(wait_init=0.1, wait_in=0.5, wait_end=0.2, timeout=15):
 
 def ROBOT_RES(status='ok', info=''):
     sleep(0.3)
+    if (info==None):
+        info=""
     return {
         "status": status,
         'info': info}
