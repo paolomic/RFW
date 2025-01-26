@@ -26,7 +26,7 @@ Starting Dialog
     [Documentation]     select addin list, version
     [Timeout]           2 minutes
     ${arg}=             Set Variable  @{addin_list}         # Set Argument
-    &{result}=          evaluate      test_new.robot_run('do_start_dialog','${arg}') 
+    &{result}=          evaluate      test_new.robot_run('do_start_dialog',"${arg}") 
     ${info} =           Set Variable  ${result}[info]
     Should Be Equal As Strings        ${result}[status]     ok
 
