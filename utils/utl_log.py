@@ -2,12 +2,9 @@ import re
 import json
 from datetime import datetime, timedelta
 from time import sleep
+import utl  as utl
 ###################################
 #Cappello
-
-def get_now_sec(sep=':'):
-    now = datetime.now()
-    return f'{now.hour:02}{sep}{now.minute:02}{sep}{now.second:02}'
 
 
 def GetLogRows(logpath, class_name, field_name, field_value, start_time, retry = 3, wait_s = 1):

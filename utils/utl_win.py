@@ -2,6 +2,7 @@ import keyboard
 import mouse
 
 from pywinauto import Desktop
+from pathlib import Path
 
 from datetime import datetime
 import time
@@ -12,6 +13,7 @@ import win32gui
 from win32gui import FindWindow, PostMessage, GetCursorInfo
 
 import win32.lib.win32con as win32con
+import utl  as utl
 
 WIN_BUTT_STATE_CHECKED          = (1<<4)
 
@@ -131,17 +133,46 @@ def workspace_remove(wsp_path):
     #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
 
 
-def session_close (wtop, wait_init=.3, wait_end=.3):
+def session_close (wtop, wait_init=.3, wait_end=.3, save_wsp='No'):
     sleep(wait_init)
     win_close(wtop, wait_end=0.3)
-    warning_replay(wtop, 'Do you want to close current workspace?', 'OK')
-    warning_replay(wtop, 'Do you want to save current workspace?', 'No')
+    warning_replay(wtop, 'Do you want to close current workspace', 'OK')
+    warning_replay(wtop, 'Do you want to save current workspace?', save_wsp)
     sleep(wait_end)
 
+def page_save(page, name, time_tag=False):
+    if not name:
+        return
 
-def page_close (page, replay='No'):
+    page.set_focus()
+    keyboard.press_and_release('ctrl+s')
+    sleep(0.2)
+    # non e' chiaro dove e' collocata. se prima ho aperto newdialog ad esempio
+    popup = get_child_chk(page.parent(), name='Save page', ctrl_type='Pane', deep=3, verify=False)  
+    if popup:
+        if time_tag:
+            now = utl.get_now_sec()                           # Note
+            name = name + '_' + now.replace(":","_")
+        edit = get_child_chk(popup, ctrl_type='Edit')
+        edit_set(edit, name)
+        butt = get_child_chk(popup, name='OK', ctrl_type='Button')
+        win_click(butt)
+        sleep(0.2)
+        warning_replay(popup, mess='Do you want to replace the page saved with this name.*', butt='OK', use_re=True)
+
+        #warning = get_child_chk(popup, name='Coherence', ctrl_type='Pane', verify=False)
+        #if warning:
+        #    message = get_child_chk(warning, name='Do you want to replace the page saved with this name.*', ctrl_type='Text', use_re=True, verify=False)
+        #    if (message):
+        #        butt = get_child_chk(warning, name='OK', ctrl_type='Button')
+        #        win_click(butt)
+
+
+def page_close(page, save_as=None):
+    if save_as:
+        page_save(page, save_as)
     win_close(page)
-    warning_replay(page, 'Do you want to save the page.*before closing.*', replay, use_re=True)
+    warning_replay(page, 'Do you want to save the page.*before closing.*', 'No', use_re=True)
 
 
 ##########################################################
@@ -267,12 +298,15 @@ def popup_reply(wtop, selects, wait_init=0.2, wait_end=0.2, skip_disabled=False)
     return 1
 
 def warning_replay(win, mess, butt, use_re=False):
-    warning = get_child_chk(win, name='Coherence', ctrl_type='Pane', verify=False)
+    warning = get_child_chk(win, name='Coherence', ctrl_type='Pane', verify=False, deep=3)
     if warning:
         message = get_child_chk(warning, ctrl_type='Text', use_re=use_re).window_text()
-        assert (mess in message)
-        butt = get_child_chk(warning, name=butt, ctrl_type='Button')
-        win_click(butt)
+        if (use_re and re.match(mess, message)) or (not use_re and (mess in message)):
+            butt = get_child_chk(warning, name=butt, ctrl_type='Button')
+            win_click(butt)
+        else:
+            #e' un altro warning - situazione complessa - forse conveniva fare la ricerca in base al mess
+            assert(0)
         return True
     return False
 

@@ -26,7 +26,7 @@ Starting Dialog
     [Documentation]     select addin list, version
     [Timeout]           2 minutes
     ${arg}=             Set Variable  @{addin_list}         # Set Argument
-    &{result}=          evaluate      test_new.robot_run('do_start_dialog',"${arg}") 
+    &{result}=          evaluate      test_new.robot_run('do_start_dialog',${arg}) 
     ${info} =           Set Variable  ${result}[info]
     Should Be Equal As Strings        ${result}[status]     ok
 
@@ -50,7 +50,9 @@ Start Connection
 Search Security
     [Documentation]     Search Security, open New Care Dialog
     [Timeout]           2 minutes
+    ${arg}=             Set Variable  ${EMPTY}
     &{result}=          evaluate      test_new.robot_run('do_search_security','${arg}') 
+    log                               result: ${result}
     ${info} =           Set Variable  ${result}[info]
     Should Be Equal As Strings        ${result}[status]     ok
 

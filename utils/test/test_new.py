@@ -15,7 +15,7 @@ from pathlib import Path
 _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
-
+import utl  as utl
 from utl_app import env
 from utl_win import sleep, VERIFY, RAISE, ROBOT_RES
 import utl_win as uw
@@ -30,26 +30,32 @@ import utl_dump as ud
 ###  Session Parameter
 #region 
 
-COH_PATH =          r'C:\work\disks\D\COH_x64\bin\Coherence.exe'                # TODO: JSon File ?
-COH_ADDIN=           ['MetaMarket','UserPages']
+COH_PATH =              r'C:\work\disks\D\COH_x64\bin\Coherence.exe'                # TODO: JSon File ?
+COH_ADDIN=              ['MetaMarket','UserPages']
 
-COH_WSP=            r"C:\work\disks\D\wsp_c\robot_test.wsp4"
-COH_PRIMARY=        '192.168.200.127'         
-COH_PORT=           '28000'         
-COH_USER=           'MARI'         
-COH_PASS=           '*'         
+COH_WSP=                r"C:\work\disks\D\wsp_c\robot_test.wsp4"
+COH_PRIMARY=            '192.168.200.127'         
+COH_PORT=               '28000'         
+COH_USER=               'MARI'         
+COH_PASS=               '*'         
 COH_BAND_SAVE=           True
 
-COH_EXC=            'BIT'
-COH_MRK=            'MTA'
-COH_SEC=            'AUTOGRILL SPA'
-COH_PRICE =         '95.01'
-COH_QTY =           '100'
-COH_ALIAS =         'KATIA'
-COH_CLIENTID =      'MARI'
-COH_CLIENTACC =     'TEST'
+COH_EXC=                'BIT'
+COH_MRK=                'MTA'
+COH_SEC=                'AUTOGRILL SPA'
+COH_PRICE =             '95.01'
+COH_QTY =               '100'
+COH_ALIAS =             'KATIA'
+COH_CLIENTID =          'MARI'
+COH_CLIENTACC =         'TEST'
+
+COH_SAVE_WSP_ONCLOSE =  'Yes'
 
 if (1):                 # FTX
+    COH_PRIMARY=        '10.91.204.22'         
+    COH_PORT=           '42900'         
+    COH_USER=           '99999@99999'         
+    COH_PASS=           '*'         
     COH_EXC=            'HIMTF'
     COH_MRK=            'MTF'
     COH_SEC=            'BTP 1 ST 46 3,25%'
@@ -175,7 +181,7 @@ def do_search_security(arg):
 
     status_num = uw.get_child_chk(page, name='No. of Rows: .*', ctrl_type='Text', deep=10, use_re=True)
     print(f'status_num {status_num}')
-    VERIFY(status_num==1, 'Not Such Unique Security')
+    VERIFY(status_num.window_text()=='No. of Rows: 1', 'Not Such Unique Security')           # Todo : Fare Meglio il Test
 
     grid = status_num = uw.get_child_chk(page, automation_id='59661', ctrl_type='Pane', deep=10, use_re=True)
     # hide
@@ -184,7 +190,7 @@ def do_search_security(arg):
     sleep(0.25)
 
     uw.popup_reply(env.wtop, 'New#Care Order')          # Il popup viene generato sotto level top - anche il sotto menu
-    uw.page_close(page)
+    uw.page_close(page, save_as='security_search')
 
 def do_new_care_order(arg):
     dlg = uw.get_child_chk(env.wtop, name="New Care Order.*", ctrl_type="Pane", use_re=1)
@@ -204,7 +210,7 @@ def do_new_care_order(arg):
     keyboard.write(COH_ALIAS)                               # popup is hide - or edit_set
     keyboard.press("tab")
         
-    start_time = ul.get_now_sec()                           # Note
+    start_time = utl.get_now_sec()                           # Note
     mytag = f'pwa_{start_time.replace(":","_")}' 
     edit = uw.get_child_chk(dlgadv, automation_id='12954')  
     uw.edit_set(edit, mytag)
@@ -238,6 +244,8 @@ def do_select_order(arg):
     status_num = uw.get_child_chk(page, name='No. of Rows: .*', ctrl_type='Text', deep=10, use_re=True)
     print(f'status_num {status_num}')
     VERIFY(status_num==1, 'Insert Orfed FIlter Failure')
+
+    uw.page_save(page, 'order_filtered', time_tag=True)
 
 def do_grid_sample(arg):                         
     env.click_ribbon_butt('Trading', 'Security Browser')                            # todo: Gia una aperta : selezionare l utima ?
@@ -276,6 +284,7 @@ def do_grid_sample(arg):
     VERIFY(sel, 'Security not Found')
     #print(f'Find Row: {sel}')
     print(f'Security Status {sel["Status"]}')
+    uw.page_save(page, 'security_grid_demo', time_tag=True)
 
 def do_close_session(arg):                         
     pass
@@ -292,7 +301,7 @@ def robot_run(fun_name:str, arg:str='', session='hang'):
         else:
             env.hang_app(COH_PATH)
         if session=='kill':
-            uw.session_close(env.wtop, wait_init=1, wait_end=1)
+            uw.session_close(env.wtop, wait_init=1, wait_end=1, save_wsp=COH_SAVE_WSP_ONCLOSE)
     def verify_session(session):
         if session=='kill':
             exist = 0
@@ -326,6 +335,6 @@ def prova(arg):
 if __name__ == '__main__':
     select = 1
     if (select==1):
-        print(robot_run('do_new_session') )
+        print(robot_run('do_close_session', session='kill') )
 
 
