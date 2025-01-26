@@ -33,12 +33,12 @@ import utl_dump as ud
 COH_PATH =          r'C:\work\disks\D\COH_x64\bin\Coherence.exe'                # TODO: JSon File ?
 COH_ADDIN=           ['MetaMarket','UserPages']
 
-COH_WSP=            r"C:\work\disks\D\wsp_c\test.wsp4"
+COH_WSP=            r"C:\work\disks\D\wsp_c\robot_test.wsp4"
 COH_PRIMARY=        '192.168.200.127'         
 COH_PORT=           '28000'         
 COH_USER=           'MARI'         
 COH_PASS=           '*'         
-COH_BAND=           True
+COH_BAND_SAVE=           True
 
 COH_EXC=            'BIT'
 COH_MRK=            'MTA'
@@ -53,20 +53,14 @@ if (1):                 # FTX
     COH_EXC=            'HIMTF'
     COH_MRK=            'MTF'
     COH_SEC=            'BTP 1 ST 46 3,25%'
-    COH_PRICE =         '95.01'
-    COH_QTY =           '100'
-    COH_ALIAS =         'KATIA'
-    COH_CLIENTID =      'MARI'
-    COH_CLIENTACC =     'TEST'
 
 #endregion
 
 
-############################ 
+######################################################
 ### Robot Operations
-
+#region 
 def do_new_session(arg):
-    VERIFY(env.app and env.wtop, "New Session Failed")
     path_wsp = Path(COH_WSP)
     if (path_wsp.exists()):
         path_wsp.unlink()
@@ -77,7 +71,6 @@ def do_new_session(arg):
     #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
 
 def do_start_dialog(arg):
-    VERIFY(env.app and env.wtop, "Hang Session Failed")
     edit = uw.get_child_chk(env.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
     uw.edit_set(edit, COH_WSP)
 
@@ -109,7 +102,7 @@ def do_setting_init(arg):
     edit = uw.get_child_chk(pane, automation_id='11303', ctrl_type='Edit', deep=3)
     uw.edit_set(edit, COH_PASS)
     
-    if COH_BAND:
+    if COH_BAND_SAVE:
         butt = uw.get_child_chk(pane, name='Bandwidth Saving', ctrl_type='CheckBox', deep=3)
         if not uw.butt_is_checked(butt):
             uw.win_click(butt)
@@ -168,21 +161,17 @@ def do_search_security(arg):
 
     uw.win_resize(page, 888, 444)
 
-    #edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # reset search 
+    search_edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # reset search 
+    search_butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
     #uw.edit_set(edit, '')
-
-    butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
-    uw.win_click(butt, wait_end=.5)
+    #uw.win_click(butt, wait_end=.5)
 
     treekey = f'{COH_EXC} - {COH_MRK}'
     item = uw.get_child_chk(page, name=treekey, ctrl_type='TreeItem', deep=10) 
     uw.win_click(item)
 
-    edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # POTEVO USARE -1 
-    uw.edit_set(edit, COH_SEC)
-
-    butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
-    uw.win_click(butt)
+    uw.edit_set(search_edit, COH_SEC)
+    uw.win_click(search_butt)
 
     status_num = uw.get_child_chk(page, name='No. of Rows: .*', ctrl_type='Text', deep=10, use_re=True)
     print(f'status_num {status_num}')
@@ -195,7 +184,6 @@ def do_search_security(arg):
     sleep(0.25)
 
     uw.popup_reply(env.wtop, 'New#Care Order')          # Il popup viene generato sotto level top - anche il sotto menu
-
     uw.page_close(page)
 
 def do_new_care_order(arg):
@@ -252,18 +240,16 @@ def do_select_order(arg):
     VERIFY(status_num==1, 'Insert Orfed FIlter Failure')
 
 def do_grid_sample(arg):                         
-    
     env.click_ribbon_butt('Trading', 'Security Browser')                            # todo: Gia una aperta : selezionare l utima ?
     page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
     grid = uw.get_child_chk(page, name='StingrayGrid', deep=9)
 
     uw.win_resize(page, 999, 444)
-    
-    edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # reset search 
-    uw.edit_set(edit, '')
 
-    butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
-    uw.win_click(butt, wait_end=.5)
+    #search_edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # reset search 
+    #search_butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
+    #uw.edit_set(edit, '')
+    #uw.win_click(butt, wait_end=.5)
 
     treekey = f'{COH_EXC} - {COH_MRK}'
     item = uw.get_child_chk(page, name=treekey, ctrl_type='TreeItem', deep=10) 
@@ -291,18 +277,14 @@ def do_grid_sample(arg):
     #print(f'Find Row: {sel}')
     print(f'Security Status {sel["Status"]}')
 
-def do_close_sessio(arg):                         
-    exist = 0
-    try:
-        env.hang_app(COH_PATH)
-        exist=1
-    except Exception as e:
-        pass
-    VERIFY(not exist, 'Close Session Failed')
+def do_close_session(arg):                         
+    pass
+
+#endregion
 
 
-############################ 
-# Generic Caller 
+######################################################
+# Generic Caller
 def robot_run(fun_name:str, arg:str='', session='hang'):
     def manage_session(session):
         if session=='new':
@@ -311,17 +293,29 @@ def robot_run(fun_name:str, arg:str='', session='hang'):
             env.hang_app(COH_PATH)
         if session=='kill':
             uw.session_close(env.wtop, wait_init=1, wait_end=1)
+    def verify_session(session):
+        if session=='kill':
+            exist = 0
+            try:
+                env.hang_app(COH_PATH)
+                exist=1
+            except Exception as e:
+                pass
+            VERIFY(not exist, 'Close Session Failed. Process still Exists')
+        else:
+            VERIFY(env.app and env.wtop, "Hang or New Session Failed")
     try:
         manage_session(session)
+        verify_session(session)
         func = globals().get(fun_name)
         result = func(arg)
         return ROBOT_RES('ok', result)
     except Exception as e:
         return ROBOT_RES('no', str(e)) 
     
-
-############## 
-# DEBUG 
+    
+######################################################
+# Main DEBUG 
 
 def prova(arg):
     env.hang_app(COH_PATH)
@@ -329,7 +323,6 @@ def prova(arg):
     #uw.win_move(page, 12, 12)
     uw.win_resize(page, 444, 444)
     
-
 if __name__ == '__main__':
     select = 1
     if (select==1):
