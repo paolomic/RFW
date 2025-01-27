@@ -277,7 +277,7 @@ def do_grid_sample(arg):
     ug.set_sort(grid_mng, [['Section','DESC'],['Security Ref.','ASC']])
 
     #esempio Import Rows
-    ug.import_rows(grid_mng, 20, mode='pg')
+    ug.import_rows(grid_mng, 85, mode='row')
     
     # esempio Data Search-Use
     print (f'Collected Rows: {grid_mng.get_row_num()}')

@@ -7,13 +7,13 @@ import utl  as utl
 #Cappello
 
 
-def GetLogRows(logpath, class_name, field_name, field_value, start_time, retry = 3, wait_s = 1):
+def GetLogRows(logpath, class_name, field_name, field_value, start_time, margin_sec=1, retry = 3, wait_s = 1):
     if (start_time=='now'):
         now = datetime.now()
         start_time = f'{now.hour:02}:{now.minute:02}:{now.second:02}'
     
     while retry > 0:
-        result = _GetLogRows(logpath, class_name, field_name, field_value, start_time)
+        result = _GetLogRows(logpath, class_name, field_name, field_value, start_time, margin_sec)
         if (result):
             return result
         sleep(wait_s)
@@ -36,7 +36,7 @@ def time_to_seconds(time_str):
     t = datetime.strptime(time_str, "%H:%M:%S")
     return t.hour * 3600 + t.minute * 60 + t.second
 
-def _GetLogRows(logpath, class_name, field_name, field_value, start_time):
+def _GetLogRows(logpath, class_name, field_name, field_value, start_time, margin_sec):
     """
     Estrae l'ultima riga di log che corrisponde ai criteri specificati.
     
@@ -95,7 +95,7 @@ def _GetLogRows(logpath, class_name, field_name, field_value, start_time):
                         line_seconds = time_to_seconds(timestamp)
                         
                         # Interrompi se il timestamp è precedente al target
-                        if line_seconds < target_seconds:
+                        if line_seconds < target_seconds - margin_sec:
                             return None
                         
                         # Verifica criteri di ricerca
