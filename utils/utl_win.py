@@ -14,6 +14,7 @@ from win32gui import FindWindow, PostMessage, GetCursorInfo
 
 import win32.lib.win32con as win32con
 import utl  as utl
+import utl_app as ua
 
 WIN_BUTT_STATE_CHECKED          = (1<<4)
 
@@ -133,11 +134,11 @@ def workspace_remove(wsp_path):
     #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
 
 
-def session_close (wtop, wait_init=.3, wait_end=.3, save_wsp='No'):
+def session_close (wtop, wait_init=.3, wait_end=.3, save_wsp=False):
     sleep(wait_init)
     win_close(wtop, wait_end=0.3)
-    warning_replay(wtop, 'Do you want to close current workspace', 'OK')
-    warning_replay(wtop, 'Do you want to save current workspace?', save_wsp)
+    warning_replay('Do you want to close current workspace', 'OK')
+    warning_replay('Do you want to save current workspace?', 'Yes' if save_wsp else 'No')
     sleep(wait_end)
 
 def page_save(page, name, time_tag=False):
@@ -148,17 +149,19 @@ def page_save(page, name, time_tag=False):
     keyboard.press_and_release('ctrl+s')
     sleep(0.2)
     # non e' chiaro dove e' collocata. se prima ho aperto newdialog ad esempio
+
     popup = get_child_chk(page.parent(), name='Save page', ctrl_type='Pane', deep=3, verify=False)  
     if popup:
-        if time_tag:
-            now = utl.get_now_sec()                           # Note
-            name = name + '_' + now.replace(":","_")
-        edit = get_child_chk(popup, ctrl_type='Edit')
-        edit_set(edit, name)
+        if name:
+            if time_tag:
+                now = utl.get_now_sec()                            # Note
+                name = name + '_' + now.replace(":","_")
+            edit = get_child_chk(popup, ctrl_type='Edit')
+            edit_set(edit, name)
         butt = get_child_chk(popup, name='OK', ctrl_type='Button')
         win_click(butt)
         sleep(0.2)
-        warning_replay(popup, mess='Do you want to replace the page saved with this name.*', butt='OK', use_re=True)
+        warning_replay('Do you want to replace the page saved with this name.*', butt='OK', use_re=True)
 
         #warning = get_child_chk(popup, name='Coherence', ctrl_type='Pane', verify=False)
         #if warning:
@@ -172,7 +175,7 @@ def page_close(page, save_as=None):
     if save_as:
         page_save(page, save_as)
     win_close(page)
-    warning_replay(page, 'Do you want to save the page.*before closing.*', 'No', use_re=True)
+    warning_replay('Do you want to save the page.*before closing.*', 'No', use_re=True)
 
 
 ##########################################################
@@ -297,17 +300,32 @@ def popup_reply(wtop, selects, wait_init=0.2, wait_end=0.2, skip_disabled=False)
     sleep(wait_end)
     return 1
 
-def warning_replay(win, mess, butt, use_re=False):
-    warning = get_child_chk(win, name='Coherence', ctrl_type='Pane', verify=False, deep=3)
-    if warning:
-        message = get_child_chk(warning, ctrl_type='Text', use_re=use_re).window_text()
+def warning_replay(mess, butt, root=None, title='Coherence', use_re=False, deep=3):
+    if not root:
+        root=ua.env.wtop
+    popup = get_child_chk(root, name=title, ctrl_type='Pane', verify=False, deep=deep)
+    if popup:
+        message = get_child_chk(popup, ctrl_type='Text', use_re=use_re).window_text()
         if (use_re and re.match(mess, message)) or (not use_re and (mess in message)):
-            butt = get_child_chk(warning, name=butt, ctrl_type='Button')
+            butt = get_child_chk(popup, name=butt, ctrl_type='Button')
             win_click(butt)
         else:
-            #e' un altro warning - situazione complessa - forse conveniva fare la ricerca in base al mess
-            assert(0)
+            #e' un altro warning - situazione complessa - warning_replay_2
+            VERIFY(None, 'Unespected Warning')
         return True
+    return False
+
+def warning_replay_2(mess, butt, root=None, title='Coherence', use_re=False, deep=3):
+    #works by message - totest
+    if not root:
+        root=ua.env.wtop
+    txt = get_child_chk(root, mess, ctrl_type='Text', use_re=use_re, verify=False, deep=deep)
+    if txt:
+        popup = txt.parent()
+        if popup:
+            butt = get_child_chk(popup, name=butt, ctrl_type='Button')
+            win_click(butt)
+            return True
     return False
 
 #endregion

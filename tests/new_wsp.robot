@@ -40,7 +40,7 @@ Setting Init
 
 Start Connection
     [Documentation]     Enable Connections On, wait for Connection Ready
-    [Timeout]           2 minutes
+    [Timeout]           4 minutes     #slow
     ${arg}=             Set Variable  ${EMPTY}
     &{result}=          evaluate      test_new.robot_run('do_start_connections','${arg}') 
     log                               result: ${result}

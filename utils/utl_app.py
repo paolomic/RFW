@@ -5,6 +5,8 @@ import os
 import utl_win as uw
 from utl_win import sleep, VERIFY, RAISE
 
+import re
+
 class AppEnv:
     app = None
     wtop = None
@@ -27,26 +29,24 @@ class AppEnv:
         coh_path = None
         coh_exe = None
 
-    def set(self, app):
+    def placeholder(self, app):
         self.reset()
         
         self.app = app
-        try:
-            self.wtop = app.top_window()
-        except:
-            pass
-        try:
-            self.rib_tab = uw.get_child_chk(self.wtop, name='Ribbon Tabs', ctrl_type='Group', deep=3, verify=False)      # TODO verify condizionale a wtop
-        except:
-            pass
-        try:
-            self.rib_grp = uw.get_child_chk(self.wtop, automation_id='59398', ctrl_type='ToolBar', deep=3, verify=False)
-        except:
-            pass
-        try:
-            self.st_bar = uw.get_child_chk(self.wtop, name='StatusBar', ctrl_type='StatusBar', verify=False)
-        except:
-            pass
+        self.wtop = app.top_window()
+
+        VERIFY(self.app, 'Application handler non Valid')
+        VERIFY(self.wtop, 'Windows Application handler non Valid')
+
+        if(not re.match('Starting Coherence.*', self.wtop.window_text())):
+            self.rib_tab = uw.get_child_chk(self.wtop, name='Ribbon Tabs', ctrl_type='Group', deep=4, verify=False)      # TODO verify condizionale a wtop
+            self.st_bar = uw.get_child_chk(self.wtop, name='StatusBar', ctrl_type='StatusBar', deep=4, verify=False)
+            self.rib_grp = uw.get_child_chk(self.wtop, automation_id='59398', ctrl_type='ToolBar', deep=4, verify=False)
+
+            VERIFY(self.rib_tab, 'Ribbon Tab handler non Valid')
+            VERIFY(self.st_bar, 'Ribbon Bar handler non Valid')
+            VERIFY(self.st_bar, 'Ribbon Group handler non Valid')
+
         #print (self)
 
     def init(self, coh_path): 
@@ -77,7 +77,7 @@ class AppEnv:
             
         #print(f'app {app}')
         #print(f'wtop {wtop}')
-        self.set(app)
+        self.placeholder(app)
 
     def hang_app(self, coh_path):
         self.init(coh_path)
@@ -94,7 +94,7 @@ class AppEnv:
 
         print(f'app {app}')
         print(f'wtop {wtop}')
-        self.set(app)
+        self.placeholder(app)
 
     def select_ribbon(self, ribb):
         rib_sel = uw.get_child_chk(self.rib_tab, name=ribb, ctrl_type='TabItem')
@@ -109,7 +109,7 @@ class AppEnv:
         bt = uw.get_child_chk(toolbar, name=butt, ctrl_type='Button', deep=2)
         return bt
 
-    def click_ribbon_butt(self, ribb, butt, wait_end=1):
+    def click_ribbon_butt(self, ribb, butt, wait_end=1): 
         bt = self.select_ribbon_butt(ribb, butt)
         uw.win_click(bt)
         sleep(wait_end)

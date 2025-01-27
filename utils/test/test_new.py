@@ -49,9 +49,9 @@ COH_ALIAS =             'KATIA'
 COH_CLIENTID =          'MARI'
 COH_CLIENTACC =         'TEST'
 
-COH_SAVE_WSP_ONCLOSE =  'Yes'
+COH_SAVE_WSP_ONCLOSE =  True
 
-if (1):                 # FTX
+if ( 0 ):                 # FTX
     COH_PRIMARY=        '10.91.204.22'         
     COH_PORT=           '42900'         
     COH_USER=           '99999@99999'         
@@ -89,7 +89,7 @@ def do_start_dialog(arg):
     VERIFY(is_create, 'Can`t Create New Workspace')
 
     uw.win_click(butt, wait_end=0.5)
-    uw.warning_replay(env.wtop, 'This workspace has not been closed properly', 'No')
+    uw.warning_replay('This workspace has not been closed properly', 'No')
 
     sleep(3.5)                                                                         # todo : Smart Wait                     
     env.reload()  
@@ -154,7 +154,7 @@ def do_start_connections(arg):
     if not uw.butt_is_checked(butt):
         uw.win_click(butt)
 
-    if uw.statusbar_wait(env.st_bar, 'Ready', attempt=15, delay=2):             # Wait for Connection Ready
+    if uw.statusbar_wait(env.st_bar, 'Ready', attempt=60, delay=2):             # Wait for Connection Ready
         print ('Connection Ready')
     else:
         RAISE("Connection Fail")
@@ -194,6 +194,7 @@ def do_search_security(arg):
 
 def do_new_care_order(arg):
     dlg = uw.get_child_chk(env.wtop, name="New Care Order.*", ctrl_type="Pane", use_re=1)
+    uw.win_move(dlg, 333,333)                               # davanti alla toolbar sembra creare problemi a step successivo
     adv = uw.get_child_chk(dlg, automation_id='13652', ctrl_type="CheckBox", use_re=1)
     if not uw.butt_is_checked(adv):
         uw.win_click(adv)
@@ -221,17 +222,18 @@ def do_new_care_order(arg):
     uw.win_click(but)
 
     log_path = uw.get_log_path(COH_WSP, 'MetaMarket')
-    order = ul.GetLogRows(log_path, 'CLIENT_ORDER', 'ComplianceText', mytag, start_time, retry = 4, wait_s = 1)
+    order = ul.GetLogRows(log_path, 'CLIENT_ORDER', 'ComplianceText', mytag, start_time, retry = 10, wait_s = 1)
 
     if (not order):
         RAISE("Order not Found")
 
-    uw.win_close(dlg)
+    uw.win_close(dlg)                                       # davanti alla toolbar sembra creare problemi a step successivo
     
     return order['fields']['OrderID']
 
 def do_select_order(arg):
     order_id = arg
+    print(f'order_id: {order_id}')
     env.click_ribbon_butt('Trading', 'Orders')
     page = uw.get_child_chk(env.wtop, name='Orders.*', ctrl_type='Pane', use_re=1, deep=2)
     
@@ -241,9 +243,9 @@ def do_select_order(arg):
     butt = uw.get_child_chk(page, name='Apply', ctrl_type='Button', deep=5)  
     uw.win_click(butt)
 
-    status_num = uw.get_child_chk(page, name='No. of Rows: .*', ctrl_type='Text', deep=10, use_re=True)
+    status_num = uw.get_child_chk(page, name='No. of Orders: .*', ctrl_type='Text', deep=10, use_re=True)
     print(f'status_num {status_num}')
-    VERIFY(status_num==1, 'Insert Orfed FIlter Failure')
+    VERIFY(status_num.window_text()=='No. of Orders: 1', 'Order Selection Failed')           # Todo : Fare Meglio il Test
 
     uw.page_save(page, 'order_filtered', time_tag=True)
 
@@ -275,11 +277,11 @@ def do_grid_sample(arg):
     ug.set_sort(grid_mng, [['Section','DESC'],['Security Ref.','ASC']])
 
     #esempio Import Rows
-    ug.import_rows(grid_mng, 10, mode='pg')
+    ug.import_rows(grid_mng, 20, mode='pg')
     
     # esempio Data Search-Use
     print (f'Collected Rows: {grid_mng.get_row_num()}')
-    sel = grid_mng.search_first_match({"Security Ref.": COH_SEC})      # piu segmenti con , 
+    sel = grid_mng.search_first_match({"Description": COH_SEC})      # piu segmenti con , 
     print(f'Find {1 if sel else 0} Row')
     VERIFY(sel, 'Security not Found')
     #print(f'Find Row: {sel}')
@@ -313,6 +315,7 @@ def robot_run(fun_name:str, arg:str='', session='hang'):
             VERIFY(not exist, 'Close Session Failed. Process still Exists')
         else:
             VERIFY(env.app and env.wtop, "Hang or New Session Failed")
+            env.wtop.set_focus()
     try:
         manage_session(session)
         verify_session(session)
@@ -335,6 +338,6 @@ def prova(arg):
 if __name__ == '__main__':
     select = 1
     if (select==1):
-        print(robot_run('do_close_session', session='kill') )
+        print(robot_run('do_new_session', 'new') )
 
 

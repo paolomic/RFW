@@ -179,7 +179,7 @@ def robot_security_browser(arg):
 
         status_num = uw.get_child_chk(page, name='No. of Rows: .*', ctrl_type='Text', deep=10, use_re=True)
         print(f'status_num {status_num}')
-        assert status_num.window_text()=='No. of Rows: 1'       # UNIQUE 
+        VERIFY(status_num.window_text()=='No. of Rows: 1','Security not Unique')
 
         grid = status_num = uw.get_child_chk(page, automation_id='59661', ctrl_type='Pane', deep=10, use_re=True)
         # hide
