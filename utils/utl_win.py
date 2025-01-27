@@ -133,8 +133,18 @@ def workspace_remove(wsp_path):
     #    path_wsp_folder.rmdir()
     #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
 
+def session_logon():
+    butt = ua.env.select_ribbon_butt('Home', 'Auto Connect')
+    if not butt_is_checked(butt):
+        win_click(butt)
 
-def session_close (wtop, wait_init=.3, wait_end=.3, save_wsp=False):
+def session_logoff():
+    butt = ua.env.select_ribbon_butt('Home', 'Auto Connect')
+    if butt_is_checked(butt):
+        win_click(butt)
+        warning_replay('Do you want to disable Auto Connect mode and stop all connections?', 'OK')
+
+def session_close (wtop, wait_init=.3, wait_end=.3, save_wsp=False, logoff=False):
     sleep(wait_init)
     win_close(wtop, wait_end=0.3)
     warning_replay('Do you want to close current workspace', 'OK')
@@ -171,9 +181,9 @@ def page_save(page, name, time_tag=False):
         #        win_click(butt)
 
 
-def page_close(page, save_as=None):
+def page_close(page, save_as=None, time_tag=False):
     if save_as:
-        page_save(page, save_as)
+        page_save(page, save_as, time_tag=time_tag)
     win_close(page)
     warning_replay('Do you want to save the page.*before closing.*', 'No', use_re=True)
 

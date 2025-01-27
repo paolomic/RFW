@@ -16,7 +16,7 @@ _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
 import utl  as utl
-from utl_app import env
+from utl_app import env, opt
 from utl_win import sleep, VERIFY, RAISE, ROBOT_RES
 import utl_win as uw
 import utl_log as ul
@@ -49,8 +49,6 @@ COH_ALIAS =             'KATIA'
 COH_CLIENTID =          'MARI'
 COH_CLIENTACC =         'TEST'
 
-COH_SAVE_WSP_ONCLOSE =  True
-
 if ( 0 ):                 # FTX
     COH_PRIMARY=        '10.91.204.22'         
     COH_PORT=           '42900'         
@@ -68,9 +66,10 @@ if ( 0 ):                 # FTX
 #region 
 def do_new_session(arg):
     path_wsp = Path(COH_WSP)
-    if (path_wsp.exists()):
+    if (path_wsp.exists() and not opt.check('reuse_wsp', 'yes')):
+        print('Remove Workspace...')
         path_wsp.unlink()
-    VERIFY(not path_wsp.exists(), 'Wsp Exist')
+        VERIFY(not path_wsp.exists(), 'Wsp Exist')
     #path_wsp_folder = Path(COH_WSP.replace('.wsp4', '.wsp4_wrk'))
     #if (path_wsp_folder.exists()):
     #    path_wsp_folder.rmdir()
@@ -85,8 +84,8 @@ def do_start_dialog(arg):
     uw.list_check(list, arg, True)
 
     butt = uw.get_child_chk(env.wtop, automation_id='1', ctrl_type='Button', deep=3)
-    is_create = butt.window_text()=='Create'
-    VERIFY(is_create, 'Can`t Create New Workspace')
+    if not opt.check('reuse_wsp', 'yes'):
+        VERIFY(butt.window_text()=='Create', 'Can`t Create New Workspace')
 
     uw.win_click(butt, wait_end=0.5)
     uw.warning_replay('This workspace has not been closed properly', 'No')
@@ -95,23 +94,32 @@ def do_start_dialog(arg):
     env.reload()  
         
 def do_setting_init(arg):
-    pane = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Pane', deep=3)
+    try:
+        pane = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Pane', deep=3)
+    except:
+        butt = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Button', deep=4)
+        uw.win_click(butt)
+        pane = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Pane', deep=3)
+
     list = uw.get_child_chk(pane, automation_id='103', ctrl_type='List', deep=3)
 
     ### Connection
-    edit = uw.get_child_chk(pane, name='Primary', ctrl_type='Edit', deep=3)
-    uw.edit_set(edit, COH_PRIMARY)
-    edit = uw.get_child_chk(pane, name='Port', ctrl_type='Edit', deep=3)
-    uw.edit_set(edit, COH_PORT)
-    edit = uw.get_child_chk(pane, name='User name', ctrl_type='Edit', deep=3)
-    uw.edit_set(edit, COH_USER)
-    edit = uw.get_child_chk(pane, automation_id='11303', ctrl_type='Edit', deep=3)
-    uw.edit_set(edit, COH_PASS)
-    
-    if COH_BAND_SAVE:
-        butt = uw.get_child_chk(pane, name='Bandwidth Saving', ctrl_type='CheckBox', deep=3)
-        if not uw.butt_is_checked(butt):
-            uw.win_click(butt)
+    try:
+        edit = uw.get_child_chk(pane, name='Primary', ctrl_type='Edit', deep=3)
+        uw.edit_set(edit, COH_PRIMARY)
+        edit = uw.get_child_chk(pane, name='Port', ctrl_type='Edit', deep=3)
+        uw.edit_set(edit, COH_PORT)
+        edit = uw.get_child_chk(pane, name='User name', ctrl_type='Edit', deep=3)
+        uw.edit_set(edit, COH_USER)
+        edit = uw.get_child_chk(pane, automation_id='11303', ctrl_type='Edit', deep=3)
+        uw.edit_set(edit, COH_PASS)
+        
+        if COH_BAND_SAVE:
+            butt = uw.get_child_chk(pane, name='Bandwidth Saving', ctrl_type='CheckBox', deep=3)
+            if not uw.butt_is_checked(butt):
+                uw.win_click(butt)
+    except:
+        print('Connection is Started')
 
     ### MetaMarket
     uw.list_select(list, "MetaMarket")
@@ -190,7 +198,8 @@ def do_search_security(arg):
     sleep(0.25)
 
     uw.popup_reply(env.wtop, 'New#Care Order')          # Il popup viene generato sotto level top - anche il sotto menu
-    uw.page_close(page, save_as='security_search')
+    uw.page_save(page, 'security_search', time_tag=True)
+    uw.page_close(page, )
 
 def do_new_care_order(arg):
     dlg = uw.get_child_chk(env.wtop, name="New Care Order.*", ctrl_type="Pane", use_re=1)
@@ -296,14 +305,15 @@ def do_close_session(arg):
 
 ######################################################
 # Generic Caller
-def robot_run(fun_name:str, arg:str='', session='hang'):
+def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
     def manage_session(session):
         if session=='new':
             env.launch_app(COH_PATH)
         else:
             env.hang_app(COH_PATH)
         if session=='kill':
-            uw.session_close(env.wtop, wait_init=1, wait_end=1, save_wsp=COH_SAVE_WSP_ONCLOSE)
+            butt = env.select_ribbon_butt('Home', 'Auto Connect')
+            uw.session_close(env.wtop, wait_init=1, wait_end=1, save_wsp=opt.check('save_wsp_onclose', 'yes'), logoff=True)
     def verify_session(session):
         if session=='kill':
             exist = 0
@@ -317,8 +327,10 @@ def robot_run(fun_name:str, arg:str='', session='hang'):
             VERIFY(env.app and env.wtop, "Hang or New Session Failed")
             env.wtop.set_focus()
     try:
+        opt.set(options)
         manage_session(session)
         verify_session(session)
+        print(f'Test Option: {options}')
         func = globals().get(fun_name)
         result = func(arg)
         return ROBOT_RES('ok', result)
@@ -329,15 +341,13 @@ def robot_run(fun_name:str, arg:str='', session='hang'):
 ######################################################
 # Main DEBUG 
 
-def prova(arg):
-    env.hang_app(COH_PATH)
-    page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
-    #uw.win_move(page, 12, 12)
-    uw.win_resize(page, 444, 444)
     
 if __name__ == '__main__':
+    
     select = 1
     if (select==1):
-        print(robot_run('do_new_session', 'new') )
+        print(robot_run('do_close_session', 'kill') )
+        #env.hang_app(COH_PATH)
+        #do_grid_sample('')
 
 

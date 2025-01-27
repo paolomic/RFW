@@ -120,3 +120,21 @@ class AppEnv:
         self.hang_app(self.coh_path)
 
 env = AppEnv()              # session singleton
+
+class AppOptions:
+    opt = None
+    def set(self, options):
+        self.opt = options
+    def check(self, key, value=None):
+        try:
+            find_val = self.opt[key]
+            if value:
+                return find_val == value
+            return find_val != None
+        except Exception as e:
+            return False
+    
+opt = AppOptions()
+
+if __name__ == '__main__':
+    pass
