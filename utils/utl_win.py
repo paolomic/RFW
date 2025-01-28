@@ -23,7 +23,10 @@ WIN_BUTT_STATE_CHECKED          = (1<<4)
 ##########################################################
 #region
 def sleep(sec):
-    time.sleep(sec)
+    speed = float(eval(ua.opt.get('speed')))/100
+    if speed==0:
+        speed=1
+    time.sleep(sec/speed)
 
 def is_array(a):
     if isinstance(a, (list, tuple)):
@@ -144,7 +147,7 @@ def session_logoff():
         win_click(butt)
         warning_replay('Do you want to disable Auto Connect mode and stop all connections?', 'OK')
 
-def session_close (wtop, wait_init=.3, wait_end=.3, save_wsp=False, logoff=False):
+def session_close (wtop, wait_init=.5, wait_end=.5, logoff=False, save_wsp=False):
     sleep(wait_init)
     if (logoff):
         session_logoff()

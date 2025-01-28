@@ -12,12 +12,9 @@ from win32gui import GetCursorInfo
 import time
 
 
+print(int('2'))
+print(float(eval('1/4')))
 
-now = datetime.now()
-time.sleep(2)
-now2 = datetime.now()
-
-print ((now2-now).seconds)
 exit()
 
 

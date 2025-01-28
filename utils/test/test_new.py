@@ -66,7 +66,7 @@ if ( 0 ):                 # FTX
 #region 
 def do_new_session(arg):
     path_wsp = Path(COH_WSP)
-    if (path_wsp.exists() and not opt.check('reuse_wsp', 'yes')):
+    if (path_wsp.exists() and not opt.get('reuse_wsp')=='yes'):
         print('Remove Workspace...')
         path_wsp.unlink()
         VERIFY(not path_wsp.exists(), 'Wsp Exist')
@@ -84,7 +84,7 @@ def do_start_dialog(arg):
     uw.list_check(list, arg, True)
 
     butt = uw.get_child_chk(env.wtop, automation_id='1', ctrl_type='Button', deep=3)
-    if not opt.check('reuse_wsp', 'yes'):
+    if not opt.get('reuse_wsp')=='yes':
         VERIFY(butt.window_text()=='Create', 'Can`t Create New Workspace')
 
     uw.win_click(butt, wait_end=0.5)
@@ -308,7 +308,7 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
         else:
             env.hang_app(COH_PATH)
         if session=='kill':
-            uw.session_close(env.wtop, wait_init=1, wait_end=1, logoff=True, save_wsp=opt.check('save_wsp_onclose', 'yes'))
+            uw.session_close(env.wtop, wait_init=1, wait_end=1, logoff=True, save_wsp=opt.get('save_wsp_onclose')=='yes')
     def verify_session(session):
         if session=='kill':
             exist = 0
