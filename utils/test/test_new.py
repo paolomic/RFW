@@ -94,16 +94,13 @@ def do_start_dialog(arg):
     env.reload()  
         
 def do_setting_init(arg):
-    try:
-        pane = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Pane', deep=3)
-    except:
-        butt = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Button', deep=4)
-        uw.win_click(butt)
-        pane = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Pane', deep=3)
+    butt = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Button', deep=4)          # Settings gia aperto se New Wsp
+    uw.win_click(butt)
 
+    pane = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Pane', deep=3)
     list = uw.get_child_chk(pane, automation_id='103', ctrl_type='List', deep=3)
 
-    ### Connection
+    ### Connection  - Disable se connection Ready
     try:
         edit = uw.get_child_chk(pane, name='Primary', ctrl_type='Edit', deep=3)
         uw.edit_set(edit, COH_PRIMARY)
@@ -137,7 +134,7 @@ def do_setting_init(arg):
     ### WorkSpace
     uw.list_select(list, "Workspace")
 
-    combo = uw.get_child_chk(pane, automation_id='11347', ctrl_type='ComboBox', deep=3) # Todo: Input Per Valore
+    combo = uw.get_child_chk(pane, automation_id='11347', ctrl_type='ComboBox', deep=3)         # Todo: Input Per Valore
     uw.win_click(combo)
     keyboard.press("end")
     keyboard.press("enter")
@@ -233,8 +230,7 @@ def do_new_care_order(arg):
     log_path = uw.get_log_path(COH_WSP, 'MetaMarket')
     order = ul.GetLogRows(log_path, 'CLIENT_ORDER', 'ComplianceText', mytag, start_time, retry = 10, wait_s = 1)
 
-    if (not order):
-        RAISE("Order not Found")
+    VERIFY(order, 'Order not Found')
 
     uw.win_close(dlg)                                       # davanti alla toolbar sembra creare problemi a step successivo
     
@@ -254,7 +250,7 @@ def do_select_order(arg):
 
     status_num = uw.get_child_chk(page, name='No. of Orders: .*', ctrl_type='Text', deep=10, use_re=True)
     print(f'status_num {status_num}')
-    VERIFY(status_num.window_text()=='No. of Orders: 1', 'Order Selection Failed')           # Todo : Fare Meglio il Test
+    VERIFY(status_num.window_text()=='No. of Orders: 1', 'Order Selection Failed')                          # Todo : Fare Meglio il Test
 
     uw.page_save(page, 'order_filtered', time_tag=True)
 
@@ -290,7 +286,7 @@ def do_grid_sample(arg):
     
     # esempio Data Search-Use
     print (f'Collected Rows: {grid_mng.get_row_num()}')
-    sel = grid_mng.search_first_match({"Description": COH_SEC})      # piu segmenti con , 
+    sel = grid_mng.search_first_match({"Description": COH_SEC})             # piu segmenti con , 
     print(f'Find {1 if sel else 0} Row')
     VERIFY(sel, 'Security not Found')
     #print(f'Find Row: {sel}')
@@ -312,8 +308,7 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
         else:
             env.hang_app(COH_PATH)
         if session=='kill':
-            butt = env.select_ribbon_butt('Home', 'Auto Connect')
-            uw.session_close(env.wtop, wait_init=1, wait_end=1, save_wsp=opt.check('save_wsp_onclose', 'yes'), logoff=True)
+            uw.session_close(env.wtop, wait_init=1, wait_end=1, logoff=True, save_wsp=opt.check('save_wsp_onclose', 'yes'))
     def verify_session(session):
         if session=='kill':
             exist = 0
@@ -328,9 +323,9 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
             env.wtop.set_focus()
     try:
         opt.set(options)
+        print(f'Test Option: {options}')
         manage_session(session)
         verify_session(session)
-        print(f'Test Option: {options}')
         func = globals().get(fun_name)
         result = func(arg)
         return ROBOT_RES('ok', result)
@@ -343,10 +338,10 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
 
     
 if __name__ == '__main__':
-    
+    opts = {'reuse_wsp':'yes', 'save_wsp_onclose':'yes'}
     select = 1
     if (select==1):
-        print(robot_run('do_close_session', 'kill') )
+        print(robot_run('do_close_session', '', opts,'kill') )
         #env.hang_app(COH_PATH)
         #do_grid_sample('')
 

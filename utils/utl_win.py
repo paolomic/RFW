@@ -146,6 +146,8 @@ def session_logoff():
 
 def session_close (wtop, wait_init=.3, wait_end=.3, save_wsp=False, logoff=False):
     sleep(wait_init)
+    if (logoff):
+        session_logoff()
     win_close(wtop, wait_end=0.3)
     warning_replay('Do you want to close current workspace', 'OK')
     warning_replay('Do you want to save current workspace?', 'Yes' if save_wsp else 'No')

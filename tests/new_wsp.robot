@@ -13,7 +13,6 @@ ${orderid}          000000000000
 
 
 *** Test Cases ***
-
 Start New Session
     [Documentation]     launch process
     [Timeout]           2 minutes
