@@ -172,7 +172,7 @@ def do_search_security(arg):
     page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
     grid = uw.page_get_grid(page)
 
-    uw.win_resize(page, 888, 444)
+    uw.win_resize(page, 1000, 450)
 
     search_edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # reset search 
     search_butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
@@ -242,7 +242,9 @@ def do_select_order(arg):
     order_id = arg
     print(f'order_id: {order_id}')
     env.click_ribbon_butt('Trading', 'Orders')
+    
     page = uw.get_child_chk(env.wtop, name='Orders.*', ctrl_type='Pane', use_re=1, deep=2)
+    uw.win_resize(page, 1000, 450)
     
     edit = uw.get_child_chk(page, name='Order ID', ctrl_type='Edit', deep=5)  
     uw.edit_set(edit, order_id)
@@ -260,7 +262,7 @@ def do_grid_sample(arg):
     page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
     grid = uw.page_get_grid(page)
 
-    uw.win_resize(page, 999, 444)
+    uw.win_resize(page, 1000, 450)
 
     #search_edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # reset search 
     #search_butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)

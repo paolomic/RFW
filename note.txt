@@ -3,31 +3,14 @@
 ==================================
 
 #   Evolution:
-#    - SUITE NEW    con New Wsp - aggiungere setting new wsp
 #    - SUITER INST. Installer (admin) ?
-#    - CTRL ID      COme identificare univocamente controlli
+#    - CTRL ID      Come identificare univocamente controlli
 #    - VERS CHECK   Aggiungere Addin Versione-Check e Load-check
 #    - AUTOM_ID     Dlg NewOrder: handler sfalsati (non corrispondono nomi) why?
 #    - MESSAGE      COntrollare Message-Barra alle Tx (?)
-#    - CLOSE PAGE   Fare win_close_page() che controlla warning
-#    - CLOSE SESS   Fare close_session - che controlla warning
-#    - WAIT WIN     dopo handle_start_dialog attesa retry - vedi todo
 #    - NODE RELOAD  fare reload_node affidabile (serve?)
 #    - PARS         Mantenere Pars in Robot o file json, ... ?
 #
-#   New Suite:
-#    - check    !Esit wsp
-#    - new wsp, start-dialog
-#    - new page SB
-#    - select sec
-#    - new care, link oid
-#    - New Order, order, filter, selection, search, ... dont close
-#    - New SB Grid sort import search
-#    - timer session close
-#
-
-
-
 
 
 ==================================

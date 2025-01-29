@@ -130,20 +130,21 @@ class AppEnv:
             try:
                 app = Application(backend="uia").connect(path=self.coh_exe)
                 wtop = app.top_window()
+                status = 1
             except Exception as e:
                 pass
             if app and wtop and not re.match('Starting Coherence.*', wtop.window_text()):
-                ready=1
+                status=2
                 sleep(0.5)
                 break
             elaps = (datetime.now()-now).seconds
             if (elaps>timeout):
                 break
             sleep(wait_in)
-        if ready:
+        if status==2:
+            sleep(wait_end)
             self.hang_app(self.coh_path)
-        sleep(wait_end)
-        VERIFY(self.ready(), "Connection War not readi in Timeout")
+        VERIFY(self.ready(), "Connection Was not Ready by Timeout")
 
 env = AppEnv()              # session singleton
 
