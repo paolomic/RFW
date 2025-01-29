@@ -6,7 +6,7 @@ Library             ../utils/test/test_new.py  AS  test_new
 
 
 *** Variables ***
-&{opts}             speed=110    run=local    reuse_wsp=yes  save_wsp_onclose=yes                                                       # list of Suite Options
+&{opts}             speed=110    run=local    reuse_wsp=yes  save_wsp_onclose=yes  close_all_pages=yes                                                    # list of Suite Options
 @{addin_list}       MetaMarket  UserPages
 &{req_dict}         path=C:/work/disks/D/COH_x64/bin/Coherence.exe    title=Starting Coherence
 ${orderid}          000000000000

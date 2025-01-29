@@ -23,9 +23,12 @@ WIN_BUTT_STATE_CHECKED          = (1<<4)
 ##########################################################
 #region
 def sleep(sec):
-    speed = float(eval(ua.opt.get('speed')))/100
-    if speed==0:
+    opt_speed = ua.opt.get('speed')
+    if opt_speed:
+        speed = float(eval(opt_speed))/100  
+    else:
         speed=1
+    
     time.sleep(sec/speed)
 
 def is_array(a):
@@ -151,6 +154,9 @@ def session_close (wtop, wait_init=.5, wait_end=.5, logoff=False, save_wsp=False
     sleep(wait_init)
     if (logoff):
         session_logoff()
+    if ua.opt.get('close_all_pages')=='yes':
+        page_close_all()
+    save_wsp=ua.opt.get('save_wsp_onclose')=='yes'
     win_close(wtop, wait_end=0.3)
     warning_replay('Do you want to close current workspace', 'OK')
     warning_replay('Do you want to save current workspace?', 'Yes' if save_wsp else 'No')
@@ -191,6 +197,24 @@ def page_close(page, save_as=None, time_tag=False):
         page_save(page, save_as, time_tag=time_tag)
     win_close(page)
     warning_replay('Do you want to save the page.*before closing.*', 'No', use_re=True)
+
+def page_close_all(save_as=None, time_tag=False):
+    elements = ua.env.wtop.children() 
+    for elem in elements:
+        if (page_get_grid(elem, verify=False)):
+            page_close(elem, save_as=save_as, time_tag=time_tag)
+
+def page_get_num(page):
+    pattern = 'No\.\ *of ([a-zA-Z0-9_]*): *([0-9])'
+    text = get_child_chk(page, name=pattern, ctrl_type='Text', deep=10, use_re=True)
+    if (text):
+        return int (re.match(pattern, text.window_text())[2])
+    return None
+
+def page_get_grid(page, verify=True):
+    grid = get_child_chk(page, name='StingrayGrid', deep=9, verify=verify)
+    return grid
+
 
 
 ##########################################################
@@ -321,6 +345,7 @@ def warning_replay(mess, butt, root=None, title='Coherence', use_re=False, deep=
     popup = get_child_chk(root, name=title, ctrl_type='Pane', verify=False, deep=deep)
     if popup:
         message = get_child_chk(popup, ctrl_type='Text', use_re=use_re).window_text()
+        message = message.replace('\n', ' ')
         if (use_re and re.match(mess, message)) or (not use_re and (mess in message)):
             butt = get_child_chk(popup, name=butt, ctrl_type='Button')
             win_click(butt)

@@ -2,6 +2,8 @@ import keyboard
 import mouse
 import time
 
+#TODO Spostare questo py in tests/modules (problema include)
+
 # Import Path - Assudo
 import sys
 from pathlib import Path
@@ -22,8 +24,6 @@ import utl_win as uw
 import utl_log as ul
 import utl_grid as ug
 import utl_dump as ud
-
-#TODO Spostare in tests/modules (problema include)
 
 
 ######################################################
@@ -149,6 +149,9 @@ def do_setting_init(arg):
     uw.win_click(butt)
 
 def do_start_connections(arg):
+    if opt.get('close_all_pages')=='yes':
+        uw.page_close_all()
+    
     addins = ['MetaMarket']                                                     # TODO pass form Robot ?
     for addin in addins:
         butt = env.select_ribbon_butt(addin, 'Auto Connect')
@@ -168,7 +171,7 @@ def do_search_security(arg):
     # la pg viene generata sotto main-node coherence
     env.click_ribbon_butt('Trading', 'Security Browser')
     page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
-    grid = uw.get_child_chk(page, name='StingrayGrid', deep=9)
+    grid = uw.page_get_grid(page)
 
     uw.win_resize(page, 888, 444)
 
@@ -184,9 +187,8 @@ def do_search_security(arg):
     uw.edit_set(search_edit, COH_SEC)
     uw.win_click(search_butt)
 
-    status_num = uw.get_child_chk(page, name='No. of Rows: .*', ctrl_type='Text', deep=10, use_re=True)
-    print(f'status_num {status_num}')
-    VERIFY(status_num.window_text()=='No. of Rows: 1', 'Not Such Unique Security')           # Todo : Fare Meglio il Test
+    status_num = uw.page_get_num(page)
+    VERIFY(status_num==1, 'Not Such Unique Security') 
 
     grid = status_num = uw.get_child_chk(page, automation_id='59661', ctrl_type='Pane', deep=10, use_re=True)
     # hide
@@ -200,7 +202,8 @@ def do_search_security(arg):
 
 def do_new_care_order(arg):
     dlg = uw.get_child_chk(env.wtop, name="New Care Order.*", ctrl_type="Pane", use_re=1)
-    uw.win_move(dlg, 333,333)                               # davanti alla toolbar sembra creare problemi a step successivo
+    uw.win_move(dlg, 333,333)                              # davanti alla toolbar sembra creare problemi a step successivo
+    dlg.set_focus()
     adv = uw.get_child_chk(dlg, automation_id='13652', ctrl_type="CheckBox", use_re=1)
     if not uw.butt_is_checked(adv):
         uw.win_click(adv)
@@ -248,16 +251,15 @@ def do_select_order(arg):
     butt = uw.get_child_chk(page, name='Apply', ctrl_type='Button', deep=5)  
     uw.win_click(butt)
 
-    status_num = uw.get_child_chk(page, name='No. of Orders: .*', ctrl_type='Text', deep=10, use_re=True)
-    print(f'status_num {status_num}')
-    VERIFY(status_num.window_text()=='No. of Orders: 1', 'Order Selection Failed')                          # Todo : Fare Meglio il Test
+    status_num = uw.page_get_num(page)
+    VERIFY(status_num==1, 'Order Selection Failed') 
 
     uw.page_save(page, 'order_filtered', time_tag=True)
 
 def do_grid_sample(arg):                         
     env.click_ribbon_butt('Trading', 'Security Browser')                            # todo: Gia una aperta : selezionare l utima ?
     page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
-    grid = uw.get_child_chk(page, name='StingrayGrid', deep=9)
+    grid = uw.page_get_grid(page)
 
     uw.win_resize(page, 999, 444)
 
@@ -323,7 +325,7 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
             env.wtop.set_focus()
     try:
         opt.set(options)
-        print(f'Test Option: {options}')
+        print(f'Test Options: {options}')
         manage_session(session)
         verify_session(session)
         func = globals().get(fun_name)
@@ -338,11 +340,15 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
 
     
 if __name__ == '__main__':
-    opts = {'reuse_wsp':'yes', 'save_wsp_onclose':'yes'}
-    select = 1
+    opts = {'reuse_wsp':'yes', 'save_wsp_onclose':'yes', 'close_all_pages':'yes'}
+    opt.set(opts)
+    select = 2
     if (select==1):
         print(robot_run('do_close_session', '', opts,'kill') )
         #env.hang_app(COH_PATH)
         #do_grid_sample('')
+    if (select==2):
+        env.hang_app(COH_PATH)
+        do_start_connections('')
 
 

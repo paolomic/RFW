@@ -4,16 +4,24 @@ import sys
 
 from datetime import datetime
 
-
-
-
-
 from win32gui import GetCursorInfo
 import time
+import re
 
 
-print(int('2'))
-print(float(eval('1/4')))
+p = 'Do you want to save the page.*before closing.*'
+t = 'Do you want to save the page\n"Orders: [*][*][*]" before closing?'
+
+print(re.match(p, t.replace('\n', ' ')))
+
+exit()
+
+a = 'No. of Rows: 3'
+
+
+
+print(re.match('No\.\ *of ([a-zA-Z0-9_]*): *([0-9])', a)[2])
+
 
 exit()
 
