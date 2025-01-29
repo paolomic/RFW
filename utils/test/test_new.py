@@ -89,9 +89,8 @@ def do_start_dialog(arg):
 
     uw.win_click(butt, wait_end=0.5)
     uw.warning_replay('This workspace has not been closed properly', 'No')
-
-    sleep(3.5)                                                                         # todo : Smart Wait                     
-    env.reload()  
+                                                                                   
+    env.reload()                                                                            # Smart Wait for new Main Frame   
         
 def do_setting_init(arg):
     butt = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Button', deep=4)          # Settings gia aperto se New Wsp
@@ -310,7 +309,7 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
         else:
             env.hang_app(COH_PATH)
         if session=='kill':
-            uw.session_close(env.wtop, wait_init=1, wait_end=1, logoff=True, save_wsp=opt.get('save_wsp_onclose')=='yes')
+            uw.session_close(env.wtop, wait_init=1, wait_end=1, logoff=True)
     def verify_session(session):
         if session=='kill':
             exist = 0
@@ -340,15 +339,15 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
 
     
 if __name__ == '__main__':
-    opts = {'reuse_wsp':'yes', 'save_wsp_onclose':'yes', 'close_all_pages':'yes'}
+    opts = {'speed': '110', 'run': 'local', 'reuse_wsp': 'yes', 'save_wsp_onclose': 'yes', 'close_all_pages': 'yes'}
     opt.set(opts)
     select = 2
     if (select==1):
-        print(robot_run('do_close_session', '', opts,'kill') )
+        print(robot_run('do_start_dialog', '', opts,'hang') )
         #env.hang_app(COH_PATH)
         #do_grid_sample('')
     if (select==2):
         env.hang_app(COH_PATH)
-        do_start_connections('')
+        do_start_dialog('')
 
 

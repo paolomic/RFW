@@ -7,6 +7,8 @@ from utl_win import sleep, VERIFY, RAISE
 
 import re
 
+from datetime import datetime, timedelta
+
 class AppEnv:
     app = None
     wtop = None
@@ -48,6 +50,8 @@ class AppEnv:
             VERIFY(self.st_bar, 'Ribbon Group handler non Valid')
 
         #print (self)
+
+    
 
     def init(self, coh_path): 
         self.reset()
@@ -92,8 +96,8 @@ class AppEnv:
         except Exception as e:
             RAISE(f"Hang Error: {str(e)}")
 
-        print(f'app {app}')
-        print(f'wtop {wtop}')
+        #print(f'app {app}')
+        #print(f'wtop {wtop}')
         self.placeholder(app)
 
     def select_ribbon(self, ribb):
@@ -115,9 +119,31 @@ class AppEnv:
         sleep(wait_end)
         return bt
 
+    def ready(self):
+        return self.app != None and self.wtop != None and self.rib_tab != None and self.rib_grp != None and self.st_bar != None
 
-    def reload(self):         # mode= hang / launch  / hang_or_launch 
-        self.hang_app(self.coh_path)
+    def reload(self, wait_init=1, wait_in=1, wait_end=1, timeout=5):        
+        now = datetime.now() 
+        sleep(wait_init)
+        run = 1
+        while (run):
+            try:
+                app = Application(backend="uia").connect(path=self.coh_exe)
+                wtop = app.top_window()
+            except Exception as e:
+                pass
+            if app and wtop and not re.match('Starting Coherence.*', wtop.window_text()):
+                ready=1
+                sleep(0.5)
+                break
+            elaps = (datetime.now()-now).seconds
+            if (elaps>timeout):
+                break
+            sleep(wait_in)
+        if ready:
+            self.hang_app(self.coh_path)
+        sleep(wait_end)
+        VERIFY(self.ready(), "Connection War not readi in Timeout")
 
 env = AppEnv()              # session singleton
 

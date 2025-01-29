@@ -221,9 +221,7 @@ def page_get_grid(page, verify=True):
 # Move Resize
 ##########################################################
 
-#page.set_focus()
-
-# TODO implementazione UIA Wrapper?
+#page.set_focus()       # todo per Order Dlg non lo mette in fronte
 
 def win_move(window, x, y):
   rect = window.element_info.rectangle
