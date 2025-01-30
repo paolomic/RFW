@@ -55,8 +55,6 @@ class AppEnv:
 
         #print (self)
 
-    
-
     def init(self, coh_path): 
         self.reset()
         self.coh_path = coh_path

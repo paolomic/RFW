@@ -652,5 +652,55 @@ def butt_is_checked(butt):
     state = butt.legacy_properties()['State']
     return ((state & WIN_BUTT_STATE_CHECKED)!=0)
 
+##########################################################
+# Get Main Window 
+##########################################################
+#region
+def get_main_wnd(title_pattern, timeout_sec=10):
+    def _find_matching_windows():
+        desktop = Desktop(backend="uia")
+        all_windows = desktop.windows()
+        matching_windows = [w for w in all_windows 
+                           if w.window_text() and 
+                           re.match(title_pattern, w.window_text()) ]
+        print(f'MatchingWindow {matching_windows}')
+        return matching_windows
+
+    try:
+        matching_windows = _find_matching_windows()
+        if len(matching_windows) == 0:
+            print(f"get_main_wnd RETRY...")
+            
+            start_time = time.time()
+            while time.time() - start_time < timeout_sec:
+                matching_windows = _find_matching_windows()
+                if matching_windows:
+                    break
+                time.sleep(0.5)                     # Polling Sleep - migliorabile con Windows Hook
+        
+        # Time has Gone
+        if len(matching_windows) == 0:
+            print(f"get_main_wnd: NoResult '{title_pattern}' dopo {timeout_sec} secondi")
+            return None
+        elif len(matching_windows) > 1:
+            print(f"get_main_wnd: MultipleMatch {len(matching_windows)} window che matchano '{title_pattern}':")
+            for w in matching_windows:
+                print(f"- {w.window_text()}")
+            return None
+        else:
+            # Good
+            return matching_windows[0]
+            #window_title = matching_windows[0].window_text()
+            #app = Application(backend="uia").connect(title=window_title)
+            #window = app.window(title=window_title)
+            #print(f"get_main_wnd: Connected: '{window_title}'")
+            #return app               # or app?
+            
+    except Exception as e:
+        print(f"get_main_wnd Error:: {str(e)}")
+        return None
+
+
+
 #endregion
 

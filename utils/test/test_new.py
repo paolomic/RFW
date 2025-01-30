@@ -4,9 +4,7 @@ import time
 
 #TODO Spostare questo py in tests/modules (problema include)
 
-# Import Path - Assudo
-import sys
-from pathlib import Path
+
 
 #strpath = r'C:\work\disks\D\prog\RFW\utils'
 #sys.path.append(strpath) 
