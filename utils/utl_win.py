@@ -16,6 +16,7 @@ import win32.lib.win32con as win32con
 import utl  as utl
 import utl_app as ua
 
+
 WIN_BUTT_STATE_CHECKED          = (1<<4)
 
 ##########################################################
@@ -117,13 +118,6 @@ def ROBOT_RES(status='ok', info=''):
         "status": status,
         'info': info}
 
-def RAISE(message):
-    raise Exception(message)
-
-def VERIFY(data, message):
-    if not data:
-        RAISE(message)
-
 
 ##########################################################
 # Sessione and Pages
@@ -133,11 +127,11 @@ def workspace_remove(wsp_path):
     path_wsp = Path(wsp_path)
     if (path_wsp.exists()):
         path_wsp.unlink()
-    VERIFY(not path_wsp.exists(), 'Wsp Exist')
+    ua.VERIFY(not path_wsp.exists(), 'Wsp Exist')
     #path_wsp_folder = Path(COH_WSP.replace('.wsp4', '.wsp4_wrk'))
     #if (path_wsp_folder.exists()):
     #    path_wsp_folder.rmdir()
-    #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
+    #ua.VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
 
 def session_logon():
     butt = ua.env.select_ribbon_butt('Home', 'Auto Connect')
@@ -349,7 +343,7 @@ def warning_replay(mess, butt, root=None, title='Coherence', use_re=False, deep=
             win_click(butt)
         else:
             #e' un altro warning - situazione complessa - warning_replay_2
-            VERIFY(None, 'Unespected Warning')
+            ua.VERIFY(None, 'Unespected Warning')
         return True
     return False
 
@@ -581,7 +575,7 @@ def get_child_chk(parent_wnd, name=None, ctrl_type=None, class_name=None, automa
                          deep, use_re, use_case, visible_only, enable_only)
     
     if(verify and not cld):
-        RAISE(f'Item Not Found: Name:{name} Ctrl:{ctrl_type} Class:{class_name} AutId:{automation_id} ')
+        ua.RAISE(f'Item Not Found: Name:{name} Ctrl:{ctrl_type} Class:{class_name} AutId:{automation_id} ')
     
     return cld
 

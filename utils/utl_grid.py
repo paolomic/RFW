@@ -6,7 +6,7 @@ import time
 import utl_win as uw
 import utl_robot as ur
 
-from utl_win import sleep, VERIFY, RAISE, ROBOT_RES
+from utl_win import sleep
 
 #############################################################
 # Util  GridMng - My

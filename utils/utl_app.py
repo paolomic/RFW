@@ -3,11 +3,15 @@ from pywinauto import Application
 import os
 
 import utl_win as uw
-from utl_win import sleep, VERIFY, RAISE
+from utl_win import sleep
 
 import re
-
+import os
 from datetime import datetime, timedelta
+
+
+##########################################################
+# App Environment 
 
 class AppEnv:
     app = None
@@ -148,6 +152,9 @@ class AppEnv:
 
 env = AppEnv()              # session singleton
 
+##########################################################
+# App Options
+
 class AppOptions:
     opt = None
     def set(self, options):
@@ -158,17 +165,85 @@ class AppOptions:
             return find_val
         except Exception as e:
             return None
-        
-    #def check(self, key, value=None):
-    #    try:
-    #        find_val = self.opt[key]
-    #        if value:
-    #            return find_val == value
-    #        return find_val != None
-    #    except Exception as e:
-    #        return False
-    
+         
 opt = AppOptions()
 
+
+##########################################################
+# App Verifier - TODO Modulo Separato
+
+import inspect
+from PIL import ImageGrab, ImageDraw
+import mouse
+import shutil
+import traceback
+
+class Verifier:
+    def __init__(self, log_file="dumps/error_log.txt", dump_dir="dumps"):
+        self.log_file = log_file
+        self.dump_dir = dump_dir
+        #self.reset_dumps()
+        os.makedirs(self.dump_dir, exist_ok=True)
+
+    def reset_dumps(self):
+        if os.path.exists(self.dump_dir):
+            shutil.rmtree(self.dump_dir)
+        os.makedirs(self.dump_dir)
+
+    def _draw_cursor(self, image):
+        cursor_x, cursor_y = mouse.get_position()
+        screen_width, _ = ImageGrab.grab().size
+        circle_radius = (screen_width / 100) * 2
+        draw = ImageDraw.Draw(image)
+        draw.ellipse(
+            [
+                (cursor_x - circle_radius, cursor_y - circle_radius),
+                (cursor_x + circle_radius, cursor_y + circle_radius),
+            ],
+            outline="red",
+            width=2,
+        )
+        return image
+
+    def verify(self, condition, errormessage):
+        if not condition:
+            frame = inspect.currentframe().f_back.f_back
+            lineno, filename = frame.f_lineno, frame.f_code.co_filename
+            code_context = inspect.getframeinfo(frame).code_context[0].strip()
+            function_name = frame.f_code.co_name
+
+            filtered_stack = []
+            for line in traceback.format_stack():
+                filtered_stack.append(line)
+                if "VERIFY(" in line:
+                    break
+
+            screenshot = self._draw_cursor(ImageGrab.grab())
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            screenshot_path = f"{self.dump_dir}/screenshot_{timestamp}_line{lineno}.png"
+            screenshot.save(screenshot_path)
+
+            with open(self.log_file, "a") as log_file:
+                log_file.write(f"=== Error on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===\n")
+                log_file.write(f"Error in function '{function_name}' at line {lineno} in file {filename}:\n")
+                log_file.write(f"Code: {code_context}\nMessage: {errormessage}\n")
+                log_file.write(f"Screenshot saved at: {screenshot_path}\n\nStack Trace:\n")
+                log_file.writelines(filtered_stack)
+                log_file.write("\n")
+
+            raise AssertionError(f"{errormessage}\nSee {self.log_file} and {screenshot_path} for details.")
+
+verifier = Verifier()
+
+def VERIFY(condition, errormessage):
+    verifier.verify(condition, errormessage)
+
+def RAISE(message):
+    verifier.verify(False, message)
+
+
+##########################################################
+# Debug
+
 if __name__ == '__main__':
-    pass
+    VERIFY(x == 11, "x should be 11")

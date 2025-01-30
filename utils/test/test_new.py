@@ -18,8 +18,8 @@ _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
 import utl  as utl
-from utl_app import env, opt
-from utl_win import sleep, VERIFY, RAISE, ROBOT_RES
+from utl_app import env, opt, VERIFY, RAISE
+from utl_win import sleep, ROBOT_RES
 import utl_win as uw
 import utl_log as ul
 import utl_grid as ug
@@ -172,7 +172,7 @@ def do_search_security(arg):
     page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
     grid = uw.page_get_grid(page)
 
-    uw.win_resize(page, 1000, 450)
+    uw.win_resize(page, 1400, 450)
 
     search_edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # reset search 
     search_butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
@@ -244,7 +244,7 @@ def do_select_order(arg):
     env.click_ribbon_butt('Trading', 'Orders')
     
     page = uw.get_child_chk(env.wtop, name='Orders.*', ctrl_type='Pane', use_re=1, deep=2)
-    uw.win_resize(page, 1000, 450)
+    uw.win_resize(page, 1400, 450)
     
     edit = uw.get_child_chk(page, name='Order ID', ctrl_type='Edit', deep=5)  
     uw.edit_set(edit, order_id)
@@ -262,7 +262,7 @@ def do_grid_sample(arg):
     page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
     grid = uw.page_get_grid(page)
 
-    uw.win_resize(page, 1000, 450)
+    uw.win_resize(page, 1400, 450)
 
     #search_edit = uw.get_child_chk(page, name='Reference:', ctrl_type='Edit', deep=10)     # reset search 
     #search_butt = uw.get_child_chk(page, name='Search', ctrl_type='Button', deep=10)
