@@ -216,6 +216,13 @@ class Verifier:
                 if "VERIFY(" in line:
                     break
 
+            maxlev = 6
+            filtered_stack.reverse()
+            size=len(filtered_stack)
+            if (size>maxlev):
+                filtered_stack = filtered_stack[0:maxlev-1]
+                filtered_stack.append(f'  ... {size-maxlev} more levels')
+
             screenshot = self._draw_cursor(ImageGrab.grab())
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             screenshot_path = f"{self.dump_dir}/screenshot_{timestamp}_line{lineno}.png"

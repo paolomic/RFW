@@ -6,20 +6,16 @@
 #   $ robot --pythonpath . example.robot  
 
 
-class TestResult:
-    def __init__(self, status="ok", data=None, info=None):
-        self.status = status
-        self.data = data
-        self.error_message = info
-    def get(self): 
-        return {
-            "status": self.status,
-            'data': self.data,
-            'info': self.error_message}
+ar = [1, 2, 3, 4, 5, 6, 7]
 
+print (len(ar))
 
-def test_dialog(argument):
-     return TestResult('ok', 'xx', 'yy').get()
-     
-     return xxx
-    
+ar.reverse()
+print(ar)
+
+if len(ar)>3:
+    ar = ar[0:2]
+
+ar.append(66)
+
+print(ar)
