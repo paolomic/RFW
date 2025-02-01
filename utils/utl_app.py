@@ -16,13 +16,14 @@ from datetime import datetime, timedelta
 class AppEnv:
     app = None
     wtop = None
+    #placeholders
     rib_tab = None
     rib_grp = None
     st_bar = None
 
     #private
-    coh_path = None
-    coh_exe = None
+    coh_path = None     # to start - file path
+    coh_exe = None      # to reconnect - process name
 
     def reset(self):
         self.app = None
@@ -32,8 +33,8 @@ class AppEnv:
         self.st_bar = None
         
         #private
-        coh_path = None
-        coh_exe = None
+        self.coh_path = None
+        self.coh_exe = None
 
     def placeholder(self, app):
         self.reset()
@@ -75,9 +76,9 @@ class AppEnv:
         
         try:
             print('Starting new instance...')
-            app = Application(backend="uia").start(self.coh_path)
-            time.sleep(1)                                               # TODO attesa attiva
-            wtop = app.top_window()
+            self.app = Application(backend="uia").start(self.coh_path)
+            sleep(1)                                               # TODO attesa attiva
+            self.wtop = self.app.top_window()
         except Exception as e:
             RAISE(f"Start Error: {str(e)}")
             
@@ -92,15 +93,15 @@ class AppEnv:
         exe_name = os.path.basename(self.coh_path)
         
         try:
-            app = Application(backend="uia").connect(path=self.coh_exe)
-            wtop = app.top_window()
+            self.app = Application(backend="uia").connect(path=self.coh_exe)
+            self.wtop = self.app.top_window()
             hang_ok = 1
         except Exception as e:
             RAISE(f"Hang Error: {str(e)}")
 
         #print(f'app {app}')
         #print(f'wtop {wtop}')
-        self.placeholder(app)
+        self.placeholder(self.app)
 
     def select_ribbon(self, ribb):
         rib_sel = uw.get_child_chk(self.rib_tab, name=ribb, ctrl_type='TabItem')
@@ -148,7 +149,7 @@ class AppEnv:
             self.hang_app(self.coh_path)
         VERIFY(self.ready(), "Connection Was not Ready by Timeout")
 
-env = AppEnv()              # session singleton
+env = AppEnv()              # class singleton
 
 ##########################################################
 # App Options
@@ -175,12 +176,13 @@ from PIL import ImageGrab, ImageDraw
 import mouse
 import shutil
 import traceback
+from datetime import datetime
+import os
 
 class Verifier:
     def __init__(self, log_file="dumps/error_log.txt", dump_dir="dumps"):
         self.log_file = log_file
         self.dump_dir = dump_dir
-        #self.reset_dumps()
         os.makedirs(self.dump_dir, exist_ok=True)
 
     def reset_dumps(self):
@@ -203,52 +205,116 @@ class Verifier:
         )
         return image
 
-    def verify(self, condition, errormessage):
-        if not condition:
-            frame = inspect.currentframe().f_back.f_back
-            lineno, filename = frame.f_lineno, frame.f_code.co_filename
-            code_context = inspect.getframeinfo(frame).code_context[0].strip()
-            function_name = frame.f_code.co_name
+    def dump(self, errormessage):
+        def make_stack_clickable(stacktrace: str) -> str:
+            # Split the stacktrace into lines
+            lines = stacktrace.splitlines()
+            result = []
+            
+            # Regex per identificare le righe con informazioni sul file
+            file_pattern = r'  File "(.*?)", line (\d+), in (.*?)$'
+            
+            for line in lines:
+                # Cerca match per le righe che contengono informazioni sul file
+                match = re.match(file_pattern, line)
+                if match:
+                    filepath, line_num, function = match.groups()
+                    # Crea il link cliccabile in formato semplificato
+                    clickable_line = f'  File [file:///{filepath}#L{line_num}], line {line_num}, in {function}'
+                    result.append(clickable_line)
+                else:
+                    # Mantieni le altre righe invariate
+                    result.append(line)
+            
+            return '\n'.join(result)
+        
+        # Ottieni l'intera traccia dello stack
+        stack_trace = traceback.format_exc()
 
-            filtered_stack = []
-            for line in traceback.format_stack():
+        # Ottieni il frame corrente e il frame precedente
+        frame = inspect.currentframe().f_back.f_back
+        lineno, filename = frame.f_lineno, frame.f_code.co_filename
+        code_context = inspect.getframeinfo(frame).code_context[0].strip()
+        function_name = frame.f_code.co_name
+
+        # Formatta il percorso del file come collegamento ipertestuale per VSCode
+        file_link = f"{os.path.abspath(filename)}:{lineno}"
+
+        # Filtra lo stack per includere solo le informazioni rilevanti
+        filtered_stack = []
+        for line in traceback.format_stack():
+            if "File \"" in line and "line " in line:
+                # Estrai il percorso del file, il numero di riga e il nome della funzione
+                parts = line.strip().split(", ")
+                file_path = parts[0].replace("File \"", "").strip('"')
+                line_number = parts[1].replace("line ", "").strip()
+                func_name = parts[2].replace("in ", "").strip()
+                # Formatta come collegamento ipertestuale per VSCode
+                formatted_line = f"saved to: {os.path.abspath(file_path)}:{line_number}  # {func_name}"
+                filtered_stack.append(formatted_line)
+            else:
                 filtered_stack.append(line)
-                if "VERIFY(" in line:
-                    break
+            if "VERIFY(" in line:
+                break
 
-            maxlev = 6
-            filtered_stack.reverse()
-            size=len(filtered_stack)
-            if (size>maxlev):
-                filtered_stack = filtered_stack[0:maxlev-1]
-                filtered_stack.append(f'  ... {size-maxlev} more levels')
+        # Limita il numero di livelli dello stack
+        maxlev = 7
+        filtered_stack.reverse()
+        size = len(filtered_stack)
+        if size > maxlev:
+            filtered_stack = filtered_stack[0:maxlev - 1]
+            filtered_stack.append(f'  ... {size - maxlev} more levels')
 
-            screenshot = self._draw_cursor(ImageGrab.grab())
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            screenshot_path = f"{self.dump_dir}/screenshot_{timestamp}_line{lineno}.png"
-            screenshot.save(screenshot_path)
+        # Cattura uno screenshot
+        screenshot = self._draw_cursor(ImageGrab.grab())
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        screenshot_path = f"{self.dump_dir}/screenshot_{timestamp}_line{lineno}.png"
+        screenshot.save(screenshot_path)
 
-            with open(self.log_file, "a") as log_file:
-                log_file.write(f"=== Error on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===\n")
-                log_file.write(f"Error in function '{function_name}' at line {lineno} in file {filename}:\n")
-                log_file.write(f"Code: {code_context}\nMessage: {errormessage}\n")
-                log_file.write(f"Screenshot saved at: {screenshot_path}\n\nStack Trace:\n")
-                log_file.writelines(filtered_stack)
-                log_file.write("\n")
+        # Scrivi i dettagli dell'errore nel file di log
+        with open(self.log_file, "a") as log_file:
+            log_file.write(f"=== Error on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===\n")
+            log_file.write(f"Error in function '{function_name}' at line {lineno} in file {filename}:\n")
+            log_file.write(f"Code: {code_context}\nMessage: {errormessage}\n")
+            log_file.write(f"Screenshot saved at: {screenshot_path}\n\nStack Trace:\n")
+            #log_file.writelines(filtered_stack)
+            log_file.write("\nFull Stack Trace:\n")
+            log_file.write(make_stack_clickable(stack_trace))
+            log_file.write("\n")
 
-            raise AssertionError(f"{errormessage}\nSee {self.log_file} and {screenshot_path} for details.")
+        # Informa l'utente del percorso del dump
+        print(f"Error in: {file_link}  # {function_name}")
+        print(f"Dump saved to: {os.path.abspath(self.log_file)}")
+        print(f"Screenshot saved to: {os.path.abspath(screenshot_path)}")
 
 verifier = Verifier()
 
-def VERIFY(condition, errormessage):
-    verifier.verify(condition, errormessage)
+def DUMP(message):
+    verifier.dump(message)
+
+def VERIFY(condition, message):
+    if not condition:
+        raise AssertionError(message)
 
 def RAISE(message):
-    verifier.verify(False, message)
+    VERIFY(False, message)
 
 
 ##########################################################
 # Debug
 
+
 if __name__ == '__main__':
-    VERIFY(x == 11, "x should be 11")
+    def fun1():
+        print(3/0)
+
+    def fun2():
+        fun1()
+
+    def fun3():
+        fun2()
+
+    try:
+        fun3()
+    except Exception as e:
+        DUMP( str(e))

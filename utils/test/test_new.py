@@ -16,7 +16,7 @@ _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
 import utl  as utl
-from utl_app import env, opt, VERIFY, RAISE
+from utl_app import env, opt, VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
 import utl_win as uw
 import utl_log as ul
@@ -331,7 +331,9 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
         result = func(arg)
         return ROBOT_RES('ok', result)
     except Exception as e:
-        return ROBOT_RES('no', str(e)) 
+        message = str(e)
+        DUMP(message)
+        return ROBOT_RES('no', message) 
     
     
 ######################################################
