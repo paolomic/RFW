@@ -23,16 +23,13 @@ COH_SETUP = r'C:\Users\Paolo.Michetti\OneDrive - ION\Desktop\CanDeal evolutionSe
 
 
 def main():
-    """
-    Funzione principale eseguita dopo l'elevazione UAC.
-    """
     print("Esecuzione con privilegi di amministratore!")
-    # Aggiungi qui la tua logica principale
     winsound.Beep(1000, 500)  # Beep di conferma
 
 if __name__ == "__main__":
     if not pyuac.isUserAdmin():
         print("Non sono in esecuzione come amministratore. Richiesta elevazione UAC...")
+        pyuac.runAsAdmin()
 
         # Avvia un processo separato per monitorare il dialogo UAC
         #uac_process = multiprocessing.Process(target=monitor_uac_dialog)
@@ -40,15 +37,15 @@ if __name__ == "__main__":
 
         # Richiedi l'elevazione UAC
         #winsound.Beep(2000, 500)  # Beep prima dell'elevazione
-        #pyuac.runAsAdmin()  # Riavvia lo script con privilegi di amministratore
+        #  # Riavvia lo script con privilegi di amministratore
         #winsound.Beep(4000, 500)  # Beep dopo l'elevazione
 
         # Termina il processo dopo l'elevazione (opzionale)
         #uac_process.terminate()
     
         #metodo runas
-        subprocess.run(['runas', '/user:Administrator', COH_SETUP], shell=True, check=True)
-        time.sleep(1)  # Attendi un secondo per il processo di avvio
+        #subprocess.run(['runas', '/user:Administrator', COH_SETUP], shell=True, check=True)
+        #time.sleep(1)  # Attendi un secondo per il processo di avvio
 
 
     else:
