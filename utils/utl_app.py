@@ -26,21 +26,21 @@ class AppEnv:
     coh_exe = None      # to reconnect - process name
 
     def reset(self):
+        # main
         self.app = None
         self.wtop = None
+        #placeholders
         self.rib_tab = None
         self.rib_grp = None
         self.st_bar = None
-        
         #private
         self.coh_path = None
         self.coh_exe = None
 
-    def placeholder(self, app):
-        self.reset()
-        
-        self.app = app
-        self.wtop = app.top_window()
+    def placeholder(self):
+        self.rib_tab = None
+        self.rib_grp = None
+        self.st_bar = None
 
         VERIFY(self.app, 'Application handler non Valid')
         VERIFY(self.wtop, 'Windows Application handler non Valid')
@@ -63,7 +63,6 @@ class AppEnv:
 
     def launch_app(self, coh_path, unique=True):
         self.init(coh_path)
-        exe_name = os.path.basename(self.coh_path)
 
         if unique:
             found = 0
@@ -84,24 +83,20 @@ class AppEnv:
             
         #print(f'app {app}')
         #print(f'wtop {wtop}')
-        self.placeholder(app)
+        self.placeholder()
 
     def hang_app(self, coh_path):
         self.init(coh_path)
-        hang_ok = 0
-        self.reset()
-        exe_name = os.path.basename(self.coh_path)
         
         try:
             self.app = Application(backend="uia").connect(path=self.coh_exe)
             self.wtop = self.app.top_window()
-            hang_ok = 1
         except Exception as e:
             RAISE(f"Hang Error: {str(e)}")
 
         #print(f'app {app}')
         #print(f'wtop {wtop}')
-        self.placeholder(self.app)
+        self.placeholder()
 
     def select_ribbon(self, ribb):
         rib_sel = uw.get_child_chk(self.rib_tab, name=ribb, ctrl_type='TabItem')
@@ -129,24 +124,24 @@ class AppEnv:
         now = datetime.now() 
         sleep(wait_init)
         run = 1
+        done = 0
         while (run):
             try:
-                app = Application(backend="uia").connect(path=self.coh_exe)
-                wtop = app.top_window()
-                status = 1
+                self.app = Application(backend="uia").connect(path=self.coh_exe)
+                self.wtop = self.app.top_window()
+                if self.app and self.wtop and not re.match('Starting Coherence.*', self.wtop.window_text()):
+                    done = 1
+                    sleep(0.5)
+                    break
             except Exception as e:
                 pass
-            if app and wtop and not re.match('Starting Coherence.*', wtop.window_text()):
-                status=2
-                sleep(0.5)
-                break
             elaps = (datetime.now()-now).seconds
             if (elaps>timeout):
                 break
             sleep(wait_in)
-        if status==2:
+        if done:
             sleep(wait_end)
-            self.hang_app(self.coh_path)
+            self.placeholder()
         VERIFY(self.ready(), "Connection Was not Ready by Timeout")
 
 env = AppEnv()              # class singleton
