@@ -278,9 +278,10 @@ class Verifier:
             log_file.write("\n")
 
         # Informa l'utente del percorso del dump
-        print(f"Error in: {file_link}  # {function_name}")
-        print(f"Dump saved to: {os.path.abspath(self.log_file)}")
-        print(f"Screenshot saved to: {os.path.abspath(screenshot_path)}")
+        print(f"== TEST FAIL =========================================================================================")
+        print(f" * Error in:   [{file_link}  # {function_name}]")
+        print(f" * Dump to:    [{os.path.abspath(self.log_file)}]")
+        print(f" * Screen to:  [{os.path.abspath(screenshot_path)}]")
 
 verifier = Verifier()
 
