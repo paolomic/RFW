@@ -200,7 +200,7 @@ class Verifier:
         )
         return image
 
-    def dump(self, errormessage):
+    def dump(self, message):
         def make_stack_clickable(stacktrace: str) -> str:
             # Split the stacktrace into lines
             lines = stacktrace.splitlines()
@@ -270,7 +270,7 @@ class Verifier:
         with open(self.log_file, "a") as log_file:
             log_file.write(f"=== Error on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===\n")
             log_file.write(f"Error in function '{function_name}' at line {lineno} in file {filename}:\n")
-            log_file.write(f"Code: {code_context}\nMessage: {errormessage}\n")
+            log_file.write(f"Code: {code_context}\nMessage: {message}\n")
             log_file.write(f"Screenshot saved at: {screenshot_path}\n\nStack Trace:\n")
             #log_file.writelines(filtered_stack)
             log_file.write("\nFull Stack Trace:\n")
@@ -279,7 +279,8 @@ class Verifier:
 
         # Informa l'utente del percorso del dump
         print(f"== TEST FAIL =========================================================================================")
-        print(f" * Error in:   [{file_link}  # {function_name}]")
+        print(f" * Error:      [{message}]")
+        print(f" * File:       [{file_link} func:{function_name}]")
         print(f" * Dump to:    [{os.path.abspath(self.log_file)}]")
         print(f" * Screen to:  [{os.path.abspath(screenshot_path)}]")
 
