@@ -23,14 +23,9 @@ WIN_BUTT_STATE_CHECKED          = (1<<4)
 # Generic
 ##########################################################
 #region
-def sleep(sec):
-    opt_speed = ua.opt.get('speed')
-    if opt_speed:
-        speed = float(eval(opt_speed))/100  
-    else:
-        speed=1
-    
-    time.sleep(sec/speed)
+
+def sleep(x):
+    ua.sleep(x)
 
 def is_array(a):
     if isinstance(a, (list, tuple)):

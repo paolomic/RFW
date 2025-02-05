@@ -19,7 +19,8 @@ strpath = r'C:\work\disks\D\prog\RFW\utils'
 sys.path.append(strpath) 
 
 import utl  as utl
-from utl_app import env, opt, VERIFY, RAISE, DUMP
+from utl_app import env, opt
+from utl_verifier import VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
 import utl_win as uw
 import utl_log as ul

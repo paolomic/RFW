@@ -3,3 +3,4 @@ out.txt
 *.xml
 *.html
 dumps/
+*.bak

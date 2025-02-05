@@ -9,7 +9,8 @@ _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
 from utl_app import env
-from utl_win import sleep, VERIFY, RAISE, ROBOT_RES
+from utl_win import sleep, ROBOT_RES
+from utl_verifier import VERIFY, RAISE, DUMP
 import utl_win as uw
 import utl_log as ul
 import utl_grid as ug
