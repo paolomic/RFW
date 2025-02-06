@@ -581,7 +581,7 @@ def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, auto
     while attempt>0:
         #print (attempt)
         cld = get_child(parent_wnd, name, ctrl_type, class_name, automation_id, handle, texts,
-                         deep, use_re, use_case, visible_only, enable_only, verify=False)
+                         deep, use_re, use_case, visible_only, enable_only)
         if (cld):
             sleep(wait_end) 
             return cld

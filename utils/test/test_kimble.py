@@ -18,7 +18,8 @@ def kimble(SerchKey, ActivKey:list, IONProduct, Activity, Notes, Hours):
     ###############################
     # region - Windows
 
-    wnd = uw.find_window(name="Google Chrome - Paolo", exact_match=False)
+    #wnd = uw.find_window(name="Google Chrome - Paolo", exact_match=False)
+    wnd = uw.get_main_wnd('Time .* Expense Entry .* Salesforce .* Google Chrome', timeout_sec=1)
     print (f'wnd {wnd}')
     uw.win_activate(wnd)
 
