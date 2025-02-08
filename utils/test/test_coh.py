@@ -182,7 +182,7 @@ def robot_security_browser(arg):
         print(f'status_num {status_num}')
         VERIFY(status_num.window_text()=='No. of Rows: 1','Security not Unique')
 
-        grid = status_num = uw.get_child_chk(page, automation_id='59661', ctrl_type='Pane', deep=10, use_re=True)
+        grid = uw.get_child_chk(page, automation_id='59661', ctrl_type='Pane', deep=10, use_re=True)
         # hide
         uw.win_click(grid, mode='grid_row1')
         mouse.click('right')

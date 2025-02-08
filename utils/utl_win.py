@@ -181,7 +181,7 @@ def page_close_all(save_as=None, time_tag=False):
             page_close(elem, save_as=save_as, time_tag=time_tag)
 
 def page_get_num(page):
-    pattern = 'No\.\ *of ([a-zA-Z0-9_]*): *([0-9])'
+    pattern = 'No\. *of ([a-zA-Z0-9_]*): *([0-9])'
     text = get_child_chk(page, name=pattern, ctrl_type='Text', deep=10, use_re=True)
     if (text):
         return int (re.match(pattern, text.window_text())[2])

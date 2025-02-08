@@ -39,6 +39,7 @@ class AppEnv:
         self.coh_path = None
         self.coh_exe = None
 
+    @utl.chrono_function
     def placeholder(self):
         self.rib_tab = None
         self.rib_grp = None
@@ -48,9 +49,10 @@ class AppEnv:
         VERIFY(self.wtop, 'Windows Application handler non Valid')
 
         if(not re.match('Starting Coherence.*', self.wtop.window_text())):
-            self.rib_tab = uw.get_child_chk(self.wtop, name='Ribbon Tabs', ctrl_type='Group', deep=4, verify=False)      # TODO verify condizionale a wtop
-            self.st_bar = uw.get_child_chk(self.wtop, name='StatusBar', ctrl_type='StatusBar', deep=4, verify=False)
-            self.rib_grp = uw.get_child_chk(self.wtop, automation_id='59398', ctrl_type='ToolBar', deep=4, verify=False)
+            self.rib_grp = uw.get_child_chk(self.wtop, automation_id='59398', ctrl_type='ToolBar', deep=1, verify=False)   # contenuto della tab corrente
+            self.rib_tab = uw.get_child_chk(self.rib_grp, name='Ribbon Tabs', ctrl_type='Group', deep=1, verify=False)      # FILE HOME VIWE ....
+            self.st_bar = uw.get_child_chk(self.wtop, name='StatusBar', ctrl_type='StatusBar', deep=1, verify=False)        
+            
 
             VERIFY(self.rib_tab, 'Ribbon Tab handler non Valid')
             VERIFY(self.st_bar, 'Ribbon Bar handler non Valid')
@@ -87,6 +89,7 @@ class AppEnv:
         #print(f'wtop {wtop}')
         self.placeholder()
 
+    @utl.chrono_function
     def hang_app(self, coh_path=None, pid=None):
         if not coh_path:
             coh_path = r'.\Coherence.exe'

@@ -48,7 +48,7 @@ COH_ALIAS =             'KATIA'
 COH_CLIENTID =          'MARI'
 COH_CLIENTACC =         'TEST'
 
-if ( 0 ):                 # FTX
+if ( 1 ):                 # FTX
     COH_PRIMARY=        '10.91.204.22'         
     COH_PORT=           '42900'         
     COH_USER=           '99999@99999'         
@@ -344,9 +344,9 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
 if __name__ == '__main__':
     opts = {'speed': '110', 'run': 'local', 'reuse_wsp': 'yes', 'save_wsp_onclose': 'yes', 'close_all_pages': 'yes'}
     opt.set(opts)
-    select = 2
+    select = 1
     if (select==1):
-        print(robot_run('do_start_dialog', '', opts,'hang') )
+        print(robot_run('do_search_security', '', opts,'hang') )
         #env.hang_app(COH_PATH)
         #do_grid_sample('')
     if (select==2):

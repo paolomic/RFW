@@ -9,13 +9,18 @@ def get_now_sec(sep=':'):
 
 def play_sound(type):
     if type=='success':
-        winsound.Beep(1000, 200)
-        winsound.Beep(1000, 200)
+        #winsound.Beep(1000, 100)
+        #winsound.Beep(1000, 100)
+        wav_file = r"C:\Windows\Media\Windows Print complete.wav"
+        winsound.PlaySound(wav_file, winsound.SND_FILENAME)
     elif type=='fail':
-        winsound.Beep(200, 1000)
+        #winsound.Beep(200, 1000)
+        wav_file = r"C:\Windows\Media\Windows Critical Stop.wav"
+        winsound.PlaySound(wav_file, winsound.SND_FILENAME)
+        winsound.PlaySound(wav_file, winsound.SND_FILENAME)
 
 
-def chrono_function(func):                  # set as Decorator: @....
+def chrono_function(func):                  # Analisi: set as Decorator: @....
     @wraps(func)
     def wrapper(*args, **kwargs):
         start_time = time.time()
@@ -28,4 +33,4 @@ def chrono_function(func):                  # set as Decorator: @....
 
 
 if __name__ == '__main__':
-    play_sound('success')
+    play_sound('fail')
