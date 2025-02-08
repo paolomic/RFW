@@ -1,7 +1,7 @@
 import keyboard
 import mouse
 
-from pywinauto import Desktop
+from pywinauto import Desktop, Application, findwindows
 from pathlib import Path
 
 from datetime import datetime
@@ -58,20 +58,7 @@ def hide_select(n):
         keyboard.press("end")
         for i in range(0,-n-1):
             keyboard.press("up")
-
-def statusbar_wait(statusbar, state, attempt=5, wait_init=0.25,  delay=1, wait_end=0.25):
-    sleep(wait_init)
-    while attempt>0:
-        cld = get_child_chk(statusbar, name=state, ctrl_type='Text', verify=False)
-        if (cld):
-            sleep(wait_end) 
-            return True
-        
-        attempt -= 1
-        if attempt==0:
-            return None
-        sleep(delay) 
-    return False
+    
 
 def edit_set(edit, value, wait_end=0.3):
     edit.iface_value.SetValue(value)
@@ -389,69 +376,6 @@ def win_copy_to_clip(wait_init = .5):
 
 #endregion
 
-##########################################################
-# find_window
-##########################################################
-#region
-def find_window(name=None, class_name=None, handle=None, process_id=None, exact_match=False):
-    """
-    Trova una finestra di primo livello basata sui criteri specificati.
-    
-    Args:
-        name: Nome/titolo della finestra
-        class_name: Nome della classe
-        handle: Handle Windows
-        process_id: ID del processo
-        exact_match: Se True, richiede match esatto per le stringhe
-    """
-    try:
-        desktop = Desktop(backend='uia')
-        top_windows = desktop.windows()
-        
-        for window in top_windows:
-            try:
-                # Handle check (più veloce)
-                if handle is not None:
-                    if window.element_info.handle != handle:
-                        continue
-                
-                # Process ID check
-                if process_id is not None:
-                    if window.process_id() != process_id:
-                        continue
-                
-                # Class name check
-                if class_name is not None:
-                    try:
-                        if window.element_info.class_name != class_name:
-                            continue
-                    except:
-                        continue
-                
-                # Window name check (potenzialmente più lento)
-                if name is not None:
-                    try:
-                        window_text = window.window_text()
-                        if exact_match:
-                            if window_text != name:
-                                continue
-                        else:
-                            if name.lower() not in window_text.lower():
-                                continue
-                    except:
-                        continue
-                
-                return window
-                
-            except Exception:
-                continue
-                
-        return None
-        
-    except Exception as e:
-        print(f"Error in find_window: {str(e)}")
-        return None
-#endregion
 
 ##########################################################
 # get_child
@@ -651,50 +575,116 @@ def butt_is_checked(butt):
 # Get Main Window 
 ##########################################################
 #region
-def get_main_wnd(title_pattern, timeout_sec=10):
-    def _find_matching_windows():
-        desktop = Desktop(backend="uia")
-        all_windows = desktop.windows()
-        matching_windows = [w for w in all_windows 
-                           if w.window_text() and 
-                           re.match(title_pattern, w.window_text()) ]
-        print(f'MatchingWindow {matching_windows}')
-        return matching_windows
 
+# normal speed
+def get_main_wnd(name=None, handle=None, pid=None, use_re=False):
+    # riscritta con deepseek + efficente by name
+    # todo aggiungere timeout?
     try:
-        matching_windows = _find_matching_windows()
-        if len(matching_windows) == 0:
-            print(f"get_main_wnd RETRY...")
-            
-            start_time = time.time()
-            while time.time() - start_time < timeout_sec:
-                matching_windows = _find_matching_windows()
-                if matching_windows:
-                    break
-                time.sleep(0.5)                     # Polling Sleep - migliorabile con Windows Hook
-        
-        # Time has Gone
-        if len(matching_windows) == 0:
-            print(f"get_main_wnd: NoResult '{title_pattern}' dopo {timeout_sec} secondi")
-            return None
-        elif len(matching_windows) > 1:
-            print(f"get_main_wnd: MultipleMatch {len(matching_windows)} window che matchano '{title_pattern}':")
-            for w in matching_windows:
-                print(f"- {w.window_text()}")
-            return None
-        else:
-            # Good
-            return matching_windows[0]
-            #window_title = matching_windows[0].window_text()
-            #app = Application(backend="uia").connect(title=window_title)
-            #window = app.window(title=window_title)
-            #print(f"get_main_wnd: Connected: '{window_title}'")
-            #return app               # or app?
-            
+        if handle is not None:
+            app = Application(backend='uia').connect(handle=handle)
+            return app.window(handle=handle)
+        elif pid is not None:
+            app = Application(backend='uia').connect(process=pid)
+            return app.window()
+        elif name is not None:
+            if use_re:
+                windows = findwindows.find_windows(title_re=name)
+            else:
+                windows = findwindows.find_windows(title=name)              # tornano Vettori
+            if windows:
+                handle = windows[0]                                         # prende la 1a
+                app = Application(backend='uia').connect(handle=handle)
+                return app.window(handle=handle)
+        return None
     except Exception as e:
-        print(f"get_main_wnd Error:: {str(e)}")
+        print(f"Error in get_main_wnd: {e}")
         return None
 
+
+#  super_fast version
+from typing import Optional, Union
+from ctypes import windll, create_unicode_buffer, sizeof, byref
+import ctypes
+import win32process
+
+def get_main_wnd_fast(name: Optional[str] = None, 
+                      handle: Optional[int] = None, 
+                      pid: Optional[int] = None, 
+                      use_re: bool = False) -> Optional[int]:
+    """
+    Versione ottimizzata che usa direttamente Win32 API.
+    Ritorna l'handle della finestra invece dell'oggetto Application.
+    """
+    try:
+        # Se abbiamo già l'handle, verifichiamo solo che la finestra esista
+        if handle is not None:
+            if win32gui.IsWindow(handle):
+                return handle
+            return None
+
+        # Se abbiamo il PID, cerchiamo la finestra principale per quel processo
+        if pid is not None:
+            def callback(hwnd, target_pid):
+                try:
+                    _, found_pid = win32gui.GetWindowThreadProcessId(hwnd)
+                    if found_pid == target_pid and win32gui.IsWindowVisible(hwnd):
+                        target_pid[0] = hwnd
+                        return False
+                except:
+                    pass
+                return True
+            
+            result = [None]
+            win32gui.EnumWindows(callback, result)
+            return result[0]
+
+        # Ricerca per nome - versione ottimizzata
+        if name is not None:
+            if use_re:
+                pattern = re.compile(name)
+                def callback(hwnd, results):
+                    if win32gui.IsWindowVisible(hwnd):
+                        title = win32gui.GetWindowText(hwnd)
+                        if pattern.search(title):
+                            results.append(hwnd)
+                            return False
+                    return True
+                
+                results = []
+                win32gui.EnumWindows(callback, results)
+                return results[0] if results else None
+            else:
+                # Versione più veloce per match esatto
+                def callback(hwnd, target_name):
+                    if win32gui.IsWindowVisible(hwnd):
+                        if win32gui.GetWindowText(hwnd) == target_name:
+                            target_name[0] = hwnd
+                            return False
+                    return True
+                
+                result = [None]
+                win32gui.EnumWindows(callback, result)
+                return result[0]
+
+        return None
+
+    except Exception as e:
+        print(f"Error in get_main_wnd_fast: {str(e)}")
+        return None
+
+# detail by handle
+def get_window_info(hwnd: int) -> dict:
+    """
+    Ottiene informazioni aggiuntive sulla finestra.
+    """
+    info = {}
+    info['title'] = win32gui.GetWindowText(hwnd)
+    info['class'] = win32gui.GetClassName(hwnd)
+    info['rect'] = win32gui.GetWindowRect(hwnd)
+    _, pid = win32process.GetWindowThreadProcessId(hwnd)  # Corretto qui
+    info['pid'] = pid
+    return info
 
 
 #endregion

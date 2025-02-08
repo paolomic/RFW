@@ -25,9 +25,7 @@ def send_key_sequence(seq:str):
 
 #send_key_sequence('Prova')
 
-
-
-wnd = uw.find_window(name="Google Chrome - Paolo", exact_match=False)
+wnd = uw.get_main_wnd(name="Google Chrome - Paolo", use_re=1)
 print (wnd)
 
 uw.win_activate(wnd)

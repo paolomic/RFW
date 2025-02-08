@@ -140,7 +140,7 @@ def robot_start_connections(arg):
         if not uw.butt_is_checked(butt):
             uw.win_click(butt)
 
-        if uw.statusbar_wait(env.st_bar, 'Ready', attempt=15, delay=2):             # Wait for Connection Ready
+        if env.wait_conn_ready(to_sec=30, to_err_sec=5, delay=2):
             print ('Connection Ready')
         else:
             RAISE("Connection Fail")

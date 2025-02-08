@@ -3,6 +3,7 @@ from pywinauto import Application
 import os
 
 import utl_win as uw
+import utl  as utl
 
 import re
 import os
@@ -60,7 +61,7 @@ class AppEnv:
     def init(self, coh_path): 
         self.reset()
         self.coh_path = coh_path
-        self.coh_exe = os.path.basename(coh_path)
+        self.coh_exe = 'Coherence.exe'
 
     def launch_app(self, coh_path, unique=True):
         self.init(coh_path)
@@ -86,11 +87,14 @@ class AppEnv:
         #print(f'wtop {wtop}')
         self.placeholder()
 
-    def hang_app(self, coh_path):
+    def hang_app(self, coh_path=None, pid=None):
+        if not coh_path:
+            coh_path = r'.\Coherence.exe'
+        
         self.init(coh_path)
         
         try:
-            self.app = Application(backend="uia").connect(path=self.coh_exe)
+            self.app = Application(backend="uia").connect(path=self.coh_exe, pid=pid)
             self.wtop = self.app.top_window()
         except Exception as e:
             RAISE(f"Hang Error: {str(e)}")
@@ -124,18 +128,16 @@ class AppEnv:
     def reload(self, wait_init=1, wait_in=1, wait_end=1, timeout=5):        
         now = datetime.now() 
         sleep(wait_init)
-        run = 1
         done = 0
-        while (run):
+        while (1):
             try:
-                self.app = Application(backend="uia").connect(path=self.coh_exe)
                 self.wtop = self.app.top_window()
                 if self.app and self.wtop and not re.match('Starting Coherence.*', self.wtop.window_text()):
                     done = 1
                     sleep(0.5)
                     break
             except Exception as e:
-                pass
+                break
             elaps = (datetime.now()-now).seconds
             if (elaps>timeout):
                 break
@@ -144,6 +146,30 @@ class AppEnv:
             sleep(wait_end)
             self.placeholder()
         VERIFY(self.ready(), "Connection Was not Ready by Timeout")
+
+    def wait_conn_ready(self, to_sec=30, to_err_sec=5, delay=1, wait_init=0.5, wait_end=0.5):
+        now = datetime.now() 
+        sleep(wait_init)
+        done = 0
+        print ('Wait Connection Ready...')
+        while (1):
+            elaps = (datetime.now()-now).seconds
+            if elaps>to_sec:
+                    break
+            cld = uw.get_child_chk(self.st_bar, 'Ready', ctrl_type='Text', verify=False)
+            if cld:
+                done = 1
+                break
+            if elaps > to_err_sec:
+                cld = uw.get_child_chk(self.st_bar, 'Failed', ctrl_type='Text', verify=False)
+            if cld:
+                done = 0
+                break
+            sleep(delay)
+        if done:
+            sleep(wait_end)
+        utl.play_sound('success' if done else 'fail')
+        return done==1
 
 env = AppEnv()              # class singleton
 

@@ -1,4 +1,3 @@
-from pywinauto.keyboard import send_keys
 import keyboard
 import threading
 import time
@@ -20,7 +19,7 @@ class MacroManager:
             repeat: Se True, ripete la callback mentre le hotkeys sono premute
         """
         if isinstance(hotkeys, str):
-            hotkeys = hotkeys.split()
+            hotkeys = hotkeys.split('+')
             
         if not self.macros:
             keyboard.on_press(self._handle_key_event)
@@ -58,3 +57,66 @@ class MacroManager:
     def stop(self):
         self._running = False
         keyboard.unhook_all()
+
+
+
+""" 
+=============================================================================================== KEYS
+Tasti standard:
+a, b, c, ..., z (lettere minuscole)
+A, B, C, ..., Z (lettere maiuscole)
+0, 1, 2, ..., 9 (numeri)
+!, @, #, $, %, ^, &, *, (, ), -, _, =, +, [, ], {, }, \\, |, ;, :, ', ", ,, <, ., >, /, ?, `, ~ (simboli)
+
+Tasti speciali:
+space (barra spaziatrice)
+enter (invio)
+tab (tabulazione)
+backspace (cancellazione)
+delete (cancella)
+insert (inserisci)
+home (inizio)
+end (fine)
+page up (pagina su)
+page down (pagina giù)
+up (freccia su)
+down (freccia giù)
+left (freccia sinistra)
+right (freccia destra)
+esc (escape)
+caps lock (blocco maiuscole)
+num lock (blocco numerico)
+scroll lock (blocco scorrimento)
+print screen (stampa schermo)
+pause (pausa)
+
+Tasti funzione:
+f1, f2, f3, ..., f12 (tasti funzione da F1 a F12)
+
+Tasti modificatori:
+shift (maiuscolo)
+ctrl (control)
+alt (alternate)
+alt gr (alternate graphic)
+win (tasto Windows)
+cmd (tasto Command su macOS)
+
+Tasti numerici (tastierino numerico):
+num 0, num 1, num 2, ..., num 9 (tasti numerici del tastierino numerico)
+num lock (blocco numerico)
+num / (divisione)
+num * (moltiplicazione)
+num - (sottrazione)
+num + (addizione)
+num enter (invio del tastierino numerico)
+num . (punto decimale del tastierino numerico)
+
+Combinazioni di tasti:
+Puoi anche referenziare combinazioni di tasti, ad esempio:
+
+ctrl + c (copia)
+ctrl + v (incolla)
+alt + f4 (chiudi la finestra)
+shift + a (maiuscolo + A)
+
+"""
