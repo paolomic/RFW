@@ -15,6 +15,7 @@ from win32gui import FindWindow, PostMessage, GetCursorInfo
 import win32.lib.win32con as win32con
 import utl  as utl
 import utl_app as ua
+import utl_dump as ud
 
 
 WIN_BUTT_STATE_CHECKED          = (1<<4)
@@ -62,6 +63,14 @@ def hide_select(n):
 
 def edit_set(edit, value, wait_end=0.3):
     edit.iface_value.SetValue(value)
+    sleep(wait_end)
+
+def edit_set_manual(edit, value, reset=False, wait_end=0.3):
+    win_click(edit)
+    if reset:
+        keyboard.press_and_release('ctrl+a')
+        keyboard.press_and_release('del')
+    keyboard.write(value)
     sleep(wait_end)
 
 def get_today_iso():
@@ -514,6 +523,21 @@ def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, auto
         if attempt==0:
             return None
         sleep(delay) 
+    return None
+
+# patch per trovare se non ho elementi - web Quantity
+def get_child_after(child_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
+                   use_re=False, use_case=True, visible_only=False, enable_only=True):
+    parent_wnd = child_wnd.parent()
+    children = parent_wnd.children()
+    found_child = False
+    for sibling in children:
+        if found_child:
+            if check_control(sibling, name, ctrl_type, class_name, automation_id, handle, texts,
+                            use_re, use_case, visible_only, enable_only):
+                return sibling
+        if sibling == child_wnd:
+            found_child = True
     return None
 
 #TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST 
