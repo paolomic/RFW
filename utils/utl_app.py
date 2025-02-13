@@ -271,6 +271,36 @@ class WebAppEnv:
         
         return users
 
+    class WebTable:                                                    # todo to move in utl_web
+        header = []
+        rows = []
+
+        def node_str(self, node):
+            res = ''
+            for item in node.children():
+                res += item.window_text()
+
+        def reset(self):
+            self.header = []
+            self.rows = []
+
+        def load(self, table, reload_header=False, nrow=0):             # todo limitare row, col ?
+            if len(self.header==0) or reload_header:
+                self.header = []
+                hd = uw.get_child(table, ctrl_type='Custom') 
+                for colh in hd.children():
+                    col_name = self.node_str(colh)
+                    self.header.append(col_name)
+            table2 = uw.get_child(table, ctrl_type='Table')
+            rows = uw.get_child(table2, ctrl_type='Group')  
+            for row in rows.children():
+                data_row = []
+                cells =  row.children()
+                for cell in cells:
+                    data_row.append(self.node_str(cell))
+                self.rows.append(data_row)
+
+
 
 wenv = WebAppEnv()              # class singleton
 
