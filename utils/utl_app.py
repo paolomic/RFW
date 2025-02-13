@@ -186,7 +186,6 @@ class WebAppEnv:
     url = None
 
     def reset(self):
-        # main
         self.url = None
 
     #@utl.chrono_function
@@ -197,15 +196,16 @@ class WebAppEnv:
         self.reset()
         self.url = url
 
-    def launch_app(self, url=None):
+    def launch_url(self, url=None, wait_end=3):
         if url:
             self.init(url)        
         subprocess.run(["start", "chrome", "--new-window", self.url], shell=True)
-        uw.sleep(3)
-        #self.hang_app()
+        utl.play_sound('success')
+        uw.sleep(wait_end)
+        return self.hang_main()
 
     #@utl.chrono_function
-    def hang_main(self, url=None):
+    def hang_main(self, url=None, wait_end=1):
         if url:
             self.init(url)
         brw = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)  
@@ -216,17 +216,16 @@ class WebAppEnv:
             doc = uw.get_child_chk(brw, name='CanDeal Evolution', ctrl_type='Document')   # main page
             print(f'doc:{doc} logged')
         except:
-            ud.dump_uia_tree(brw, max_depth=4)                                               # PATCH - ??? navigazione fittizia - perche ???
-            doc = uw.get_child_chk(brw, ctrl_type='Document')                                # login page
+            ud.dump_uia_tree(brw, max_depth=3)                      # PATCH - MISTERO atrimenti non trova il doc
+            doc = uw.get_child_chk(brw, ctrl_type='Document')       # login page
             print(f'doc:{doc} loggin')
-
-        uw.sleep(1)
         try:
             pass
             # todo verifica unicita
         except Exception as e:
             RAISE(f"Start Error: {str(e)}")
-            
+        
+        uw.sleep(wait_end)
         return (brw, doc)
 
     def hang_rfq(self, url=None):

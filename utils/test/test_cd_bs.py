@@ -40,7 +40,7 @@ WEB_PRICE =             '101.34'
 #region 
 
 def do_login_session(new=False):
-    (brw, doc) = wenv.hang_main()
+    (brw, doc) = wenv.launch_url(WEB_URL)
     edit = uw.get_child_chk(doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1)
     uw.edit_set(edit, 'OP1@CUST1')
     edit = uw.get_child_chk(doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
@@ -83,7 +83,7 @@ def do_send_rfq(arg):
     #print(ud.dump_uia_tree(table))
     
     label = uw.get_child_chk(table, name='QTY', ctrl_type='Text')
-    combo = uw.get_child_after(label, ctrl_type='Spinner')              # todo mancano Key
+    combo = uw.get_child_after(label, ctrl_type='Spinner')                      # todo mancano Key
     uw.edit_set_manual(combo, WEB_QTY, reset=1)         # usa keyboard
 
     label = uw.get_child_chk(table, name='PRICE', ctrl_type='Text')
@@ -97,10 +97,6 @@ def do_send_rfq(arg):
     uw.win_click(butt)
 
     sleep(1)
-    # need reload ?
-    rfq = uw.get_main_wnd('New Bond RFQ.*Google Chrome.*', use_re=1)
-    table = uw.get_child_chk(rfq, ctrl_type='Table', deep=2)
-
 #endregion
 
 
@@ -108,19 +104,21 @@ def do_manage_rfq(arg):
     (rfq, table, grp) = wenv.hang_rfq()
 
     time = None
-    while not uw.get_child(rfq, name='.*EXPIRED.*', use_re=1):
+    while not uw.get_child(table, name='.*EXPIRED.*', use_re=1):
         try:
             if not time:
-                time = uw.get_child(rfq, name=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$', use_re=1, deep=7)
-            print(f'rfq runnig... {time.window_text()}')
+                time = uw.get_child(table, name=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$', use_re=1, deep=6)
+            print(f'table runnig... {time.window_text()}')
         except:
-            pass
+            break
 
         for i in range(6):
             print('.', end='', flush=True)
             uw.sleep(1)
         print('')
-    
+
+    sleep(1)
+        
     print('Rfq EXPIRED')
 
 
@@ -133,8 +131,6 @@ def do_manage_rfq(arg):
 
 def robot_run(fun_name:str, arg:str='', options=[], s_op=''):
     def manage_session(s_op):
-        if s_op=='new':
-            wenv.launch_app(WEB_URL)
         pass
     def verify_session(ope):
         pass
@@ -159,14 +155,14 @@ def robot_run(fun_name:str, arg:str='', options=[], s_op=''):
 if __name__ == '__main__':
     opts = {'speed': '110', 'run': 'local', 'reuse_wsp': 'yes', 'save_wsp_onclose': 'yes', 'close_all_pages': 'yes'}
     opt.set(opts)
-    select = 1
+    select = 0
     if (select==1):
-        #print(robot_run('do_login_session', '', opts, 'new') )
-        #print(robot_run('do_open_rfq', '', opts, 'hang') )
+        #print(robot_run('do_login_session', '', opts, '') )
+        #print(robot_run('do_open_rfq', '', opts, '') )
         #print(robot_run('do_send_rfq', '', opts, '') )
-        print(robot_run('do_manage_rfq', '', opts, '') )
-        
+        #print(robot_run('do_manage_rfq', '', opts, '') )
         #do_grid_sample('')
+        pass
     if (select==2):
         wenv.hang_app()
         do_login_session('')

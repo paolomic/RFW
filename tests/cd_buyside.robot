@@ -8,7 +8,7 @@ Library             ../utils/test/test_cd_bs.py
 *** Variables ***
 &{opts}             speed=110    run=local    reuse_wsp=yes  save_wsp_onclose=yes  close_all_pages=yes                                                    # list of Suite Options
 #@{addin_list}       MetaMarket  UserPages
-&{req_dict}         path=http://10.91.204.20/login    title=Chrome
+&{req_dict}         path=http://10.91.204.20/login    driver=Chrome
 ${ftqid}            000000000000
 
 
@@ -17,7 +17,7 @@ Start New Session
     [Documentation]     login
     [Timeout]           2 minutes
     ${arg}=             Set Variable  ${EMPTY}
-    &{result}=          evaluate      test_cd_bs.robot_run('do_login_session','${arg}',${opts},'new')  
+    &{result}=          evaluate      test_cd_bs.robot_run('do_login_session','${arg}',${opts},'')  
     log                               result: ${result}
     ${info} =           Set Variable  ${result}[info]
     Should Be Equal As Strings        ${result}[status]     ok
@@ -41,8 +41,8 @@ Send a New Rfq
     Should Be Equal As Strings        ${result}[status]     ok
     
 Manage Active Pane Rfq
-    [Documentation]     Mabage Active Rfq
-    [Timeout]           2 minutes
+    [Documentation]     Manage Active Rfq
+    [Timeout]           3 minutes     #slow
     ${arg}=             Set Variable  ${EMPTY}
     &{result}=          evaluate      test_cd_bs.robot_run('do_manage_rfq','${arg}',${opts},'')  
     log                               result: ${result}
