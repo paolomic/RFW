@@ -101,6 +101,8 @@ def do_send_rfq(arg):
 
 
 def do_manage_rfq(arg):
+    
+    
     (rfq, table, grp) = wenv.hang_rfq()
 
     time = None
@@ -112,6 +114,11 @@ def do_manage_rfq(arg):
         except:
             break
 
+        try:
+            print(print(f'Answer From {wenv.get_answer(table)}'))
+        except:
+            pass
+
         for i in range(6):
             print('.', end='', flush=True)
             uw.sleep(1)
@@ -120,6 +127,7 @@ def do_manage_rfq(arg):
     sleep(1)
         
     print('Rfq EXPIRED')
+    print(print(f'Final Answer From {wenv.get_answer(table)}'))
 
 
 
@@ -155,12 +163,12 @@ def robot_run(fun_name:str, arg:str='', options=[], s_op=''):
 if __name__ == '__main__':
     opts = {'speed': '110', 'run': 'local', 'reuse_wsp': 'yes', 'save_wsp_onclose': 'yes', 'close_all_pages': 'yes'}
     opt.set(opts)
-    select = 0
+    select = 1
     if (select==1):
         #print(robot_run('do_login_session', '', opts, '') )
         #print(robot_run('do_open_rfq', '', opts, '') )
         #print(robot_run('do_send_rfq', '', opts, '') )
-        #print(robot_run('do_manage_rfq', '', opts, '') )
+        print(robot_run('do_manage_rfq', '', opts, '') )
         #do_grid_sample('')
         pass
     if (select==2):

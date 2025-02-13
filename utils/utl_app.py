@@ -248,8 +248,34 @@ class WebAppEnv:
     def get_doc(self):
         return 
 
+    #todo metterla in modulo opportuno
+    # todo - heade e row potrebbero forse non essere calcolati tutte le volte
+    def get_answer(self, table):
+        users=[]
+        
+        try:
+            table2 = uw.get_child(table, ctrl_type='Table')
+            header = uw.get_child(table, ctrl_type='Custom')    #'Dealer Good For Qty Yield Price Ref Sprd.*'
+            rows = uw.get_child(table2, ctrl_type='Group')
+
+            for row in rows.children():
+                cols =  row.children()
+                col_user = cols[0]
+                user =cols[0].children()[1]
+                qty =cols[2].children()[2]
+                prc =cols[3].children()[2]
+                if (len(user.window_text())>2):    
+                    users.append((user.window_text(), qty.window_text(), prc.window_text()))
+        except:
+            pass
+        
+        return users
+
 
 wenv = WebAppEnv()              # class singleton
+
+
+
 
 #endregion
 
