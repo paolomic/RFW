@@ -527,7 +527,7 @@ def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, auto
 
 # patch per trovare se non ho elementi - web Quantity
 def get_child_after(child_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
-                   use_re=False, use_case=True, visible_only=False, enable_only=True):
+                   use_re=False, use_case=True, visible_only=False, enable_only=True, check=True):
     parent_wnd = child_wnd.parent()
     children = parent_wnd.children()
     found_child = False
@@ -538,6 +538,9 @@ def get_child_after(child_wnd, name=None, ctrl_type=None, class_name=None, autom
                 return sibling
         if sibling == child_wnd:
             found_child = True
+
+    if check:
+        ua.RAISE(f'Item Not Found After: Name:{name} Ctrl:{ctrl_type} Class:{class_name} AutId:{automation_id} ')
     return None
 
 #TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST 

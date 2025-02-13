@@ -1,4 +1,4 @@
-
+import utl
 
 ######################################################################################################
 #  Dump - (Develop Helpers)
@@ -73,6 +73,7 @@ def dump_uia_item(element, level=0):
     except Exception as e:
         return f"{indent}Error processing element: {str(e)}"
 
+#@utl.chrono_function
 def dump_uia_tree(element, level=0, max_depth=None, file_path='out.txt', first_call=True):
     """
     Stampa l'albero dei controlli su file, una riga per elemento.
@@ -103,6 +104,21 @@ def dump_uia_tree(element, level=0, max_depth=None, file_path='out.txt', first_c
                     
     except Exception as e:
         print(f"Error writing to file: {str(e)}")
+
+
+def refresh_uia_tree(element):
+    try:
+        xxx = dump_uia_item(element, 0) + "\n"
+        try:
+            children = element.children()
+            for child in children:
+                refresh_uia_tree(child)
+        except Exception as e:
+            pass
+                    
+    except Exception as e:
+        print(f"Error writing to file: {str(e)}")
+
         
 def dump_uia_path(item, root=None, file_path='out.txt'):
     """

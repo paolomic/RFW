@@ -1,6 +1,6 @@
 import time
 from pywinauto import Application
-import os
+import subprocess
 
 import utl_win as uw
 import utl  as utl
@@ -10,10 +10,11 @@ import os
 from datetime import datetime, timedelta
 
 from utl_verifier import VERIFY, RAISE, DUMP
+import utl_dump as ud
 
 
 ##########################################################
-# App Environment 
+#region - Coherence Environment 
 
 class AppEnv:
     app = None
@@ -175,6 +176,83 @@ class AppEnv:
         return done==1
 
 env = AppEnv()              # class singleton
+#endregion
+
+##########################################################
+#ewgion - Web Environment 
+
+class WebAppEnv:
+    #private
+    url = None
+
+    def reset(self):
+        # main
+        self.url = None
+
+    #@utl.chrono_function
+    def placeholder(self):
+        pass
+
+    def init(self, url): 
+        self.reset()
+        self.url = url
+
+    def launch_app(self, url=None):
+        if url:
+            self.init(url)        
+        subprocess.run(["start", "chrome", "--new-window", self.url], shell=True)
+        uw.sleep(3)
+        #self.hang_app()
+
+    #@utl.chrono_function
+    def hang_main(self, url=None):
+        if url:
+            self.init(url)
+        brw = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)  
+        print(f'brw:{brw}')
+        VERIFY(brw, 'browser start fail')
+        try:
+            #ud.dump_uia_tree(brw, max_depth=1)                         # patch 
+            doc = uw.get_child_chk(brw, name='CanDeal Evolution', ctrl_type='Document')   # main page
+            print(f'doc:{doc} logged')
+        except:
+            ud.dump_uia_tree(brw, max_depth=4)                                               # PATCH - ??? navigazione fittizia - perche ???
+            doc = uw.get_child_chk(brw, ctrl_type='Document')                                # login page
+            print(f'doc:{doc} loggin')
+
+        uw.sleep(1)
+        try:
+            pass
+            # todo verifica unicita
+        except Exception as e:
+            RAISE(f"Start Error: {str(e)}")
+            
+        return (brw, doc)
+
+    def hang_rfq(self, url=None):
+        uw.sleep(0.25)
+        rfq = uw.get_main_wnd('New Bond RFQ.*Google Chrome.*', use_re=1)
+        VERIFY(rfq, 'rfq panel fail')
+        table = uw.get_child_chk(rfq, ctrl_type='Table', deep=2)
+        grp = uw.get_child_chk(table, ctrl_type='Group', deep=1)        # group combo type
+        uw.sleep(0.25)
+
+        return (rfq, table, grp)
+
+    def kill_app(self, url=None):
+        while 1:
+            inst = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)  
+            if not inst:
+                return
+            uw.win_close(inst)
+
+    def get_doc(self):
+        return 
+
+
+wenv = WebAppEnv()              # class singleton
+
+#endregion
 
 ##########################################################
 # App Options
