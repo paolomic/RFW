@@ -4,3 +4,5 @@ out.txt
 *.html
 dumps/
 *.bak
+out_graph.txt
+tests/out_graph.txt

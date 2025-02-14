@@ -32,5 +32,16 @@ def chrono(func):                  # Analisi: set as Decorator: @....
     return wrapper
 
 
+class TimeOut():
+    timeout = 120
+    start_time = 0
+    def __init__(self, timeout):
+        self.timeout = timeout
+        self.start_time = time.time()
+    def expired(self):
+        return time.time() - self.start_time > self.timeout
+
+
+
 if __name__ == '__main__':
     play_sound('fail')

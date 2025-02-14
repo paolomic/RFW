@@ -19,13 +19,16 @@ class WebAppEnv:
     #private
     url = None
 
+    def reset(self):
+        self.url = None
+
     def init(self, url): 
-        self.reset()
-        self.url = url
+        if url:            
+            self.url = url
 
     def launch_url(self, url=None, wait_end=3):
-        if url:
-            self.init(url)        
+        if url:            
+            self.url = url
         subprocess.run(["start", "chrome", "--new-window", self.url], shell=True)
         utl.play_sound('success')
         uw.sleep(wait_end)
@@ -36,10 +39,10 @@ class WebAppEnv:
         if url:
             self.init(url)
         brw = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)  
-        print(f'brw:{brw}')
+        #@print(f'brw:{brw}')                                      # very long string     
         VERIFY(brw, 'browser start fail')
         try:
-            #ud.dump_uia_tree(brw, max_depth=1)                         # patch 
+            #ud.dump_uia_tree(brw, max_depth=1)                
             doc = uw.get_child_chk(brw, name='CanDeal Evolution', ctrl_type='Document')   # main page
             print(f'doc:{doc} logged')
         except:
@@ -82,6 +85,37 @@ webapp = WebAppEnv()              # class singleton
 # Table struct
 #
 #
+class WebBondDlg:
+    table = None
+    tag_time = None
+    tag_state = None
+
+    def __init__(self, table=None, load=False):
+        self.table = table
+        self.tag_time = None
+        self.tag_state = None
+        if load and self.table:
+            pass                            #todo
+
+    def get_time(self):
+        try:
+            if not self.tag_time:
+                self.tag_time = uw.get_child(self.table, name=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$', use_re=1, deep=6)         # todo - sepolto senza locator
+            txt_time = self.tag_time.window_text()
+        except:
+            self.tag_time = None
+            return None
+        if not self.tag_time or not txt_time:
+            return None
+        return txt_time
+
+    def get_state(self):
+        try:
+            self.tag_state = uw.get_child(self.table, name='.*(ENDED|EXPIRED|DONE).*', use_re=1)                # todo - ottimizzare se' e' lo stesso del time ?
+            return self.tag_state.window_text()
+        except:
+            return None
+
 
 
 class WebTable:
@@ -107,8 +141,6 @@ class WebTable:
         if table:
             self.table = table
 
-        self.reset()  # Resetta la tabella prima di caricare nuovi dati
-
         # Carica l'header se necessario
         if len(self.header) == 0 or reload_header:
             hd = uw.get_child(self.table, ctrl_type='Custom')  # Assicurati che 'Custom' sia corretto
@@ -131,12 +163,12 @@ class WebTable:
                 if nrow > 0 and row_count >= nrow:  # Interrompi se è stato raggiunto il numero massimo di righe
                     break
 
+
+
     def get_answer(self, table=None):        # short fast version for load - serve?
         if table:
-            self.table = table
-        
+            self.table = table        
         users=[]
-        
         try:
             header = uw.get_child(self.table, ctrl_type='Custom')    #'Dealer Good For Qty Yield Price Ref Sprd.*'
             rows = uw.get_child(self.table, ctrl_type='Group')
@@ -151,7 +183,6 @@ class WebTable:
                     users.append((user.window_text(), qty.window_text(), prc.window_text()))
         except:
             pass
-        
         return users 
 
 
@@ -194,6 +225,4 @@ Level 0: Table (Class: , AutomationId: ), Visible=True, Text=None, Texts=[['Deal
                 ├── Level 4: Text (Class: , AutomationId: ), Visible=False, Text='  ', Texts=['  ']
                 ├── Level 4: Text (Class: , AutomationId: ), Visible=False, Text='  ', Texts=['  ']
                 ├── Level 4: Text (Class: , AutomationId: ), Visible=True, Text='-', Texts=['-']
-
-                
  """

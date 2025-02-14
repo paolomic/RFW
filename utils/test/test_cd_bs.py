@@ -2,6 +2,7 @@ import keyboard
 import mouse
 import webbrowser 
 import subprocess
+import time
 
 #TODO Spostare questo py in tests/modules (problema include)
 
@@ -14,7 +15,7 @@ sys.path.append(_new_path)
 
 import utl  as utl
 from utl_app import env, opt
-from utl_web import webapp, WebTable
+from utl_web import webapp, WebTable, WebBondDlg
 from utl_verifier import VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
 
@@ -41,7 +42,7 @@ WEB_PRICE =             '101.34'
 ### Robot Operations
 #region 
 
-def do_login_session(new=False):
+def do_login_session(arg):
     (brw, doc) = webapp.launch_url(WEB_URL)
     edit = uw.get_child_chk(doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1)
     uw.edit_set(edit, 'OP1@CUST1')
@@ -109,20 +110,27 @@ def do_manage_rfq(arg):
     grid = uw.get_child(table, ctrl_type='Table')
     tb = WebTable(grid, load=0)
 
-    time = None
-    while not uw.get_child(table, name='.*EXPIRED.*', use_re=1):
-        try:
-            if not time:
-                time = uw.get_child(table, name=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$', use_re=1, deep=6)
-            print(f'table runnig... {time.window_text()}')
-        except:
+    dlg_bond = WebBondDlg(table)
+
+    timeout = utl.TimeOut(240)
+ 
+    while True:
+        # termination on State
+        str_time = dlg_bond.get_time()
+        if not str_time:
             break
 
-        try:
-            print(print(f'Answer From {tb.get_answer()}'))
-        except:
-            pass
+        print(f'RFQ Active... {str_time}')
+        
+        # termination on TimeOut
+        if timeout.expired():                                #4 min T.O.
+            VERIFY(0, 'Timeout Managing Rfq Dialog')
+            break
 
+        #while actions
+        print(print(f'Answer From {tb.get_answer()}'))
+
+        #polling delay
         for i in range(6):
             print('.', end='', flush=True)
             uw.sleep(1)
@@ -130,13 +138,14 @@ def do_manage_rfq(arg):
 
     sleep(0.5)
 
-    print('Rfq EXPIRED')
+    str_state = dlg_bond.get_state()
+
+    print(f'Rfq Ended - Info {str_state}')
     ud.dump_uia_tree_graph(grid)
 
     tb.load()
     print(f'No.Row:{len(tb.rows)}')
     print(tb.rows)
-
 
 
 
@@ -182,4 +191,5 @@ if __name__ == '__main__':
         pass
     if (select==2):
         do_manage_rfq('')
+        #do_login_session('')
 

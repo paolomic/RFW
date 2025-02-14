@@ -42,7 +42,7 @@ Send a New Rfq
     
 Manage Active Pane Rfq
     [Documentation]     Manage Active Rfq
-    [Timeout]           3 minutes     #slow
+    [Timeout]           5 minutes     #slow
     ${arg}=             Set Variable  ${EMPTY}
     &{result}=          evaluate      test_cd_bs.robot_run('do_manage_rfq','${arg}',${opts},'')  
     log                               result: ${result}
