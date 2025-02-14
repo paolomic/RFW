@@ -128,10 +128,10 @@ def do_manage_rfq(arg):
             uw.sleep(1)
         print('')
 
-    sleep(1)
+    sleep(0.5)
 
     print('Rfq EXPIRED')
-    #ud.dump_uia_tree_graph(grid)
+    ud.dump_uia_tree_graph(grid)
 
     tb.load()
     print(f'No.Row:{len(tb.rows)}')

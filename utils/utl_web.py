@@ -78,6 +78,12 @@ class WebAppEnv:
 
 webapp = WebAppEnv()              # class singleton
 
+
+# Table struct
+#
+#
+
+
 class WebTable:
     def __init__(self, table=None, load=True):
         self.header = []  # Lista per memorizzare gli header della tabella
@@ -149,3 +155,45 @@ class WebTable:
         return users 
 
 
+
+
+
+""" 
+Esempio:
+Table: 
+    Custom - contiene Header, 
+    Group - contiene 1 row
+    Group - contiene 1 row
+    ...
+
+Level 0: Table (Class: , AutomationId: ), Visible=True, Text=None, Texts=[['Dealer Good For Qty Yield Price Ref Sprd W/O Call Date Status Settl Date Maturity'], ['']]
+    ├── Level 1: Custom (Class: , AutomationId: ), Visible=True, Text='Dealer Good For Qty Yield Price Ref Sprd W/O Call Date Status Settl Date Maturity', Texts=['Dealer Good For Qty Yield Price Ref Sprd W/O Call Date Status Settl Date Maturity']
+        ├── Level 2: Header (Class: , AutomationId: ), Visible=True, Text='Dealer', Texts=['Dealer']
+        ├── Level 2: Header (Class: , AutomationId: ), Visible=True, Text='Good For', Texts=['Good For']
+        ├── Level 2: Header (Class: , AutomationId: ), Visible=True, Text='Qty', Texts=['Qty']
+        ...
+    ├── Level 1: Group (Class: , AutomationId: ), Visible=True, Text=None, Texts=['']                   # Row.1
+        ├── Level 2: Custom (Class: , AutomationId: ), Visible=True, Text=None, Texts=['']
+            ├── Level 3: DataItem (Class: , AutomationId: ), Visible=True, Text=None, Texts=['  ', 'RBC']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=True, Text='  ', Texts=['  ']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=True, Text='RBC', Texts=['RBC']
+            ├── Level 3: DataItem (Class: , AutomationId: ), Visible=True, Text=None, Texts=['  ']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=False, Text='  ', Texts=['  ']
+            ├── Level 3: DataItem (Class: , AutomationId: ), Visible=True, Text=None, Texts=['  ', '  ', '-']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=False, Text='  ', Texts=['  ']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=False, Text='  ', Texts=['  ']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=True, Text='-', Texts=['-']
+    ├── Level 1: Group (Class: , AutomationId: ), Visible=True, Text=None, Texts=['']                   # Row.2
+        ├── Level 2: Custom (Class: , AutomationId: ), Visible=True, Text=None, Texts=['']
+            ├── Level 3: DataItem (Class: , AutomationId: ), Visible=True, Text=None, Texts=['  ', 'RBC']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=True, Text='  ', Texts=['  ']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=True, Text='RBC', Texts=['RBC']
+            ├── Level 3: DataItem (Class: , AutomationId: ), Visible=True, Text=None, Texts=['  ']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=False, Text='  ', Texts=['  ']
+            ├── Level 3: DataItem (Class: , AutomationId: ), Visible=True, Text=None, Texts=['  ', '  ', '-']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=False, Text='  ', Texts=['  ']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=False, Text='  ', Texts=['  ']
+                ├── Level 4: Text (Class: , AutomationId: ), Visible=True, Text='-', Texts=['-']
+
+                
+ """
