@@ -105,6 +105,70 @@ def dump_uia_tree(element, level=0, max_depth=None, file_path='out.txt', first_c
     except Exception as e:
         print(f"Error writing to file: {str(e)}")
 
+##########################################################
+#region - TreeGraph
+
+def dump_uia_item_graph(element, level=0, inline=False):
+    """Restituisce la rappresentazione di un singolo elemento UIA."""
+    try:
+        indent = "    " * level
+        connector = "├── " if level > 0 else ""
+        
+        # Estrazione proprietà
+        visible = element.is_visible()
+        control_type = element.element_info.control_type
+        class_name = element.element_info.class_name
+        automation_id = element.element_info.automation_id
+        window_text = element.window_text()
+        
+        # Estrazione texts
+        texts = []
+        try:
+            texts = element.get_properties().get('texts', [])
+        except:
+            pass
+        
+        # Costruzione output
+        if inline:
+            parts = [
+                f"{indent}{connector}Level {level}: {control_type} (Class: {class_name}, AutomationId: {automation_id})",
+                f"Visible={visible}",
+                f"Text='{window_text}'" if window_text else "Text=None",
+                f"Texts={texts}" if texts else "Texts=[]"
+            ]
+            return ", ".join(parts)
+        else:
+            parts = [
+                f"{indent}{connector}Level {level}: {control_type} (Class: {class_name}, AutomationId: {automation_id})",
+                f"{indent}    Visible={visible}",
+                f"{indent}    Text='{window_text}'" if window_text else f"{indent}    Text=None",
+                f"{indent}    Texts={texts}" if texts else f"{indent}    Texts=[]"
+            ]
+            return "\n".join(parts)
+            
+    except Exception as e:
+        return f"{indent}{connector}Error: {str(e)}"
+
+def dump_uia_tree_graph(element, level=0, max_depth=None, file_path='out_graph.txt', file_handle=None, inline=True, is_root=True):
+    """Scrive l'albero UIA su file in modo ordinato."""
+    if is_root:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            dump_uia_tree_graph(element, level, max_depth, file_path, f, inline, False)
+    else:
+        # Scrive l'elemento corrente
+        file_handle.write(dump_uia_item_graph(element, level, inline) + "\n")
+        
+        # Processa i figli
+        if max_depth is None or level < max_depth:
+            try:
+                children = element.children()
+                for child in children:
+                    dump_uia_tree_graph(child, level + 1, max_depth, file_path, file_handle, inline, False)
+            except Exception as e:
+                file_handle.write(f"{'    ' * level}└── Error: {str(e)}\n")
+                
+#endregion
+
 
 def refresh_uia_tree(element):
     try:
@@ -118,7 +182,6 @@ def refresh_uia_tree(element):
                     
     except Exception as e:
         print(f"Error writing to file: {str(e)}")
-
         
 def dump_uia_path(item, root=None, file_path='out.txt'):
     """

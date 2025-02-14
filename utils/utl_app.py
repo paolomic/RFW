@@ -271,36 +271,58 @@ class WebAppEnv:
         
         return users
 
-    class WebTable:                                                    # todo to move in utl_web
-        header = []
-        rows = []
 
-        def node_str(self, node):
-            res = ''
-            for item in node.children():
-                res += item.window_text()
+class WebTable:
+    def __init__(self, table=None):
+        self.header = []  # Lista per memorizzare gli header della tabella
+        self.rows = []    # Lista di dizionari per memorizzare le righe della tabella
+        self.table = table
+        if self.table:
+            self.load(self.table)
 
-        def reset(self):
-            self.header = []
-            self.rows = []
+    def node_str(self, node):
+        """
+        Restituisce la concatenazione delle stringhe dei figli di un nodo.
+        """
+        res = ''
+        for item in node.children():
+            res += item.window_text()
+        return res.strip()  # Rimuove spazi bianchi in eccesso
 
-        def load(self, table, reload_header=False, nrow=0):             # todo limitare row, col ?
-            if len(self.header==0) or reload_header:
-                self.header = []
-                hd = uw.get_child(table, ctrl_type='Custom') 
+    def reset(self):
+        """
+        Resetta l'header e le righe della tabella.
+        """
+        self.header = []
+        self.rows = []
+
+    def load(self, table=None, reload_header=False, nrow=0):
+        if not table:
+            table = self.table
+
+        self.reset()  # Resetta la tabella prima di caricare nuovi dati
+
+        # Carica l'header se necessario
+        if len(self.header) == 0 or reload_header:
+            hd = uw.get_child(table, ctrl_type='Custom')  # Assicurati che 'Custom' sia corretto
+            if hd:
                 for colh in hd.children():
-                    col_name = self.node_str(colh)
+                    col_name = colh.window_text()
                     self.header.append(col_name)
-            table2 = uw.get_child(table, ctrl_type='Table')
-            rows = uw.get_child(table2, ctrl_type='Group')  
+
+        rows = uw.get_child(table, ctrl_type='Group')  # Assicurati che 'Group' sia corretto
+        if rows:
+            row_count = 0
             for row in rows.children():
-                data_row = []
-                cells =  row.children()
-                for cell in cells:
-                    data_row.append(self.node_str(cell))
+                data_row = {}
+                cells = row.children()
+                for i, cell in enumerate(cells):
+                    if i < len(self.header):  # Assicurati di non superare il numero di colonne
+                        data_row[self.header[i]] = self.node_str(cell)
                 self.rows.append(data_row)
-
-
+                row_count += 1
+                if nrow > 0 and row_count >= nrow:  # Interrompi se è stato raggiunto il numero massimo di righe
+                    break
 
 wenv = WebAppEnv()              # class singleton
 

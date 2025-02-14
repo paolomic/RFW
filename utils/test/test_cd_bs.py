@@ -13,7 +13,7 @@ _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
 import utl  as utl
-from utl_app import env, wenv, opt
+from utl_app import env, wenv, opt, WebTable
 from utl_verifier import VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
 import utl_win as uw
@@ -101,9 +101,11 @@ def do_send_rfq(arg):
 
 
 def do_manage_rfq(arg):
-    
-    
+
     (rfq, table, grp) = wenv.hang_rfq()
+
+    grid = uw.get_child(table, ctrl_type='Table')
+    tb = WebTable(grid)
 
     time = None
     while not uw.get_child(table, name='.*EXPIRED.*', use_re=1):
@@ -125,6 +127,11 @@ def do_manage_rfq(arg):
         print('')
 
     sleep(1)
+
+    #ud.dump_uia_tree_graph(grid)
+    tb.load()
+    print(f'No.Row:{len(tb.rows)}')
+    print(tb.rows)
         
     print('Rfq EXPIRED')
     print(print(f'Final Answer From {wenv.get_answer(table)}'))
@@ -163,7 +170,7 @@ def robot_run(fun_name:str, arg:str='', options=[], s_op=''):
 if __name__ == '__main__':
     opts = {'speed': '110', 'run': 'local', 'reuse_wsp': 'yes', 'save_wsp_onclose': 'yes', 'close_all_pages': 'yes'}
     opt.set(opts)
-    select = 1
+    select = 2
     if (select==1):
         #print(robot_run('do_login_session', '', opts, '') )
         #print(robot_run('do_open_rfq', '', opts, '') )
@@ -172,6 +179,5 @@ if __name__ == '__main__':
         #do_grid_sample('')
         pass
     if (select==2):
-        wenv.hang_app()
-        do_login_session('')
+        do_manage_rfq('')
 
