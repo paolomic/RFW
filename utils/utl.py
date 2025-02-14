@@ -20,7 +20,7 @@ def play_sound(type):
         winsound.PlaySound(wav_file, winsound.SND_FILENAME)
 
 
-def chrono_function(func):                  # Analisi: set as Decorator: @....
+def chrono(func):                  # Analisi: set as Decorator: @....
     @wraps(func)
     def wrapper(*args, **kwargs):
         start_time = time.time()

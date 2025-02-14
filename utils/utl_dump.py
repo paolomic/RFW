@@ -73,7 +73,7 @@ def dump_uia_item(element, level=0):
     except Exception as e:
         return f"{indent}Error processing element: {str(e)}"
 
-#@utl.chrono_function
+#@utl.chrono
 def dump_uia_tree(element, level=0, max_depth=None, file_path='out.txt', first_call=True):
     """
     Stampa l'albero dei controlli su file, una riga per elemento.

@@ -13,9 +13,11 @@ _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
 import utl  as utl
-from utl_app import env, wenv, opt, WebTable
+from utl_app import env, opt
+from utl_web import webapp, WebTable
 from utl_verifier import VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
+
 import utl_win as uw
 import utl_log as ul
 import utl_grid as ug
@@ -40,7 +42,7 @@ WEB_PRICE =             '101.34'
 #region 
 
 def do_login_session(new=False):
-    (brw, doc) = wenv.launch_url(WEB_URL)
+    (brw, doc) = webapp.launch_url(WEB_URL)
     edit = uw.get_child_chk(doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1)
     uw.edit_set(edit, 'OP1@CUST1')
     edit = uw.get_child_chk(doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
@@ -58,7 +60,7 @@ def do_login_session(new=False):
         pass
 
 def do_open_rfq(arg):
-    (brw, doc) = wenv.hang_main()
+    (brw, doc) = webapp.hang_main()
     butt = uw.get_child_chk(doc, name='', deep=2)  # clear - todo AutomationId
     uw.win_click(butt)
 
@@ -74,7 +76,7 @@ def do_open_rfq(arg):
     uw.sleep(1.5)      # new windows opening
 
 def do_send_rfq(arg):
-    (rfq, table, grp) = wenv.hang_rfq()
+    (rfq, table, grp) = webapp.hang_rfq()
 
     combo = uw.get_child_chk(grp, name='-', ctrl_type='ComboBox')
     uw.win_click(combo)
@@ -102,10 +104,10 @@ def do_send_rfq(arg):
 
 def do_manage_rfq(arg):
 
-    (rfq, table, grp) = wenv.hang_rfq()
+    (rfq, table, grp) = webapp.hang_rfq()
 
     grid = uw.get_child(table, ctrl_type='Table')
-    tb = WebTable(grid)
+    tb = WebTable(grid, load=0)
 
     time = None
     while not uw.get_child(table, name='.*EXPIRED.*', use_re=1):
@@ -117,7 +119,7 @@ def do_manage_rfq(arg):
             break
 
         try:
-            print(print(f'Answer From {wenv.get_answer(table)}'))
+            print(print(f'Answer From {tb.get_answer()}'))
         except:
             pass
 
@@ -128,13 +130,13 @@ def do_manage_rfq(arg):
 
     sleep(1)
 
+    print('Rfq EXPIRED')
     #ud.dump_uia_tree_graph(grid)
+
     tb.load()
     print(f'No.Row:{len(tb.rows)}')
     print(tb.rows)
-        
-    print('Rfq EXPIRED')
-    print(print(f'Final Answer From {wenv.get_answer(table)}'))
+
 
 
 
