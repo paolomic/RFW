@@ -9,8 +9,11 @@ import re
 import os
 from datetime import datetime, timedelta
 
+
+
 from utl_verifier import VERIFY, RAISE, DUMP
 import utl_dump as ud
+from utl_config import config
 
 
 ##########################################################
@@ -179,34 +182,13 @@ env = AppEnv()              # class singleton
 #endregion
 
 
-
-
-
-
-##########################################################
-# App Options
-
-class AppOptions:
-    opt = None
-    def set(self, options):
-        self.opt = options
-    def get(self, key):
-        try:
-            find_val = self.opt[key]
-            return find_val
-        except Exception as e:
-            return None
-         
-opt = AppOptions()
-
-
 ##########################################################
 # Others
 
 def sleep(sec):
-    opt_speed = opt.get('speed')
+    opt_speed = config.get('opt.speed')
     if opt_speed:
-        speed = float(eval(opt_speed))/100  
+        speed = float(opt_speed)/100  
     else:
         speed=1
     
@@ -214,16 +196,5 @@ def sleep(sec):
 
 
 if __name__ == '__main__':
-    def fun1():
-        print(3/0)
-
-    def fun2():
-        fun1()
-
-    def fun3():
-        fun2()
-
-    try:
-        fun3()
-    except Exception as e:
-        DUMP( str(e))
+    test_config.load(r'.\utils\test\test_cd_rfq.json')
+    print(config('coh.addin'))

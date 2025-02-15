@@ -15,6 +15,7 @@ from win32gui import FindWindow, PostMessage, GetCursorInfo
 import win32.lib.win32con as win32con
 import utl  as utl
 import utl_app as ua
+from utl_config import config
 import utl_dump as ud
 
 
@@ -139,9 +140,9 @@ def session_close (wtop, wait_init=.5, wait_end=.5, logoff=False, save_wsp=False
     sleep(wait_init)
     if (logoff):
         session_logoff()
-    if ua.opt.get('close_all_pages')=='yes':
+    if config.get('opt.close_all_pages')=='yes':
         page_close_all()
-    save_wsp=ua.opt.get('save_wsp_onclose')=='yes'
+    save_wsp=config.get('opt.save_wsp_onclose')=='yes'
     win_close(wtop, wait_end=0.3)
     warning_replay('Do you want to close current workspace', 'OK')
     warning_replay('Do you want to save current workspace?', 'Yes' if save_wsp else 'No')

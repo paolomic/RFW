@@ -36,7 +36,11 @@ class TimeOut():
     timeout = 120
     start_time = 0
     def __init__(self, timeout):
+        self.set(timeout)
+        self.reset()
+    def set(self, timeout):
         self.timeout = timeout
+    def reset(self):
         self.start_time = time.time()
     def expired(self):
         return time.time() - self.start_time > self.timeout

@@ -78,44 +78,7 @@ class WebAppEnv:
     def get_doc(self):
         return 
 
-
 webapp = WebAppEnv()              # class singleton
-
-
-# Table struct
-#
-#
-class WebBondDlg:
-    table = None
-    tag_time = None
-    tag_state = None
-
-    def __init__(self, table=None, load=False):
-        self.table = table
-        self.tag_time = None
-        self.tag_state = None
-        if load and self.table:
-            pass                            #todo
-
-    def get_time(self):
-        try:
-            if not self.tag_time:
-                self.tag_time = uw.get_child(self.table, name=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$', use_re=1, deep=6)         # todo - sepolto senza locator
-            txt_time = self.tag_time.window_text()
-        except:
-            self.tag_time = None
-            return None
-        if not self.tag_time or not txt_time:
-            return None
-        return txt_time
-
-    def get_state(self):
-        try:
-            self.tag_state = uw.get_child(self.table, name='.*(ENDED|EXPIRED|DONE).*', use_re=1)                # todo - ottimizzare se' e' lo stesso del time ?
-            return self.tag_state.window_text()
-        except:
-            return None
-
 
 
 class WebTable:
@@ -162,10 +125,9 @@ class WebTable:
                 row_count += 1
                 if nrow > 0 and row_count >= nrow:  # Interrompi se è stato raggiunto il numero massimo di righe
                     break
+        return self.rows
 
-
-
-    def get_answer(self, table=None):        # short fast version for load - serve?
+    def get_short_answer(self, table=None):        # short fast version for load - serve?
         if table:
             self.table = table        
         users=[]
@@ -188,9 +150,60 @@ class WebTable:
 
 
 
+class WebBondDlg:
+    table = None
+    tag_time = None
+    tag_state = None
+    grid:WebTable = None
+    timeout:utl.TimeOut = None
+
+    def __init__(self, table=None, load=False, timeout = 240):
+        self.table = table
+        self.tag_time = None
+        self.tag_state = None
+        if load and self.table:
+            pass                            #todo
+        self.timeout = utl.TimeOut(timeout)
+
+    def prepare_grid(self):
+        if not self.grid:
+            grid = WebTable(uw.get_child(self.table, ctrl_type='Table'))
+
+    def get_time(self):
+        try:
+            if not self.tag_time:
+                self.tag_time = uw.get_child(self.table, name=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$', use_re=1, deep=6)         # todo - sepolto senza locator
+            txt_time = self.tag_time.window_text()
+        except:
+            self.tag_time = None
+            return None
+        if not self.tag_time or not txt_time:
+            return None
+        return txt_time
+
+    def get_final_state(self):
+        try:
+            self.tag_state = uw.get_child(self.table, name='.*(ENDED|EXPIRED|DONE).*', use_re=1)                # todo - ottimizzare se' e' lo stesso del time ?
+            return self.tag_state.window_text()
+        except:
+            return None
+
+    def is_live(self):
+        if self.timeout.expired():                  # time protection
+            return False
+        return self.get_time != None                # or return self.get_final_state == None 
+        
+    def get_answer(self, short=False):
+        self.prepare_grid()
+        if short:
+            return self.grid.get_short_answer()
+        else:
+            return self.grid.load()
+
+
 
 """ 
-Esempio:
+Esempio Table Bond Dlg:
 Table: 
     Custom - contiene Header, 
     Group - contiene 1 row

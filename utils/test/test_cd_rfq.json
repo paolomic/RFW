@@ -1,0 +1,42 @@
+{
+    "coh": {
+        "path": "D:\\COH_x64_CANDEAL_NEXT\\bin\\Coherence.exe",
+        "addins": ["MetaMarket", "RFQ Sell Side", "UserPages"],
+        "wsp": "D:\\wsp_cd\\robot_test.wsp4",
+        "primary": "10.91.204.14",
+        "port": "27000",
+        "user": "AASMAH@RBC",
+        "pass": "*",
+        "band_save": true,
+        "_unsd": {
+            "path": "D:\\COH_x64_CANDEAL_NEXT\\bin\\Coherence.exe",
+            "exc": "BIT",
+            "mrk": "MTA",
+            "sec": "AUTOGRILL SPA",
+            "price": "95.01",
+            "qty": "100",
+            "alias": "KATIA",
+            "clientid": "MARI",
+            "clientacc": "TEST"
+        }
+    },
+    "web": {
+        "url": "http://10.91.204.20/login",
+        "user": "OP1@CUST1",
+        "pass": "*",
+        "sec": "BCECN 3.350 03/12/2025",
+        "qty": "2000",
+        "price": "101.34",
+        "_unsd": {
+        }
+    },
+    "opt": {
+        "run": "local",
+        "speed": 110,
+        "reuse_wsp": "yes",
+        "save_wsp_onclose": "yes",
+        "close_all_pages": "yes",
+        "_unsd": {
+        }
+    }
+}

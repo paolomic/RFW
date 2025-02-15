@@ -1,18 +1,24 @@
-import inspect
-from PIL import ImageGrab, ImageDraw
-import os
-from datetime import datetime
-import mouse  # Usiamo il modulo mouse per ottenere la posizione del cursore
-import shutil  # Per eliminare ricorsivamente la cartella dumps
-import traceback  # Per ottenere l'intero stack di chiamate
-import subprocess
 
-path = r'D:\wsp_c'
-path = os.path.realpath(path)
+import time
 
-subprocess.run(["explorer", path])
-exit()
+# Import 
+import sys
+from pathlib import Path
+_new_path = str(Path(__file__).parent.parent)
+sys.path.append(_new_path) 
+
+import utl  as utl
+
+class TimeOut():
+    timeout = 120
+    start_time = 0
+    def __init__(self, timeout):
+        self.timeout = timeout
+        self.start_time = time.time()
+    def expired(self):
+        return time.time() - self.start_time > self.timeout
 
 
-os.startfile(path)                  # trova il tab se esiste gia
-exit()
+while TimeOut(3):
+    print(1)
+    time.sleep(1)
