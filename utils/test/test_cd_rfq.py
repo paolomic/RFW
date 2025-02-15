@@ -4,9 +4,6 @@ import webbrowser
 import subprocess
 import time
 
-#TODO Spostare questo py in tests/modules (problema include)
-
-
 # Import 
 import sys
 from pathlib import Path
@@ -26,10 +23,9 @@ import utl_grid as ug
 import utl_dump as ud
 
 
-
 ######################################################
-### Robot Coherence Operations
-#region 
+#region - Robot Coherence 
+
 def do_coh_new_session(arg):
     path_wsp = Path(config.get('coh.wsp'))
     if (path_wsp.exists() and not config.get('opt.reuse_wsp')=='yes'):
@@ -147,10 +143,9 @@ def do_coh_reply(arg):
 
 
 ######################################################
-### Robot Web Operations
-#region 
+#region - Robot Web 
 
-def do_login_session(arg):
+def do_web_login_session(arg):
     webapp.launch_url(config.get('web.url'))
     edit = uw.get_child_chk(webapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1)
     uw.edit_set(edit, config.get('web.user'))
@@ -168,7 +163,7 @@ def do_login_session(arg):
     except:
         pass
 
-def do_open_rfq(arg):
+def do_web_open_rfq(arg):
     webapp.hang_main()
     butt = uw.get_child_chk(webapp.doc, name='', deep=2)  # clear - todo AutomationId
     uw.win_click(butt, wait_end=.5)
@@ -184,8 +179,9 @@ def do_open_rfq(arg):
     
     uw.sleep(1.5)      # new windows opening
 
-def do_send_rfq(arg):
+def do_web_send_rfq(arg):
     rfq = webapp.hang_rfq()
+    
     #print(ud.dump_uia_tree(table))
 
     combo = uw.get_child_chk(rfq, name='-', ctrl_type='ComboBox', deep=2)   # mancano locator
@@ -208,7 +204,7 @@ def do_send_rfq(arg):
 
     sleep(1)
 
-def do_manage_rfq(arg):
+def do_web_manage_rfq(arg):
 
     rfq = webapp.hang_rfq()
     dlg_bond = WebBondDlg(rfq)
@@ -241,14 +237,15 @@ def do_manage_rfq(arg):
 
 
 def robot_run(fun_name:str, arg:str, cfg_file, conn=''):
+    def manage_conn(event):
+        env.manage_conn(event, conn)
+        webapp.manage_conn(event, conn)
     try:
         config.load(cfg_file)
-        env.manage_conn('start', conn)
-        webapp.manage_conn('start', conn)
+        manage_conn('start')
         func = globals().get(fun_name)
         result = func(arg)
-        env.manage_conn('exit', conn)
-        webapp.manage_conn('exit', conn)
+        manage_conn('exit')
         return ROBOT_RES('ok', result)
     except Exception as e:
         message = str(e)
