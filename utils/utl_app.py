@@ -1,15 +1,13 @@
 import time
 from pywinauto import Application
 import subprocess
-
-import utl_win as uw
-import utl  as utl
-
+from pathlib import Path
 import re
 import os
 from datetime import datetime, timedelta
 
-
+import utl_win as uw
+import utl  as utl
 
 from utl_verifier import VERIFY, RAISE, DUMP
 import utl_dump as ud
@@ -110,6 +108,36 @@ class AppEnv:
         #print(f'wtop {wtop}')
         self.placeholder()
 
+
+    # Starting....
+    def reset_wsp():
+        path_wsp = Path(config.get('coh.wsp'))
+        if (path_wsp.exists() and ):
+            print('Remove Workspace...')
+            path_wsp.unlink()
+            VERIFY(not path_wsp.exists(), 'Wsp Exist')
+        #path_wsp_folder = Path(config.get('coh.wsp').replace('.wsp4', '.wsp4_wrk'))
+        #if (path_wsp_folder.exists()):
+        #    path_wsp_folder.rmdir()
+        #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
+
+    def start_dialog(wsp, addins):
+        edit = uw.get_child_chk(env.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
+        uw.edit_set(edit, wsp)
+
+        list = uw.get_child_chk(env.wtop, name='Import From', ctrl_type='List', deep=3)
+        uw.list_check(list, '*', False)
+        uw.list_check(list, addins, True)
+
+        butt = uw.get_child_chk(env.wtop, automation_id='1', ctrl_type='Button', deep=3)
+        if not config.get('opt.reuse_wsp')=='yes':
+            VERIFY(butt.window_text()=='Create', 'Can`t Create New Workspace')
+
+        uw.win_click(butt, wait_end=0.5)
+        uw.warning_replay('This workspace has not been closed properly', 'No')
+
+
+    # After Start
     def select_ribbon(self, ribb):
         rib_sel = uw.get_child_chk(self.rib_tab, name=ribb, ctrl_type='TabItem')
         uw.win_click(rib_sel)
@@ -188,7 +216,6 @@ class AppEnv:
             elif 'hang' in op:
                 env.hang_app(config.get('coh.path'))
                 env.wtop.set_focus()
-                uw.win_move(env.wtop, 10, 10)
 
             if 'new' in op or 'hang' in op:
                 VERIFY(env.app and env.wtop, "Hang or New Session Failed")

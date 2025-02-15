@@ -1,8 +1,6 @@
 import keyboard
 import mouse
-import webbrowser 
-import subprocess
-import time
+
 
 # Import 
 import sys
@@ -27,32 +25,13 @@ import utl_dump as ud
 #region - Robot Coherence 
 
 def do_coh_new_session(arg):
-    path_wsp = Path(config.get('coh.wsp'))
-    if (path_wsp.exists() and not config.get('opt.reuse_wsp')=='yes'):
-        print('Remove Workspace...')
-        path_wsp.unlink()
-        VERIFY(not path_wsp.exists(), 'Wsp Exist')
-    #path_wsp_folder = Path(config.get('coh.wsp').replace('.wsp4', '.wsp4_wrk'))
-    #if (path_wsp_folder.exists()):
-    #    path_wsp_folder.rmdir()
-    #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
-
-def do_coh_start_dialog(arg):
-    edit = uw.get_child_chk(env.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
-    uw.edit_set(edit, config.get('coh.wsp'))
-
-    list = uw.get_child_chk(env.wtop, name='Import From', ctrl_type='List', deep=3)
-    uw.list_check(list, '*', False)
-    uw.list_check(list, config.get('coh.addins'), True)
-
-    butt = uw.get_child_chk(env.wtop, automation_id='1', ctrl_type='Button', deep=3)
     if not config.get('opt.reuse_wsp')=='yes':
-        VERIFY(butt.window_text()=='Create', 'Can`t Create New Workspace')
-
-    uw.win_click(butt, wait_end=0.5)
-    uw.warning_replay('This workspace has not been closed properly', 'No')
-                                                                                   
+        env.reset_wsp()
+    
+def do_coh_start_dialog(arg):
+    env.start_dialog(config.get('coh.wsp'), config.get('coh.addins'))                                          
     env.reload()                                                                            # Smart Wait for new Main Frame   
+    uw.win_move(env.wtop, 8, 8)
         
 def do_coh_setting_init(arg):
     butt = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Button', deep=4)          # Settings gia aperto se New Wsp
@@ -137,8 +116,9 @@ def do_coh_prepare_session(arg):
 def do_coh_reply(arg):
     dlg_rfq = uw.get_child_chk(env.wtop, name=r"RFQ Outright \[CANDEAL\/BOND\] \[\d+\]", ctrl_type='Pane', deep=1, use_re=1)  
     butt = uw.get_child_chk(dlg_rfq, name='Done', ctrl_type='Button', deep=1)  
-    utl.sleep_progress(10)
+    utl.sleep_progress(30)  # suspance
     uw.win_click(butt)
+
 #endregion
 
 
@@ -147,94 +127,58 @@ def do_coh_reply(arg):
 
 def do_web_login_session(arg):
     webapp.launch_url(config.get('web.url'))
-    edit = uw.get_child_chk(webapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1)
-    uw.edit_set(edit, config.get('web.user'))
-    edit = uw.get_child_chk(webapp.doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
-    uw.edit_set(edit, config.get('web.pass'))
-    keyboard.press_and_release('esc')
-    butt = uw.get_child_chk(webapp.doc, name='LOGIN.*', ctrl_type='Button', use_re=1)
-    uw.win_click(butt)
-    sleep(2)                   # todo - smart wait
-
-    try:
-        wrn = uw.get_child_chk(webapp.doc, name='Notifications popup are disabled')
-        butt = uw.get_child_chk(wrn, name='OK', deep=2)
-        uw.win_click(butt)
-    except:
-        pass
-
+    webapp.set_login_user_password()
+    
 def do_web_open_rfq(arg):
     webapp.hang_main()
-    butt = uw.get_child_chk(webapp.doc, name='', deep=2)  # clear - todo AutomationId
-    uw.win_click(butt, wait_end=.5)
 
-    combo = uw.get_child_chk(webapp.doc, name='Search Security', ctrl_type='ComboBox', deep=2)  # clear - todo AutomationId
-    uw.edit_set(combo, config.get('web.sec'), wait_end=1)
-
-    butt = uw.get_child_chk(webapp.doc, name='', deep=2)  # insert - todo AutomationId
-    uw.win_click(butt, wait_end=.5)
-
-    butt = uw.get_child_chk(webapp.doc, name='NEW RFQ', ctrl_type='Button', deep=2)  # insert - todo AutomationId
-    uw.win_click(butt, wait_end=.5)
-    
-    uw.sleep(1.5)      # new windows opening
+    webapp.filter_clear()
+    webapp.filter_set_security(config.get('web.sec'))
+    webapp.new_rfq()
+ 
+    uw.sleep(1.5)                   # new windows opening - todo smart_wait ?
 
 def do_web_send_rfq(arg):
-    rfq = webapp.hang_rfq()
+    rfq = WebBondDlg()
     
-    #print(ud.dump_uia_tree(table))
-
-    combo = uw.get_child_chk(rfq, name='-', ctrl_type='ComboBox', deep=2)   # mancano locator
-    uw.win_click(combo)
-    uw.edit_set(combo, 'My offer')
-
-    label = uw.get_child_chk(rfq, name='QTY', ctrl_type='Text')
-    combo = uw.get_child_after(label, ctrl_type='Spinner')                  # todo mancano Key
-    uw.edit_set_manual(combo, config.get('web.qty'), reset=1)               # usa keyboard
-
-    label = uw.get_child_chk(rfq, name='PRICE', ctrl_type='Text')
-    combo = uw.get_child_after(label, ctrl_type='Spinner')
-    uw.edit_set_manual(combo, config.get('web.price'), reset=1)             # usa keyboard
-   
-    butt = uw.get_child_chk(rfq, name='RBC', ctrl_type='Button')
-    uw.win_click(butt)
-
-    butt = uw.get_child_chk(rfq, name='SEND', ctrl_type='Button')
-    uw.win_click(butt)
-
+    rfq.set_combo('My offer')
+    rfq.set_price(config.get('web.price'))
+    rfq.set_qty(config.get('web.qty'))
+    rfq.set_dealer('RBC')
+    rfq.set_dealer('CBMO')
+    rfq.send()
+  
     sleep(1)
 
 def do_web_manage_rfq(arg):
+    dlg_rfq = WebBondDlg()
 
-    rfq = webapp.hang_rfq()
-    dlg_bond = WebBondDlg(rfq)
-
-    while dlg_bond.is_live():
-        str_time = dlg_bond.get_time()
+    while dlg_rfq.is_live():
+        str_time = dlg_rfq.get_time()
         print(f'RFQ Active... {str_time}')
-        print(print(f'Answer From {dlg_bond.get_answer(short=1)}'))
+        print(print(f'Answer From {dlg_rfq.get_answer(short=1)}'))
+
+        # BuySide Action Here: Accept, ...
+
         utl.sleep_progress(5)
 
     sleep(0.5)
 
-    str_state = dlg_bond.get_final_state()
+    str_state = dlg_rfq.get_final_state()
     print(f'Rfq Ended - Info {str_state}')
 
-    all_answ = dlg_bond.get_answer()
+    all_answ = dlg_rfq.get_answer()
     print(f'No.Row:{len(all_answ)}')
     print(all_answ)
 
-    VERIFY(str_state=='DONE', "RFQ Status Unexpected")
+    VERIFY(str_state=='DONE', "RFQ Status Fail")
 
 #endregion
 
 ######################################################
 # Generic Caller
 
-# todo differenziare connection web e coh
-
-#conn 'coh:hang,kill web:new,run'
-
+# todo piu sessioni coh
 
 def robot_run(fun_name:str, arg:str, cfg_file, conn=''):
     def manage_conn(event):
@@ -261,15 +205,15 @@ if __name__ == '__main__':
     cfg_file = r'.\utils\test\test_cd_rfq.json'
     select = 1
     if (select==1):
-        #print(robot_run('do_login_session', '', cfg_file, '') )
-        #print(robot_run('do_open_rfq', '', cfg_file, '') )
-        #print(robot_run('do_send_rfq', '', cfg_file, '') )
-        #print(robot_run('do_manage_rfq', '', cfg_file, '') )
+        #print(robot_run('do_web_login_session', '', cfg_file, '') )
+        #print(robot_run('do_web_open_rfq', '', cfg_file, '') )
+        #print(robot_run('do_web_send_rfq', '', cfg_file, '') )
+        #print(robot_run('do_web_manage_rfq', '', cfg_file, '') )
         #print(robot_run('do_coh_new_session', '', cfg_file, 'new') )
         #print(robot_run('do_coh_setting_init', '', cfg_file, 'hang') )
         print(robot_run('do_coh_reply', '', cfg_file, 'coh:hang') )
         pass
     if (select==2):
-        do_manage_rfq('')
-        #do_login_session('')
+        do_web_manage_rfq('')
+        #do_web_login_session('')
 

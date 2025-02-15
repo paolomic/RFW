@@ -508,7 +508,7 @@ def get_child_chk(parent_wnd, name=None, ctrl_type=None, class_name=None, automa
     
     return cld
 
-def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,
+def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=  None, automation_id=None, handle=None, texts=None,
                          deep=1, use_re=False, use_case=True, visible_only=False, enable_only=True,
                          attempt=5, wait_init=0.25,  delay=1, wait_end=0.25):
     sleep(wait_init)

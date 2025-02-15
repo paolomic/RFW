@@ -2,6 +2,7 @@
 import time
 from pywinauto import Application
 import subprocess
+import keyboard
 
 import utl_win as uw
 import utl  as utl
@@ -13,7 +14,7 @@ from datetime import datetime, timedelta
 from utl_verifier import VERIFY, RAISE, DUMP
 import utl_dump as ud
 
-
+from utl_config import config
 
 class WebAppEnv:
     #private
@@ -64,15 +65,11 @@ class WebAppEnv:
         self.main = main
         self.doc = doc
 
+    def manage_conn(self, evt, conn):
+        pass                                         # gestita nelle do_fun
+
     def hang_rfq(self, url=None, move=True):
-        uw.sleep(0.25)
-        brw = uw.get_main_wnd('New Bond RFQ.*Google Chrome.*', use_re=1)
-        if move:
-            uw.win_move(brw, 1300, 500)
-        VERIFY(brw, 'rfq panel fail')
-        rfq = uw.get_child_chk(brw, ctrl_type='Table', deep=2)
-        uw.sleep(0.25)
-        return rfq
+        pass
 
     def kill_app(self, url=None):
         while 1:
@@ -81,11 +78,41 @@ class WebAppEnv:
                 return
             uw.win_close(inst)
 
-    def get_doc(self):
-        return 
+    def get_main(self):
+        return self.main
+
+    def get_doc(self):  
+        return self.doc
     
-    def manage_conn(self, evt, conn):
-        pass                                         # gestita nelle do_fun
+    def set_login_user_password(self):
+        edit = uw.get_child_chk(webapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1)
+        uw.edit_set(edit, config.get('web.user'))
+        edit = uw.get_child_chk(webapp.doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
+        uw.edit_set(edit, config.get('web.pass'))
+        keyboard.press_and_release('esc')
+        butt = uw.get_child_chk(webapp.doc, name='LOGIN.*', ctrl_type='Button', use_re=1)
+        uw.win_click(butt)
+        uw.sleep(2)                   # todo - smart wait
+        try:
+            wrn = uw.get_child_chk(webapp.doc, name='Notifications popup are disabled')
+            butt = uw.get_child_chk(wrn, name='OK', deep=2)
+            uw.win_click(butt)
+        except:
+            pass
+
+    def filter_clear(self):
+       butt = uw.get_child_chk(webapp.doc, name='', deep=2)  # clear - todo AutomationId
+       uw.win_click(butt, wait_end=.5)
+
+    def filter_set_security(self, sec):
+        combo = uw.get_child_chk(webapp.doc, name='Search Security', ctrl_type='ComboBox', deep=2)  # clear - todo AutomationId
+        uw.edit_set(combo, sec, wait_end=1)
+        butt = uw.get_child_chk(webapp.doc, name='', deep=2)  # insert - todo AutomationId
+        uw.win_click(butt, wait_end=.5)
+
+    def new_rfq(self):
+        butt = uw.get_child_chk(webapp.doc, name='NEW RFQ', ctrl_type='Button', deep=2)  # insert - todo AutomationId
+        uw.win_click(butt, wait_end=.5)
 
 webapp = WebAppEnv()              # class singleton
 
@@ -108,7 +135,7 @@ class WebTable:
             res += item.window_text()
         return res.strip()  # Rimuove spazi bianchi in eccesso
 
-    @utl.chrono
+    #@utl.chrono
     def load(self, table=None, reload_header=False, nrow=0):
         if table:
             self.table = table
@@ -138,19 +165,49 @@ class WebTable:
 
 
 class WebBondDlg:
+    main = NotImplementedError
     table = None
     tag_time = None
     tag_state = None
     grid:WebTable = None
     timeout:utl.TimeOut = None
 
-    def __init__(self, table=None, load=False, timeout = 240):
-        self.table = table
-        self.tag_time = None
-        self.tag_state = None
-        if load and self.table:
-            pass                            #todo
+    def __init__(self, timeout = 240, move=True):
+        uw.sleep(0.25)
+        self.main = uw.get_main_wnd('New Bond RFQ.*Google Chrome.*', use_re=1)
+        VERIFY(self.main, 'rfq panel fail')
+        if move:
+            uw.win_move(self.main, 1300, 500)
+        self.table = uw.get_child_chk(self.main, ctrl_type='Table', deep=2)
+        #print(ud.dump_uia_tree(self.table))
+        uw.sleep(0.25)
         self.timeout = utl.TimeOut(timeout)
+
+    # Before Send - Prepare Rfq
+    def set_combo(self, rfq_type):
+        combo = uw.get_child_chk(self.table, name='-', ctrl_type='ComboBox', deep=2)   # mancano locator
+        uw.win_click(combo)
+        uw.edit_set(combo, rfq_type)
+
+    def set_price(self, price):
+        label = uw.get_child_chk(self.table, name='PRICE', ctrl_type='Text')
+        combo = uw.get_child_after(label, ctrl_type='Spinner')                  # todo mancano Key
+        uw.edit_set_manual(combo, price, reset=1)               # usa keyboard
+
+    def set_qty(self, qty):
+        label = uw.get_child_chk(self.table, name='QTY', ctrl_type='Text')
+        combo = uw.get_child_after(label, ctrl_type='Spinner')
+        uw.edit_set_manual(combo, qty, reset=1)             # usa keyboard
+ 
+    def set_dealer(self, delaer):
+        butt = uw.get_child_chk(self.table, name=delaer, ctrl_type='Button')
+        uw.win_click(butt)
+
+    def send(self):
+        butt = uw.get_child_chk(self.table, name='SEND', ctrl_type='Button')
+        uw.win_click(butt)
+
+    # After Send - Manage Rfq
 
     def prepare_grid(self):
         if not self.grid:
@@ -198,7 +255,6 @@ class WebBondDlg:
         except:
             pass
         return users 
-
 
     def get_answer(self, short=False):
         self.prepare_grid()
