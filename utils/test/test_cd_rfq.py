@@ -1,8 +1,7 @@
 import keyboard
 import mouse
 
-
-# Import 
+# Import utils
 import sys
 from pathlib import Path
 _new_path = str(Path(__file__).parent.parent)
@@ -10,7 +9,7 @@ sys.path.append(_new_path)
 
 import utl as utl
 from utl_config import config
-from utl_app import env
+from utl_app import app, Settings, BondDlg
 from utl_web import webapp, WebTable, WebBondDlg
 from utl_verifier import VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
@@ -26,86 +25,28 @@ import utl_dump as ud
 
 def do_coh_new_session(arg):
     if not config.get('opt.reuse_wsp')=='yes':
-        env.reset_wsp()
+        app.reset_wsp()
     
 def do_coh_start_dialog(arg):
-    env.start_dialog(config.get('coh.wsp'), config.get('coh.addins'))                                          
-    env.reload()                                                                            # Smart Wait for new Main Frame   
-    uw.win_move(env.wtop, 8, 8)
+    app.start_dialog(config.get('coh.wsp'), config.get('coh.addins'))                                          
+    app.reload()                                                                            # Smart Wait for new Main Frame   
+    uw.win_move(app.wtop, 8, 8)
+    app.connection(start=False)             # se riuso il wsp stacco la conn
         
 def do_coh_setting_init(arg):
-    butt = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Button', deep=4)          # Settings gia aperto se New Wsp
-    uw.win_click(butt)
-
-    pane = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Pane', deep=3)
-    list = uw.get_child_chk(pane, automation_id='103', ctrl_type='List', deep=3)
-
+    setting_dlg = Settings()
+    setting_dlg.open()
     ### Connection  - Disable se connection Ready
-    try:
-        edit = uw.get_child_chk(pane, name='Host', ctrl_type='Edit', deep=1)
-        uw.edit_set(edit, config.get('coh.primary'))
-        edit = uw.get_child_chk(pane, name='Port', ctrl_type='Edit', deep=1)
-        uw.edit_set(edit, config.get('coh.port'))
-        edit = uw.get_child_chk(pane, name='User name', ctrl_type='Edit', deep=3)
-        uw.edit_set(edit, config.get('coh.user'))
-        edit = uw.get_child_chk(pane, automation_id='11303', ctrl_type='Edit', deep=3)
-        uw.edit_set(edit, config.get('coh.pass'))
-        
-        if config.get('coh.band_save'):
-            butt = uw.get_child_chk(pane, name='Bandwidth Saving', ctrl_type='CheckBox', deep=3)
-            if not uw.butt_is_checked(butt):
-                uw.win_click(butt)
-    except:
-        print('Connection is Started')
-
-    ### MetaMarket
-    uw.list_select(list, "MetaMarket")
-
-    trace = uw.get_child_chk(pane, name='Trace Level', ctrl_type='Custom', deep=3)
-    uw.win_click(trace, mode='combo')
-
-    #sleep(.25)
-    #ud.dump_uia_tree(env.wtop)         # non c'e' lista popup
-
-    uw.hide_select(-1)                  # Todo Control Inside
-    keyboard.press("enter")             # Confirm Selection
-    sleep(.25)
-
-    ### WorkSpace
-    uw.list_select(list, "Workspace")
-
-    combo = uw.get_child_chk(pane, automation_id='11347', ctrl_type='ComboBox', deep=3)         # Todo: Input Per Valore
-    uw.win_click(combo)
-    keyboard.press("end")
-    keyboard.press("enter")
-
-    combo = uw.get_child_chk(pane, automation_id='11345', ctrl_type='ComboBox', deep=3)
-    uw.win_click(combo)
-    keyboard.press("end")
-    keyboard.press("enter")
-
-    ### OK
-    butt = uw.get_child_chk(pane, name='OK', ctrl_type='Button', deep=3)
-    uw.win_click(butt)
+    setting_dlg.set_platform(config.get('coh.primary'), config.get('coh.port'), 
+                             config.get('coh.user'),  config.get('coh.pass'),
+                             config.get('coh.band_save') )
+    setting_dlg.metamarket('detail')
+    setting_dlg.workspace('detail')
+    setting_dlg.close()
+    
 
 def do_coh_start_connections(arg):
-    if config.get('opt.close_all_pages')=='yes':
-        uw.page_close_all()
-    
-    addins = ['MetaMarket']                                                     # TODO pass form Robot ?
-    for addin in addins:
-        butt = env.select_ribbon_butt(addin, 'Auto Connect')
-        if not uw.butt_is_checked(butt):
-            uw.win_click(butt)
-
-    butt = env.select_ribbon_butt('Home', 'Auto Connect')
-    if not uw.butt_is_checked(butt):
-        uw.win_click(butt)
-
-    if env.wait_conn_ready(to_sec=120, to_err_sec=5, delay=2):
-        print ('Connection Ready')
-    else:
-        RAISE("Connection Fail")
+    app.connection(start=True, addins = ['MetaMarket'])
 
 def do_coh_prepare_session(arg):
     do_coh_new_session(arg)
@@ -114,10 +55,9 @@ def do_coh_prepare_session(arg):
     do_coh_start_connections(arg)
 
 def do_coh_reply(arg):
-    dlg_rfq = uw.get_child_chk(env.wtop, name=r"RFQ Outright \[CANDEAL\/BOND\] \[\d+\]", ctrl_type='Pane', deep=1, use_re=1)  
-    butt = uw.get_child_chk(dlg_rfq, name='Done', ctrl_type='Button', deep=1)  
-    utl.sleep_progress(30)  # suspance
-    uw.win_click(butt)
+    dlg_rfq = BondDlg()
+    utl.sleep_progress(25)  # suspance ...
+    dlg_rfq.press('Done')
 
 #endregion
 
@@ -135,19 +75,16 @@ def do_web_open_rfq(arg):
     webapp.filter_clear()
     webapp.filter_set_security(config.get('web.sec'))
     webapp.new_rfq()
- 
-    uw.sleep(1.5)                   # new windows opening - todo smart_wait ?
+    sleep(1.5)                   # new windows opening - todo smart_wait ?
 
 def do_web_send_rfq(arg):
     rfq = WebBondDlg()
-    
     rfq.set_combo('My offer')
     rfq.set_price(config.get('web.price'))
     rfq.set_qty(config.get('web.qty'))
     rfq.set_dealer('RBC')
     rfq.set_dealer('CBMO')
     rfq.send()
-  
     sleep(1)
 
 def do_web_manage_rfq(arg):
@@ -161,8 +98,6 @@ def do_web_manage_rfq(arg):
         # BuySide Action Here: Accept, ...
 
         utl.sleep_progress(5)
-
-    sleep(0.5)
 
     str_state = dlg_rfq.get_final_state()
     print(f'Rfq Ended - Info {str_state}')
@@ -178,11 +113,11 @@ def do_web_manage_rfq(arg):
 ######################################################
 # Generic Caller
 
-# todo piu sessioni coh
+# todo: piu sessioni coh
 
 def robot_run(fun_name:str, arg:str, cfg_file, conn=''):
     def manage_conn(event):
-        env.manage_conn(event, conn)
+        app.manage_conn(event, conn)
         webapp.manage_conn(event, conn)
     try:
         config.load(cfg_file)
@@ -200,7 +135,6 @@ def robot_run(fun_name:str, arg:str, cfg_file, conn=''):
 ######################################################
 # Main - DEBUG 
 
-    
 if __name__ == '__main__':
     cfg_file = r'.\utils\test\test_cd_rfq.json'
     select = 1
@@ -212,7 +146,6 @@ if __name__ == '__main__':
         #print(robot_run('do_coh_new_session', '', cfg_file, 'new') )
         #print(robot_run('do_coh_setting_init', '', cfg_file, 'hang') )
         print(robot_run('do_coh_reply', '', cfg_file, 'coh:hang') )
-        pass
     if (select==2):
         do_web_manage_rfq('')
         #do_web_login_session('')

@@ -16,7 +16,7 @@ _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
 import utl  as utl
-from utl_app import env, opt
+from utl_app import app, opt
 from utl_verifier import VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
 import utl_win as uw
@@ -75,27 +75,27 @@ def do_new_session(arg):
     #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
 
 def do_start_dialog(arg):
-    edit = uw.get_child_chk(env.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
+    edit = uw.get_child_chk(app.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
     uw.edit_set(edit, COH_WSP)
 
-    list = uw.get_child_chk(env.wtop, name='Import From', ctrl_type='List', deep=3)
+    list = uw.get_child_chk(app.wtop, name='Import From', ctrl_type='List', deep=3)
     uw.list_check(list, '*', False)
     uw.list_check(list, arg, True)
 
-    butt = uw.get_child_chk(env.wtop, automation_id='1', ctrl_type='Button', deep=3)
+    butt = uw.get_child_chk(app.wtop, automation_id='1', ctrl_type='Button', deep=3)
     if not config.get('opt.reuse_wsp')=='yes':
         VERIFY(butt.window_text()=='Create', 'Can`t Create New Workspace')
 
     uw.win_click(butt, wait_end=0.5)
     uw.warning_replay('This workspace has not been closed properly', 'No')
                                                                                    
-    env.reload()                                                                            # Smart Wait for new Main Frame   
+    app.reload()                                                                            # Smart Wait for new Main Frame   
         
 def do_setting_init(arg):
-    butt = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Button', deep=4)          # Settings gia aperto se New Wsp
+    butt = uw.get_child_chk(app.wtop, name='Settings', ctrl_type='Button', deep=4)          # Settings gia aperto se New Wsp
     uw.win_click(butt)
 
-    pane = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Pane', deep=3)
+    pane = uw.get_child_chk(app.wtop, name='Settings', ctrl_type='Pane', deep=3)
     list = uw.get_child_chk(pane, automation_id='103', ctrl_type='List', deep=3)
 
     ### Connection  - Disable se connection Ready
@@ -152,23 +152,23 @@ def do_start_connections(arg):
     
     addins = ['MetaMarket']                                                     # TODO pass form Robot ?
     for addin in addins:
-        butt = env.select_ribbon_butt(addin, 'Auto Connect')
+        butt = app.select_ribbon_butt(addin, 'Auto Connect')
         if not uw.butt_is_checked(butt):
             uw.win_click(butt)
 
-    butt = env.select_ribbon_butt('Home', 'Auto Connect')
+    butt = app.select_ribbon_butt('Home', 'Auto Connect')
     if not uw.butt_is_checked(butt):
         uw.win_click(butt)
 
-    if env.wait_conn_ready(to_sec=120, to_err_sec=5, delay=2):
+    if app.wait_conn_ready(to_sec=120, to_err_sec=5, delay=2):
         print ('Connection Ready')
     else:
         RAISE("Connection Fail")
 
 def do_search_security(arg):
     # la pg viene generata sotto main-node coherence
-    env.click_ribbon_butt('Trading', 'Security Browser')
-    page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
+    app.click_ribbon_butt('Trading', 'Security Browser')
+    page = uw.get_child_chk(app.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
     grid = uw.page_get_grid(page)
 
     uw.win_resize(page, 1400, 450)
@@ -194,12 +194,12 @@ def do_search_security(arg):
     mouse.click('right')
     sleep(0.25)
 
-    uw.popup_reply(env.wtop, 'New#Care Order')          # Il popup viene generato sotto level top - anche il sotto menu
+    uw.popup_reply(app.wtop, 'New#Care Order')          # Il popup viene generato sotto level top - anche il sotto menu
     uw.page_save(page, 'security_search', time_tag=True)
     uw.page_close(page, )
 
 def do_new_care_order(arg):
-    dlg = uw.get_child_chk(env.wtop, name="New Care Order.*", ctrl_type="Pane", use_re=1)
+    dlg = uw.get_child_chk(app.wtop, name="New Care Order.*", ctrl_type="Pane", use_re=1)
     uw.win_move(dlg, 333,333)                              # davanti alla toolbar sembra creare problemi a step successivo
     dlg.set_focus()
     adv = uw.get_child_chk(dlg, automation_id='13652', ctrl_type="CheckBox", use_re=1)
@@ -240,9 +240,9 @@ def do_new_care_order(arg):
 def do_select_order(arg):
     order_id = arg
     print(f'order_id: {order_id}')
-    env.click_ribbon_butt('Trading', 'Orders')
+    app.click_ribbon_butt('Trading', 'Orders')
     
-    page = uw.get_child_chk(env.wtop, name='Orders.*', ctrl_type='Pane', use_re=1, deep=2)
+    page = uw.get_child_chk(app.wtop, name='Orders.*', ctrl_type='Pane', use_re=1, deep=2)
     uw.win_resize(page, 1400, 450)
     
     edit = uw.get_child_chk(page, name='Order ID', ctrl_type='Edit', deep=5)  
@@ -257,8 +257,8 @@ def do_select_order(arg):
     uw.page_save(page, 'order_filtered', time_tag=True)
 
 def do_grid_sample(arg):                         
-    env.click_ribbon_butt('Trading', 'Security Browser')                            # todo: Gia una aperta : selezionare l utima ?
-    page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
+    app.click_ribbon_butt('Trading', 'Security Browser')                            # todo: Gia una aperta : selezionare l utima ?
+    page = uw.get_child_chk(app.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=True, deep=1)
     grid = uw.page_get_grid(page)
 
     uw.win_resize(page, 1400, 450)
@@ -273,7 +273,7 @@ def do_grid_sample(arg):
     uw.win_click(item)
 
     # Esempio Get sheet info
-    ug.set_show_all_2(env.wtop, grid)
+    ug.set_show_all_2(app.wtop, grid)
     grid_mng = ug.create_by_win(grid)
     
     # esempio scroll
@@ -306,23 +306,23 @@ def do_close_session(arg):
 def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
     def manage_session(session):
         if session=='new':
-            env.launch_app(COH_PATH)
+            app.launch_app(COH_PATH)
         else:
-            env.hang_app(COH_PATH)
+            app.hang_app(COH_PATH)
         if session=='kill':
-            uw.session_close(env.wtop, wait_init=1, wait_end=1, logoff=True)
+            uw.session_close(app.wtop, wait_init=1, wait_end=1, logoff=True)
     def verify_session(session):
         if session=='kill':
             exist = 0
             try:
-                env.hang_app(COH_PATH)
+                app.hang_app(COH_PATH)
                 exist=1
             except Exception as e:
                 pass
             VERIFY(not exist, 'Close Session Failed. Process still Exists')
         else:
-            VERIFY(env.app and env.wtop, "Hang or New Session Failed")
-            env.wtop.set_focus()
+            VERIFY(app.app and app.wtop, "Hang or New Session Failed")
+            app.wtop.set_focus()
     try:
         opt.set(options)
         print(f'Test Options: {options}')
@@ -350,7 +350,7 @@ if __name__ == '__main__':
         #env.hang_app(COH_PATH)
         #do_grid_sample('')
     if (select==2):
-        env.hang_app(COH_PATH)
+        app.hang_app(COH_PATH)
         do_start_dialog('')
 
 

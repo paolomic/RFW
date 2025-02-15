@@ -126,12 +126,12 @@ def workspace_remove(wsp_path):
     #ua.VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
 
 def session_logon():
-    butt = ua.env.select_ribbon_butt('Home', 'Auto Connect')
+    butt = ua.app.select_ribbon_butt('Home', 'Auto Connect')
     if not butt_is_checked(butt):
         win_click(butt)
 
 def session_logoff():
-    butt = ua.env.select_ribbon_butt('Home', 'Auto Connect')
+    butt = ua.app.select_ribbon_butt('Home', 'Auto Connect')
     if butt_is_checked(butt):
         win_click(butt)
         warning_replay('Do you want to disable Auto Connect mode and stop all connections?', 'OK')
@@ -185,7 +185,7 @@ def page_close(page, save_as=None, time_tag=False):
     warning_replay('Do you want to save the page.*before closing.*', 'No', use_re=True)
 
 def page_close_all(save_as=None, time_tag=False):
-    elements = ua.env.wtop.children() 
+    elements = ua.app.wtop.children() 
     for elem in elements:
         if (page_get_grid(elem, verify=False)):
             page_close(elem, save_as=save_as, time_tag=time_tag)
@@ -325,7 +325,7 @@ def popup_reply(wtop, selects, wait_init=0.2, wait_end=0.2, skip_disabled=False)
 
 def warning_replay(mess, butt, root=None, title='Coherence', use_re=False, deep=3):
     if not root:
-        root=ua.env.wtop
+        root=ua.app.wtop
     popup = get_child_chk(root, name=title, ctrl_type='Pane', verify=False, deep=deep)
     if popup:
         message = get_child_chk(popup, ctrl_type='Text', use_re=use_re).window_text()
@@ -342,7 +342,7 @@ def warning_replay(mess, butt, root=None, title='Coherence', use_re=False, deep=
 def warning_replay_2(mess, butt, root=None, title='Coherence', use_re=False, deep=3):
     #works by message - totest
     if not root:
-        root=ua.env.wtop
+        root=ua.app.wtop
     txt = get_child_chk(root, mess, ctrl_type='Text', use_re=use_re, verify=False, deep=deep)
     if txt:
         popup = txt.parent()

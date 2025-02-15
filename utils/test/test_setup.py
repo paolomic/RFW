@@ -17,7 +17,7 @@ _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
 import utl  as utl
-from utl_app import env, opt
+from utl_app import app, opt
 from utl_verifier import VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
 import utl_win as uw
@@ -55,22 +55,22 @@ class AppEnv:
     def connect(self):
         print('Connecting instance...')
         self.app = Application(backend="uia").connect(path=self.setup_exe)
-        self.wtop = env.app.top_window()
+        self.wtop = app.app.top_window()
 
     def __init__(self, setup_path):
         self.setup_path = setup_path
         self.setup_exe = os.path.basename(self.setup_path)
 
-env = AppEnv(COH_SETUP)
+app = AppEnv(COH_SETUP)
 
 ######################################################
 ### Robot Operations
 #region 
 def do_setup(arg):
-    VERIFY(env.wtop.window_text()=='CanDeal evolution Setup', 'Setup Starting Failed')
+    VERIFY(app.wtop.window_text()=='CanDeal evolution Setup', 'Setup Starting Failed')
 
 def do_go(arg):     # Nota: Problemi a riagganciare il processo - tutto 1 sessione
-    butt = uw.get_child_chk(env.wtop, name='Next >', automation_id='1')
+    butt = uw.get_child_chk(app.wtop, name='Next >', automation_id='1')
     print(f'butt {butt}')
     uw.win_click(butt)
     pass
@@ -85,9 +85,9 @@ def do_go(arg):     # Nota: Problemi a riagganciare il processo - tutto 1 sessio
 def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
     def manage_session(session):
         if session=='new':
-           env.start()
+           app.start()
         else:
-            env.connect()
+            app.connect()
         if session=='kill':
             pass
             #uw.session_close(env.wtop, wait_init=1, wait_end=1, logoff=True)
@@ -95,8 +95,8 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
         if session=='kill':
             pass
         else:
-            VERIFY(env.app and env.wtop, "Hang or New Session Failed")
-            env.wtop.set_focus()
+            VERIFY(app.app and app.wtop, "Hang or New Session Failed")
+            app.wtop.set_focus()
 
     try:
         opt.set(options)
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         print('Connecting instance...')
         app = Application(backend="uia").connect(process=21696)
         print(f'app {app}')
-        wtop = env.app.top_window()
+        wtop = app.app.top_window()
         print(f'app {app}')
     if select==4:
             for proc in psutil.process_iter(['pid', 'name']):

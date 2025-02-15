@@ -8,7 +8,7 @@ from pathlib import Path
 _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
-from utl_app import env
+from utl_app import app
 from utl_win import sleep, ROBOT_RES
 from utl_verifier import VERIFY, RAISE, DUMP
 import utl_win as uw
@@ -45,8 +45,8 @@ COH_CLIENTACC =     'TEST'
 ### Local Test - Session 3
 
 def run_session_TEST(): 
-    env.hang_app(COH_PATH)
-    page = uw.get_child_chk(env.wtop, name='Orders', ctrl_type='Pane', deep=3)
+    app.hang_app(COH_PATH)
+    page = uw.get_child_chk(app.wtop, name='Orders', ctrl_type='Pane', deep=3)
     grid = uw.get_child_chk(page, name='StingrayGrid', deep=8)
     #print(f'page {page}, grid{grid}')
     grid_mng = ug.create_by_win(grid)
@@ -57,10 +57,10 @@ def run_session_TEST():
 
 def robot_launch_new_session(arg):
     def do():
-        VERIFY(env.app and env.wtop, "New Session Failed")
+        VERIFY(app.app and app.wtop, "New Session Failed")
     
     try:
-        env.launch_app(COH_PATH)
+        app.launch_app(COH_PATH)
         return ROBOT_RES('ok')                  
     except Exception as e:
         return ROBOT_RES('no', str(e)) 
@@ -70,24 +70,24 @@ def robot_launch_new_session(arg):
     
 def robot_start_dialog(arg):
     def do():
-        VERIFY(env.app and env.wtop, "Hang Session Failed")
-        edit = uw.get_child_chk(env.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
+        VERIFY(app.app and app.wtop, "Hang Session Failed")
+        edit = uw.get_child_chk(app.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
         uw.edit_set(edit, COH_WSP)
 
-        list = uw.get_child_chk(env.wtop, name='Import From', ctrl_type='List', deep=3)
+        list = uw.get_child_chk(app.wtop, name='Import From', ctrl_type='List', deep=3)
         uw.list_check(list, '*', False)
         uw.list_check(list, arg, True)
 
-        butt = uw.get_child_chk(env.wtop, automation_id='1', ctrl_type='Button', deep=3)
+        butt = uw.get_child_chk(app.wtop, automation_id='1', ctrl_type='Button', deep=3)
         is_create = butt.window_text()=='Create'
         uw.win_click(butt, wait_end=0.5)
-        uw.warning_replay(env.wtop, 'This workspace has not been closed properly', 'No')
+        uw.warning_replay(app.wtop, 'This workspace has not been closed properly', 'No')
 
         sleep(3.5)                                                                         # todo : Smart Wait                     
-        env.reload()  
+        app.reload()  
         
     try:
-        env.hang_app(COH_PATH)
+        app.hang_app(COH_PATH)
         do()
         return ROBOT_RES('ok')                  
     except Exception as e:
@@ -98,10 +98,10 @@ def robot_start_dialog(arg):
 
 def robot_setting_init(arg):
     def do():
-        butt = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Button', deep=3)
+        butt = uw.get_child_chk(app.wtop, name='Settings', ctrl_type='Button', deep=3)
         uw.win_click(butt, wait_end=0.5)
 
-        pane = uw.get_child_chk(env.wtop, name='Settings', ctrl_type='Pane', deep=3)
+        pane = uw.get_child_chk(app.wtop, name='Settings', ctrl_type='Pane', deep=3)
 
         list = uw.get_child_chk(pane, automation_id='103', ctrl_type='List', deep=3)
         uw.list_select(list, "MetaMarket")
@@ -119,7 +119,7 @@ def robot_setting_init(arg):
         sleep(.25)
 
     try:
-        env.hang_app(COH_PATH)
+        app.hang_app(COH_PATH)
         do()
         return ROBOT_RES('ok')                  
     except Exception as e:
@@ -132,21 +132,21 @@ def robot_start_connections(arg):
     def do():
         addins = ['MetaMarket']                                                     # TODO pass form Robot ?
         for addin in addins:
-            butt = env.select_ribbon_butt(addin, 'Auto Connect')
+            butt = app.select_ribbon_butt(addin, 'Auto Connect')
             if not uw.butt_is_checked(butt):
                 uw.win_click(butt)
 
-        butt = env.select_ribbon_butt('Home', 'Auto Connect')
+        butt = app.select_ribbon_butt('Home', 'Auto Connect')
         if not uw.butt_is_checked(butt):
             uw.win_click(butt)
 
-        if env.wait_conn_ready(to_sec=30, to_err_sec=5, delay=2):
+        if app.wait_conn_ready(to_sec=30, to_err_sec=5, delay=2):
             print ('Connection Ready')
         else:
             RAISE("Connection Fail")
 
     try:
-        env.hang_app(COH_PATH)
+        app.hang_app(COH_PATH)
         do()
         return ROBOT_RES('ok')                  
     except Exception as e:
@@ -158,7 +158,7 @@ def robot_start_connections(arg):
 def robot_security_browser(arg):
     def do():
          # la pg viene generata sotto main-node coherence
-        page = uw.get_child_chk(env.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=1)
+        page = uw.get_child_chk(app.wtop, name='Security Browser.*', ctrl_type='Pane', use_re=1)
         uw.win_activate(page)                                               # todo portare in front
         #uw.win_resize(page, 600,400)
 
@@ -188,10 +188,10 @@ def robot_security_browser(arg):
         mouse.click('right')
         sleep(0.25)
 
-        uw.popup_reply(env.wtop, 'New#Care Order')          # Il popup viene generato sotto level top - anche il sotto menu
+        uw.popup_reply(app.wtop, 'New#Care Order')          # Il popup viene generato sotto level top - anche il sotto menu
 
     try:
-        env.hang_app(COH_PATH)
+        app.hang_app(COH_PATH)
         do()
         return ROBOT_RES('ok')                  
     except Exception as e:
@@ -202,7 +202,7 @@ def robot_security_browser(arg):
 
 def robot_new_care_order(arg):
     def do():
-        dlg = uw.get_child_chk(env.wtop, name="New Care Order.*", ctrl_type="Pane", use_re=1)
+        dlg = uw.get_child_chk(app.wtop, name="New Care Order.*", ctrl_type="Pane", use_re=1)
         adv = uw.get_child_chk(dlg, automation_id='13652', ctrl_type="CheckBox", use_re=1)
         if not uw.butt_is_checked(adv):
             uw.win_click(adv)
@@ -238,7 +238,7 @@ def robot_new_care_order(arg):
         return order['fields']['OrderID']
 
     try:
-        env.hang_app(COH_PATH)
+        app.hang_app(COH_PATH)
         orderid = do()
         return ROBOT_RES('ok', orderid)                 # return orderid to robot   
     except Exception as e:
@@ -249,8 +249,8 @@ def robot_new_care_order(arg):
 
 def robot_select_order(arg):
     def do(order_id):
-        env.click_ribbon_butt('Trading', 'Orders')
-        page = uw.get_child_chk(env.wtop, name='Orders.*', ctrl_type='Pane', use_re=1, deep=2)
+        app.click_ribbon_butt('Trading', 'Orders')
+        page = uw.get_child_chk(app.wtop, name='Orders.*', ctrl_type='Pane', use_re=1, deep=2)
         
         edit = uw.get_child_chk(page, name='Order ID', ctrl_type='Edit', deep=5)  
         uw.edit_set(edit, order_id)
@@ -259,7 +259,7 @@ def robot_select_order(arg):
         uw.win_click(butt)
 
     try:
-        env.hang_app(COH_PATH)
+        app.hang_app(COH_PATH)
         do(arg)
         return ROBOT_RES('ok')                  
     except Exception as e:
@@ -271,7 +271,7 @@ def robot_select_order(arg):
 def robot_grid_sample(arg):
     def do():
         #env.click_ribbon_butt('Trading', 'Security Browser')
-        page = uw.get_child_chk(env.wtop, name='Security Browser', ctrl_type='Pane', deep=3)
+        page = uw.get_child_chk(app.wtop, name='Security Browser', ctrl_type='Pane', deep=3)
         grid = uw.get_child_chk(page, name='StingrayGrid', deep=9)
         #print(f'page {page}, grid{grid}')
         
@@ -309,7 +309,7 @@ def robot_grid_sample(arg):
         print(f'Security Status {sel["Status"]}')
 
     try:
-        env.hang_app(COH_PATH)
+        app.hang_app(COH_PATH)
         do()
         return ROBOT_RES('ok')                  
     except Exception as e:
