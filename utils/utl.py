@@ -46,6 +46,26 @@ class TimeOut():
         return time.time() - self.start_time > self.timeout
 
 
+def get_conn_events(input_string, phase_type: str) -> list:
+    try:
+        parts = input_string.split()
+        phase_dict = {}
+        
+        for part in parts:
+            key, values = part.split(':')
+            phase_dict[key] = values.split(',')
+        return phase_dict.get(phase_type, [])
+    except:
+        return None
+
+def sleep_progress(sec):
+    to = TimeOut(sec)
+    while not to.expired():
+        print('.', end='', flush=1)
+        time.sleep(1)
+    print('')
+
 
 if __name__ == '__main__':
     play_sound('fail')
+    sleep_progress(4)

@@ -178,6 +178,34 @@ class AppEnv:
         utl.play_sound('success' if done else 'fail')
         return done==1
 
+    def manage_conn(self, evt, conn):
+        op = utl.get_conn_events(conn, 'coh')
+        if not op:
+            return
+        if (evt=='start'):
+            if 'new' in op:
+                env.launch_app(config.get('coh.path'))
+            elif 'hang' in op:
+                env.hang_app(config.get('coh.path'))
+
+            if 'new' in op or 'hang' in op:
+                VERIFY(env.app and env.wtop, "Hang or New Session Failed")
+                env.wtop.set_focus()
+        if (evt=='exit'):
+            if 'kill' in op:
+                uw.session_close(env.wtop, wait_init=1, wait_end=1, logoff=True)
+                exist = 0
+                try:
+                    env.hang_app(config.get('coh.path'))
+                    exist=1
+                except Exception as e:
+                    pass
+                VERIFY(not exist, 'Close Session Failed. Process still Exists')
+
+        
+
+        
+
 env = AppEnv()              # class singleton
 #endregion
 

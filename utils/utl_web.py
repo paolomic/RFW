@@ -77,6 +77,9 @@ class WebAppEnv:
 
     def get_doc(self):
         return 
+    
+    def manage_conn(self, evt, conn):
+        pass                                         # gestita nelle do_fun
 
 webapp = WebAppEnv()              # class singleton
 
@@ -127,25 +130,6 @@ class WebTable:
                     break
         return self.rows
 
-    def get_short_answer(self, table=None):        # short fast version for load - serve?
-        if table:
-            self.table = table        
-        users=[]
-        try:
-            header = uw.get_child(self.table, ctrl_type='Custom')    #'Dealer Good For Qty Yield Price Ref Sprd.*'
-            rows = uw.get_child(self.table, ctrl_type='Group')
-
-            for row in rows.children():
-                cols =  row.children()
-                col_user = cols[0]
-                user =cols[0].children()[1]
-                qty =cols[2].children()[2]
-                prc =cols[3].children()[2]
-                if (len(user.window_text())>2):    
-                    users.append((user.window_text(), qty.window_text(), prc.window_text()))
-        except:
-            pass
-        return users 
 
 
 
@@ -167,7 +151,7 @@ class WebBondDlg:
 
     def prepare_grid(self):
         if not self.grid:
-            grid = WebTable(uw.get_child(self.table, ctrl_type='Table'))
+            self.grid = WebTable(uw.get_child_chk(self.table, ctrl_type='Table'))
 
     def get_time(self):
         try:
@@ -191,12 +175,32 @@ class WebBondDlg:
     def is_live(self):
         if self.timeout.expired():                  # time protection
             return False
-        return self.get_time != None                # or return self.get_final_state == None 
+        return self.get_time() != None                # or return self.get_final_state == None 
         
+    def get_short_answer(self):        # short fast version for load - serve?
+        self.prepare_grid()       
+        users=[]
+        try:
+            header = uw.get_child(self.grid.table, ctrl_type='Custom')    #'Dealer Good For Qty Yield Price Ref Sprd.*'
+            rows = uw.get_child(self.grid.table, ctrl_type='Group')
+
+            for row in rows.children():
+                cols =  row.children()
+                col_user = cols[0]
+                user =cols[0].children()[1]
+                qty =cols[2].children()[2]
+                prc =cols[3].children()[2]
+                if (len(user.window_text())>2):    
+                    users.append((user.window_text(), qty.window_text(), prc.window_text()))
+        except:
+            pass
+        return users 
+
+
     def get_answer(self, short=False):
         self.prepare_grid()
         if short:
-            return self.grid.get_short_answer()
+            return self.get_short_answer()
         else:
             return self.grid.load()
 

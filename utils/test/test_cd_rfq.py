@@ -164,16 +164,16 @@ def do_login_session(arg):
 def do_open_rfq(arg):
     (brw, doc) = webapp.hang_main()
     butt = uw.get_child_chk(doc, name='', deep=2)  # clear - todo AutomationId
-    uw.win_click(butt)
+    uw.win_click(butt, wait_end=.5)
 
     combo = uw.get_child_chk(doc, name='Search Security', ctrl_type='ComboBox', deep=2)  # clear - todo AutomationId
-    uw.edit_set(combo, config.get('web.sec'))
+    uw.edit_set(combo, config.get('web.sec'), wait_end=1)
 
     butt = uw.get_child_chk(doc, name='', deep=2)  # insert - todo AutomationId
-    uw.win_click(butt)
+    uw.win_click(butt, wait_end=.5)
 
     butt = uw.get_child_chk(doc, name='NEW RFQ', ctrl_type='Button', deep=2)  # insert - todo AutomationId
-    uw.win_click(butt)
+    uw.win_click(butt, wait_end=.5)
     
     uw.sleep(1.5)      # new windows opening
 
@@ -213,7 +213,7 @@ def do_manage_rfq(arg):
         str_time = dlg_bond.get_time()
         print(f'RFQ Active... {str_time}')
         print(print(f'Answer From {dlg_bond.get_answer(short=1)}'))
-        uw.sleep_progress(5)
+        utl.sleep_progress(5)
 
     sleep(0.5)
 
@@ -224,7 +224,7 @@ def do_manage_rfq(arg):
     print(f'No.Row:{len(all_answ)}')
     print(all_answ)
 
-    VERIFY(str_state=='Done')
+    VERIFY(str_state=='DONE', "RFQ Status Unexpected")
 
 
 ######################################################
@@ -232,35 +232,18 @@ def do_manage_rfq(arg):
 
 # todo differenziare connection web e coh
 
+#conn 'coh:hang,kill web:new,run'
 
-def robot_run(fun_name:str, arg:str, cfg_file, s_op=''):
-    def manage_session(session):
-        if session=='new':
-            env.launch_app(config.get('coh.path'))
-        else:
-            env.hang_app(config.get('coh.path'))
-        if session=='kill':
-            uw.session_close(env.wtop, wait_init=1, wait_end=1, logoff=True)
-    def verify_session(session):
-        if session=='kill':
-            exist = 0
-            try:
-                env.hang_app(config.get('coh.path'))
-                exist=1
-            except Exception as e:
-                pass
-            VERIFY(not exist, 'Close Session Failed. Process still Exists')
-        else:
-            VERIFY(env.app and env.wtop, "Hang or New Session Failed")
-            env.wtop.set_focus()
-    #config_init(cfg_file)
-    config.load(cfg_file)
+
+def robot_run(fun_name:str, arg:str, cfg_file, conn=''):
     try:
-        if s_op and s_op != 'web':
-            manage_session(s_op)   
-            verify_session(s_op)
+        config.load(cfg_file)
+        env.manage_conn('start', conn)
+        webapp.manage_conn('start', conn)
         func = globals().get(fun_name)
         result = func(arg)
+        env.manage_conn('exit', conn)
+        webapp.manage_conn('exit', conn)
         return ROBOT_RES('ok', result)
     except Exception as e:
         message = str(e)
@@ -279,9 +262,9 @@ if __name__ == '__main__':
         #print(robot_run('do_login_session', '', cfg_file, '') )
         #print(robot_run('do_open_rfq', '', cfg_file, '') )
         #print(robot_run('do_send_rfq', '', cfg_file, '') )
-        #print(robot_run('do_manage_rfq', '', cfg_file, '') )
+        print(robot_run('do_manage_rfq', '', cfg_file, '') )
         #print(robot_run('do_ss_new_session', '', cfg_file, 'new') )
-        print(robot_run('do_ss_setting_init', '', cfg_file, 'hang') )
+        #print(robot_run('do_ss_setting_init', '', cfg_file, 'hang') )
         #print(robot_run('do_ss_reply', '', cfg_file, 'hang') )
         pass
     if (select==2):
