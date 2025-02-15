@@ -18,6 +18,8 @@ import utl_dump as ud
 class WebAppEnv:
     #private
     url = None
+    main = None
+    doc = None
 
     def reset(self):
         self.url = None
@@ -32,22 +34,24 @@ class WebAppEnv:
         subprocess.run(["start", "chrome", "--new-window", self.url], shell=True)
         utl.play_sound('success')
         uw.sleep(wait_end)
-        return self.hang_main()
+        self.hang_main()
+        uw.win_move(self.main, 950, 0)
+        uw.win_resize(self.main, 1000, 1080)
 
     #@utl.chrono
     def hang_main(self, url=None, wait_end=1):
         if url:
             self.init(url)
-        brw = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)  
+        main = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)  
         #@print(f'brw:{brw}')                                      # very long string     
-        VERIFY(brw, 'browser start fail')
+        VERIFY(main, 'browser start fail')
         try:
             #ud.dump_uia_tree(brw, max_depth=1)                
-            doc = uw.get_child_chk(brw, name='CanDeal Evolution', ctrl_type='Document')   # main page
+            doc = uw.get_child_chk(main, name='CanDeal Evolution', ctrl_type='Document')   # main page
             print(f'doc:{doc} logged')
         except:
-            ud.dump_uia_tree(brw, max_depth=3)                      # PATCH - MISTERO atrimenti non trova il doc
-            doc = uw.get_child_chk(brw, ctrl_type='Document')       # login page
+            ud.dump_uia_tree(main, max_depth=3)                      # PATCH - MISTERO atrimenti non trova il doc
+            doc = uw.get_child_chk(main, ctrl_type='Document')       # login page
             print(f'doc:{doc} loggin')
         try:
             pass
@@ -56,17 +60,19 @@ class WebAppEnv:
             RAISE(f"Start Error: {str(e)}")
         
         uw.sleep(wait_end)
-        return (brw, doc)
 
-    def hang_rfq(self, url=None):
-        uw.sleep(0.25)
-        rfq = uw.get_main_wnd('New Bond RFQ.*Google Chrome.*', use_re=1)
-        VERIFY(rfq, 'rfq panel fail')
-        table = uw.get_child_chk(rfq, ctrl_type='Table', deep=2)
-        grp = uw.get_child_chk(table, ctrl_type='Group', deep=1)        # group combo type
-        uw.sleep(0.25)
+        self.main = main
+        self.doc = doc
 
-        return (rfq, table, grp)
+    def hang_rfq(self, url=None, move=True):
+        uw.sleep(0.25)
+        brw = uw.get_main_wnd('New Bond RFQ.*Google Chrome.*', use_re=1)
+        if move:
+            uw.win_move(brw, 1300, 500)
+        VERIFY(brw, 'rfq panel fail')
+        rfq = uw.get_child_chk(brw, ctrl_type='Table', deep=2)
+        uw.sleep(0.25)
+        return rfq
 
     def kill_app(self, url=None):
         while 1:
@@ -129,9 +135,6 @@ class WebTable:
                 if nrow > 0 and row_count >= nrow:  # Interrompi se è stato raggiunto il numero massimo di righe
                     break
         return self.rows
-
-
-
 
 
 class WebBondDlg:

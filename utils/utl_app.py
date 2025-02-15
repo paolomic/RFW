@@ -187,10 +187,11 @@ class AppEnv:
                 env.launch_app(config.get('coh.path'))
             elif 'hang' in op:
                 env.hang_app(config.get('coh.path'))
+                env.wtop.set_focus()
+                uw.win_move(env.wtop, 10, 10)
 
             if 'new' in op or 'hang' in op:
                 VERIFY(env.app and env.wtop, "Hang or New Session Failed")
-                env.wtop.set_focus()
         if (evt=='exit'):
             if 'kill' in op:
                 uw.session_close(env.wtop, wait_init=1, wait_end=1, logoff=True)
@@ -201,10 +202,6 @@ class AppEnv:
                 except Exception as e:
                     pass
                 VERIFY(not exist, 'Close Session Failed. Process still Exists')
-
-        
-
-        
 
 env = AppEnv()              # class singleton
 #endregion

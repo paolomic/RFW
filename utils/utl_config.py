@@ -1,4 +1,5 @@
 import json
+from utl_verifier import VERIFY, RAISE, DUMP
 
 class TestConfig:
     _instance = None 
@@ -12,17 +13,17 @@ class TestConfig:
     def load(self, config_file: str):
         with open(config_file, "r") as file:
             self.config = json.load(file)
-            print("Configurazione caricata:", self.config)
+            #print("load configuation:", self.config)
 
     def get(self, grp: str, key: str = None):
         if key is None:
             if '.' not in grp:
-                raise ValueError("Formato non valido. Usa 'gruppo.chiave' o fornisci due argomenti separati.")
+                RAISE("wrong config key")
             grp, key = grp.split('.')
         try:
             return self.config[grp][key]
-        except KeyError:
-            raise KeyError(f"Chiave non trovata: gruppo '{grp}', chiave '{key}'")
+        except:
+            RAISE("wrong config key")
 
 config = TestConfig()           # singleton rimappa new
 
