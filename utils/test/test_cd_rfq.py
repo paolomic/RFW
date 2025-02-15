@@ -133,7 +133,7 @@ def do_ss_start_connections(arg):
         RAISE("Connection Fail")
 
 def do_ss_reply(arg):
-    dlg_rfq = uw.get_child_chk(env.wtop, name='RFQ Outright [.*] [.*]', ctrl_type='Pane', deep=1, use_re=1)  
+    dlg_rfq = uw.get_child_chk(env.wtop, name=r"RFQ Outright \[CANDEAL\/BOND\] \[\d+\]", ctrl_type='Pane', deep=1, use_re=1)  
     butt = uw.get_child_chk(dlg_rfq, name='Done', ctrl_type='Button', deep=1)  
     uw.win_click(butt)
 #endregion
@@ -262,10 +262,10 @@ if __name__ == '__main__':
         #print(robot_run('do_login_session', '', cfg_file, '') )
         #print(robot_run('do_open_rfq', '', cfg_file, '') )
         #print(robot_run('do_send_rfq', '', cfg_file, '') )
-        print(robot_run('do_manage_rfq', '', cfg_file, '') )
+        #print(robot_run('do_manage_rfq', '', cfg_file, '') )
         #print(robot_run('do_ss_new_session', '', cfg_file, 'new') )
         #print(robot_run('do_ss_setting_init', '', cfg_file, 'hang') )
-        #print(robot_run('do_ss_reply', '', cfg_file, 'hang') )
+        print(robot_run('do_ss_reply', '', cfg_file, 'coh:hang') )
         pass
     if (select==2):
         do_manage_rfq('')

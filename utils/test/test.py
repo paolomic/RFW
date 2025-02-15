@@ -1,24 +1,13 @@
+import re
 
-import time
+# Stringa di esempio
+text = "RFQ Outright [CANDEAL/BOND] [1010725045000009]"
 
-# Import 
-import sys
-from pathlib import Path
-_new_path = str(Path(__file__).parent.parent)
-sys.path.append(_new_path) 
+# Pattern regex come raw string
+pattern = r"RFQ Outright \[CANDEAL\/BOND\] \[\d+\]"
 
-import utl  as utl
-
-class TimeOut():
-    timeout = 120
-    start_time = 0
-    def __init__(self, timeout):
-        self.timeout = timeout
-        self.start_time = time.time()
-    def expired(self):
-        return time.time() - self.start_time > self.timeout
-
-
-while TimeOut(3):
-    print(1)
-    time.sleep(1)
+# Verifica se la stringa corrisponde al pattern
+if re.match(pattern, text):
+    print("La stringa corrisponde al pattern.")
+else:
+    print("La stringa NON corrisponde al pattern.")
