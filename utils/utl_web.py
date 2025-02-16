@@ -71,13 +71,17 @@ class WebAppEnv:
             pass
         elif evt=='exit':
             pass
-        elif evt=='timeout':
-            print('Timeout: kill Browser instance')
-            main = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)
-            if (main):
-                utl.process_kill(main)
+        elif evt=='terminate':
+            print('Timeout: Terminate of Web App Browsers')
+            to = utl.TimeOut(10)
+            while not to.expired():
+                main = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)
+                if main:
+                    utl.process_kill(main)
+                    uw.sleep(2)
+                else:
+                    break
             
-
     def hang_rfq(self, url=None, move=True):
         pass
 

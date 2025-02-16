@@ -237,13 +237,13 @@ class AppEnv:
             return
         if evt=='start':
             if 'new' in op:
-                app.launch_app(config.get('coh.path'))
+                self.launch_app(config.get('coh.path'))
             elif 'hang' in op:
-                app.hang_app(config.get('coh.path'))
-                app.wtop.set_focus()
+                self.hang_app(config.get('coh.path'))
+                self.wtop.set_focus()
 
             if 'new' in op or 'hang' in op:
-                VERIFY(app.app and app.wtop, "Hang or New Session Failed")
+                VERIFY(self.app and self.wtop, "Hang or New Session Failed")
         if evt=='exit':
             if 'kill' in op:
                 uw.session_close(app.wtop, wait_init=1, wait_end=1, logoff=True)
@@ -254,12 +254,16 @@ class AppEnv:
                 except Exception as e:
                     pass
                 VERIFY(not exist, 'Close Session Failed. Process still Exists')
-        if evt=='timeout':
-            print('Timeout: kill Coherence instance')
-            utl.process_kill(self.wtop)
-            #print(f'Forcing Closure Window {self.wtop.handle}')
-            #uw.win_close(self.wtop)
-            #uw.session_close(self.wtop, wait_init=1, wait_end=1, logoff=True)
+        if evt=='terminate':
+            print('Timeout: Terminate All Coherence instance')
+            to = utl.TimeOut(10)
+            while not to.expired():
+                try:
+                    app = Application(backend="uia").connect(path='Coherence.exe')
+                    utl.process_kill(app.top_window())     
+                    sleep(2)
+                except:
+                    break
 
 class Settings:
     #private

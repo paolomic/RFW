@@ -72,7 +72,6 @@ import threading
 class TimeoutError(Exception):
     pass
 
-
 exec_intime_tag = 'Robot_Call_Timeout'
 
 def exec_intime(seconds, func, *args, **kwargs):
@@ -121,23 +120,21 @@ import ctypes
 import ctypes.wintypes
 import win32process
 
-def process_kill(win):
+def process_kill(win, pid=None):
     #pid = win.ProcessId  # Ottieni il PID dalla finestra
-    pid = win32process.GetWindowThreadProcessId(win.handle)[1]
+    if not pid:
+        pid = win32process.GetWindowThreadProcessId(win.handle)[1]
     print(f'Terminanting WND {win} {win.handle}')
     print(f'Terminanting PID {pid}')
-
     # Apri il processo con permessi di terminazione
     PROCESS_TERMINATE = 0x0001
     handle = ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, False, pid)
     if not handle:
         raise ctypes.WinError()  # Solleva un'eccezione se l'apertura fallisce
-
     # Termina il processo
     ctypes.windll.kernel32.TerminateProcess(handle, -1)
     ctypes.windll.kernel32.CloseHandle(handle)  # Chiudi l'handle del processo
     print(f"Processo con PID {pid} terminato forzatamente.")
-
 
 
 if __name__ == '__main__':
