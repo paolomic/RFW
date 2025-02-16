@@ -123,7 +123,8 @@ def do_web_manage_rfq(arg):
 # todo: piu sessioni coh
 # todo: smartwait (web)
 
-def robot_run(fun_name:str, arg:str, cfg_file, conn=''):
+
+def robot_run(fun_name:str, arg:str, cfg_file, conn='', timeout=0):
     def manage_conn(event):
         app.manage_conn(event, conn)
         wapp.manage_conn(event, conn)
@@ -131,31 +132,38 @@ def robot_run(fun_name:str, arg:str, cfg_file, conn=''):
         config.load(cfg_file)
         manage_conn('start')
         func = globals().get(fun_name)
-        result = func(arg)
-        #result = utl.exec_intime(func, 8, arg)            # concurrent execution
+        if timeout:
+            result = utl.exec_intime(timeout, func, arg)            # forked execution - time check - to test
+        else:
+            result = func(arg)
         manage_conn('exit')
         return ROBOT_RES('ok', result)
     except Exception as e:
-        message = str(e)
-        DUMP(message)
-        return ROBOT_RES('no', message) 
-    
+        excp = str(e)
+        DUMP(excp)
+        if timeout and utl.exec_intime_tag in excp:
+            manage_conn('timeout')                                  # chiude processi 
+        return ROBOT_RES('no', excp) 
+        
     
 ######################################################
 # Main - DEBUG 
 
 if __name__ == '__main__':
     cfg_file = r'.\utils\test\test_cd_rfq.json'
-    select = 1
+    select = 3
     if (select==1):
         print(robot_run('do_web_login_session', '', cfg_file, '') )
         #print(robot_run('do_web_open_rfq', '', cfg_file, '') )
         #print(robot_run('do_web_send_rfq', '', cfg_file, '') )
         #print(robot_run('do_web_manage_rfq', '', cfg_file, '') )
-        #print(robot_run('do_coh_new_session', '', cfg_file, 'new') )
+        #print(robot_run('do_coh_new_session', '', cfg_file, 'coh:new') )
         #print(robot_run('do_coh_setting_init', '', cfg_file, 'hang') )
         #print(robot_run('do_coh_reply', '', cfg_file, 'coh:hang') )
     if (select==2):
         do_web_manage_rfq('')
         #do_web_login_session('')
+    if (select==3):
+        print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=24) )
+        #print(robot_run('do_web_login_session', '', cfg_file, 'coh:new', timeout=24) )
 

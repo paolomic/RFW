@@ -67,7 +67,16 @@ class WebAppEnv:
         self.doc = doc
 
     def manage_conn(self, evt, conn):
-        pass                                         # gestita nelle do_fun
+        if evt=='start':
+            pass
+        elif evt=='exit':
+            pass
+        elif evt=='timeout':
+            print('Timeout: kill Browser instance')
+            main = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)
+            if (main):
+                utl.process_kill(main)
+            
 
     def hang_rfq(self, url=None, move=True):
         pass

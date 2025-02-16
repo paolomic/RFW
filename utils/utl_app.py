@@ -56,7 +56,6 @@ class AppEnv:
             self.rib_tab = uw.get_child_chk(self.rib_grp, name='Ribbon Tabs', ctrl_type='Group', deep=1, verify=False)      # FILE HOME VIWE ....
             self.st_bar = uw.get_child_chk(self.wtop, name='StatusBar', ctrl_type='StatusBar', deep=1, verify=False)        
             
-
             VERIFY(self.rib_tab, 'Ribbon Tab handler non Valid')
             VERIFY(self.st_bar, 'Ribbon Bar handler non Valid')
             VERIFY(self.st_bar, 'Ribbon Group handler non Valid')
@@ -236,7 +235,7 @@ class AppEnv:
         op = utl.get_conn_events(conn, 'coh')
         if not op:
             return
-        if (evt=='start'):
+        if evt=='start':
             if 'new' in op:
                 app.launch_app(config.get('coh.path'))
             elif 'hang' in op:
@@ -245,7 +244,7 @@ class AppEnv:
 
             if 'new' in op or 'hang' in op:
                 VERIFY(app.app and app.wtop, "Hang or New Session Failed")
-        if (evt=='exit'):
+        if evt=='exit':
             if 'kill' in op:
                 uw.session_close(app.wtop, wait_init=1, wait_end=1, logoff=True)
                 exist = 0
@@ -255,6 +254,12 @@ class AppEnv:
                 except Exception as e:
                     pass
                 VERIFY(not exist, 'Close Session Failed. Process still Exists')
+        if evt=='timeout':
+            print('Timeout: kill Coherence instance')
+            utl.process_kill(self.wtop)
+            #print(f'Forcing Closure Window {self.wtop.handle}')
+            #uw.win_close(self.wtop)
+            #uw.session_close(self.wtop, wait_init=1, wait_end=1, logoff=True)
 
 class Settings:
     #private

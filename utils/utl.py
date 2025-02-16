@@ -72,7 +72,10 @@ import threading
 class TimeoutError(Exception):
     pass
 
-def exec_intime(func, seconds, *args, **kwargs):
+
+exec_intime_tag = 'Robot_Call_Timeout'
+
+def exec_intime(seconds, func, *args, **kwargs):
     """
     Esegue una funzione con un timeout specificato.
 
@@ -106,7 +109,7 @@ def exec_intime(func, seconds, *args, **kwargs):
     if thread.is_alive():
         # Interrompiamo il thread (non è sempre affidabile, ma è l'unica opzione)
         thread.join(timeout=0.1)  # Aspettiamo un po' per dare tempo al thread di terminare
-        raise TimeoutError(f"Function {func.__name__} timed out after {seconds} seconds")
+        raise TimeoutError(f"{exec_intime_tag}: Function {func.__name__} after {seconds} seconds")
 
     # Se c'è un'eccezione, la rilanciamo
     if exception is not None:
@@ -114,71 +117,26 @@ def exec_intime(func, seconds, *args, **kwargs):
 
     return result
 
+import ctypes
+import ctypes.wintypes
+import win32process
 
-#####################################################################
-# timeout execution - METOTODO 2 dovrebbe interrompere ip rocesso child
+def process_kill(win):
+    #pid = win.ProcessId  # Ottieni il PID dalla finestra
+    pid = win32process.GetWindowThreadProcessId(win.handle)[1]
+    print(f'Terminanting WND {win} {win.handle}')
+    print(f'Terminanting PID {pid}')
 
+    # Apri il processo con permessi di terminazione
+    PROCESS_TERMINATE = 0x0001
+    handle = ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, False, pid)
+    if not handle:
+        raise ctypes.WinError()  # Solleva un'eccezione se l'apertura fallisce
 
-import multiprocessing
-
-
-class TimeoutError(Exception):
-    pass
-
-# Funzione globale per eseguire la funzione target in un processo separato
-def _run_function(queue, func, args, kwargs):
-    try:
-        result = func(*args, **kwargs)
-        queue.put(result)
-    except Exception as e:
-        queue.put(e)
-
-def exec_intime_2(func, seconds, *args, **kwargs):
-    """
-    Esegue una funzione con un timeout specificato.
-
-    :param func: La funzione da eseguire.
-    :param seconds: Il timeout in secondi.
-    :param args: Argomenti posizionali da passare alla funzione.
-    :param kwargs: Argomenti keyword da passare alla funzione.
-    :return: Il risultato della funzione se completata in tempo.
-    :raises TimeoutError: Se la funzione non completa entro il timeout.
-    """
-    # Creiamo una coda per comunicare il risultato
-    queue = multiprocessing.Queue()
-
-    # Creiamo un processo per eseguire la funzione
-    process = multiprocessing.Process(
-        target=_run_function,
-        args=(queue, func, args, kwargs)
-    )
-    process.start()
-
-    # Attendiamo che il processo termini entro il timeout
-    process.join(seconds)
-
-    # Se il processo è ancora attivo, significa che il timeout è scaduto
-    if process.is_alive():
-        # Terminiamo il processo in modo forzato
-        process.terminate()
-        process.join(timeout=1)  # Aspettiamo un po' per dare tempo al processo di terminare
-        if process.is_alive():
-            # Se il processo è ancora attivo, usiamo un metodo più aggressivo
-            process.kill()
-            process.join()
-        raise TimeoutError(f"Function {func.__name__} timed out after {seconds} seconds")
-
-    # Otteniamo il risultato dalla coda
-    if not queue.empty():
-        result = queue.get()
-        if isinstance(result, Exception):
-            raise result
-        return result
-    else:
-        raise TimeoutError(f"Function {func.__name__} did not return any result")
-
-
-
+    # Termina il processo
+    ctypes.windll.kernel32.TerminateProcess(handle, -1)
+    ctypes.windll.kernel32.CloseHandle(handle)  # Chiudi l'handle del processo
+    print(f"Processo con PID {pid} terminato forzatamente.")
 
 
 

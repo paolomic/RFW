@@ -1,5 +1,7 @@
 import keyboard
 import mouse
+import os
+import signal
 
 from pywinauto import Desktop, Application, findwindows
 from pathlib import Path
