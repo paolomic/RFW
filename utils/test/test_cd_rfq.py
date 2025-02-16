@@ -131,7 +131,8 @@ def robot_run(fun_name:str, arg:str, cfg_file, conn=''):
         config.load(cfg_file)
         manage_conn('start')
         func = globals().get(fun_name)
-        result = func(arg)
+        #result = func(arg)
+        result = utl.exec_intime(func, 120, arg)            # concurrent execution
         manage_conn('exit')
         return ROBOT_RES('ok', result)
     except Exception as e:
@@ -147,10 +148,10 @@ if __name__ == '__main__':
     cfg_file = r'.\utils\test\test_cd_rfq.json'
     select = 1
     if (select==1):
-        #print(robot_run('do_web_login_session', '', cfg_file, '') )
+        print(robot_run('do_web_login_session', '', cfg_file, '') )
         #print(robot_run('do_web_open_rfq', '', cfg_file, '') )
         #print(robot_run('do_web_send_rfq', '', cfg_file, '') )
-        print(robot_run('do_web_manage_rfq', '', cfg_file, '') )
+        #print(robot_run('do_web_manage_rfq', '', cfg_file, '') )
         #print(robot_run('do_coh_new_session', '', cfg_file, 'new') )
         #print(robot_run('do_coh_setting_init', '', cfg_file, 'hang') )
         #print(robot_run('do_coh_reply', '', cfg_file, 'coh:hang') )
