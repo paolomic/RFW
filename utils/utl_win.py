@@ -218,6 +218,13 @@ def win_resize(window, w, h):
   rect = window.element_info.rectangle
   win32gui.MoveWindow(window.handle, rect.left, rect.top, w, h, True)
 
+def win_maximize(window, maximize=True):
+    is_maximized = window.is_maximized()
+    if maximize and not is_maximized:
+        window.maximize()
+    elif not maximize and is_maximized:
+        window.restore()
+
 ##########################################################
 # Windows
 ##########################################################
@@ -510,19 +517,18 @@ def get_child_chk(parent_wnd, name=None, ctrl_type=None, class_name=None, automa
 
 def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=  None, automation_id=None, handle=None, texts=None,
                          deep=1, use_re=False, use_case=True, visible_only=False, enable_only=True,
-                         attempt=5, wait_init=0.25,  delay=1, wait_end=0.25):
+                         timeout=2, wait_init=0.25,  delay=1, wait_end=0.25):
+    
+    to = utl.TimeOut(timeout)
     sleep(wait_init)
-    while attempt>0:
+    while not to.expired():
         #print (attempt)
         cld = get_child(parent_wnd, name, ctrl_type, class_name, automation_id, handle, texts,
                          deep, use_re, use_case, visible_only, enable_only)
         if (cld):
             sleep(wait_end) 
             return cld
-        
-        attempt -= 1
-        if attempt==0:
-            return None
+    
         sleep(delay) 
     return None
 

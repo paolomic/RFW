@@ -1,3 +1,10 @@
+####################################################################
+# TEST CD_RFQ
+####################################################################
+
+####################################################################
+#region - import
+
 import keyboard
 import mouse
 
@@ -10,7 +17,7 @@ sys.path.append(_new_path)
 import utl as utl
 from utl_config import config
 from utl_app import app, Settings, BondDlg
-from utl_web import webapp, WebTable, WebBondDlg
+from utl_web import wapp, WebTable, WebBondDlg
 from utl_verifier import VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
 
@@ -19,8 +26,9 @@ import utl_log as ul
 import utl_grid as ug
 import utl_dump as ud
 
+#endregion
 
-######################################################
+####################################################################
 #region - Robot Coherence 
 
 def do_coh_new_session(arg):
@@ -31,7 +39,7 @@ def do_coh_start_dialog(arg):
     app.start_dialog(config.get('coh.wsp'), config.get('coh.addins'))                                          
     app.reload()                                                                            # Smart Wait for new Main Frame   
     uw.win_move(app.wtop, 8, 8)
-    app.connection(start=False)             # se riuso il wsp stacco la conn
+    #app.connection(start=False)             # se riuso il wsp stacco la conn
         
 def do_coh_setting_init(arg):
     setting_dlg = Settings()
@@ -56,26 +64,25 @@ def do_coh_prepare_session(arg):
 
 def do_coh_reply(arg):
     dlg_rfq = BondDlg()
-    utl.sleep_progress(25)  # suspance ...
+    utl.sleep_progress(20)  # suspance ...
     dlg_rfq.press('Done')
 
 #endregion
 
-
-######################################################
+####################################################################
 #region - Robot Web 
 
 def do_web_login_session(arg):
-    webapp.launch_url(config.get('web.url'))
-    webapp.set_login_user_password()
+    wapp.launch_url(config.get('web.url'))
+    wapp.set_login_user_password()
     
 def do_web_open_rfq(arg):
-    webapp.hang_main()
+    wapp.hang_main()
 
-    webapp.filter_clear()
-    webapp.filter_set_security(config.get('web.sec'))
-    webapp.new_rfq()
-    sleep(1.5)                   # new windows opening - todo smart_wait ?
+    wapp.filter_clear()                                     # todo: mancano locators
+    wapp.filter_set_security(config.get('web.sec'))         # todo: mancano locators
+    wapp.new_rfq()                                          # todo: mancano locators
+    sleep(1.5)                                              # new windows opening - todo smart_wait ?
 
 def do_web_send_rfq(arg):
     rfq = WebBondDlg()
@@ -114,11 +121,12 @@ def do_web_manage_rfq(arg):
 # Generic Caller
 
 # todo: piu sessioni coh
+# todo: smartwait (web)
 
 def robot_run(fun_name:str, arg:str, cfg_file, conn=''):
     def manage_conn(event):
         app.manage_conn(event, conn)
-        webapp.manage_conn(event, conn)
+        wapp.manage_conn(event, conn)
     try:
         config.load(cfg_file)
         manage_conn('start')
@@ -142,10 +150,10 @@ if __name__ == '__main__':
         #print(robot_run('do_web_login_session', '', cfg_file, '') )
         #print(robot_run('do_web_open_rfq', '', cfg_file, '') )
         #print(robot_run('do_web_send_rfq', '', cfg_file, '') )
-        #print(robot_run('do_web_manage_rfq', '', cfg_file, '') )
+        print(robot_run('do_web_manage_rfq', '', cfg_file, '') )
         #print(robot_run('do_coh_new_session', '', cfg_file, 'new') )
         #print(robot_run('do_coh_setting_init', '', cfg_file, 'hang') )
-        print(robot_run('do_coh_reply', '', cfg_file, 'coh:hang') )
+        #print(robot_run('do_coh_reply', '', cfg_file, 'coh:hang') )
     if (select==2):
         do_web_manage_rfq('')
         #do_web_login_session('')

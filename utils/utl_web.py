@@ -36,6 +36,7 @@ class WebAppEnv:
         utl.play_sound('success')
         uw.sleep(wait_end)
         self.hang_main()
+        uw.win_maximize(self.main, maximize=False)
         uw.win_move(self.main, 950, 0)
         uw.win_resize(self.main, 1000, 1080)
 
@@ -85,40 +86,40 @@ class WebAppEnv:
         return self.doc
     
     def set_login_user_password(self):
-        edit = uw.get_child_chk(webapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1)
+        edit = uw.get_child_chk(wapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1)
         uw.edit_set(edit, config.get('web.user'))
-        edit = uw.get_child_chk(webapp.doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
+        edit = uw.get_child_chk(wapp.doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
         uw.edit_set(edit, config.get('web.pass'))
         keyboard.press_and_release('esc')
-        butt = uw.get_child_chk(webapp.doc, name='LOGIN.*', ctrl_type='Button', use_re=1)
+        butt = uw.get_child_chk(wapp.doc, name='LOGIN.*', ctrl_type='Button', use_re=1)
         uw.win_click(butt)
         uw.sleep(2)                   # todo - smart wait
         try:
-            wrn = uw.get_child_chk(webapp.doc, name='Notifications popup are disabled')
+            wrn = uw.get_child_chk(wapp.doc, name='Notifications popup are disabled')
             butt = uw.get_child_chk(wrn, name='OK', deep=2)
             uw.win_click(butt)
         except:
             pass
 
     def filter_clear(self):
-       butt = uw.get_child_chk(webapp.doc, name='', deep=2)  # clear - todo AutomationId
+       butt = uw.get_child_chk(wapp.doc, name='', deep=2)              # clear - todo AutomationId
        uw.win_click(butt, wait_end=.5)
 
     def filter_set_security(self, sec):
-        combo = uw.get_child_chk(webapp.doc, name='Search Security', ctrl_type='ComboBox', deep=2)  # clear - todo AutomationId
-        uw.edit_set(combo, sec, wait_end=1)
-        butt = uw.get_child_chk(webapp.doc, name='', deep=2)  # insert - todo AutomationId
+        combo = uw.get_child_chk(wapp.doc, name='Search Security', ctrl_type='ComboBox', deep=2)  # clear - todo AutomationId
+        uw.edit_set(combo, sec, wait_end=.5)
+        butt = uw.get_child_retry(wapp.doc, name='', deep=2, timeout=4)        # retry: long timeout web
         uw.win_click(butt, wait_end=.5)
 
     def new_rfq(self):
-        butt = uw.get_child_chk(webapp.doc, name='NEW RFQ', ctrl_type='Button', deep=2)  # insert - todo AutomationId
+        butt = uw.get_child_retry(wapp.doc, name='NEW RFQ', ctrl_type='Button', deep=2, timeout=4)  # retry: long timeout web
         uw.win_click(butt, wait_end=.5)
 
-webapp = WebAppEnv()              # class singleton
+wapp = WebAppEnv()              # class singleton
 
 
 class WebTable:
-    def __init__(self, table=None, load=True):
+    def __init__(self, table=None, load=False):
         self.header = []  # Lista per memorizzare gli header della tabella
         self.rows = []    # Lista di dizionari per memorizzare le righe della tabella
         self.table = table
@@ -147,13 +148,13 @@ class WebTable:
                 for colh in hd.children():
                     col_name = colh.window_text()
                     self.header.append(col_name)
-
-        rows = uw.get_child(self.table, ctrl_type='Group')  # Assicurati che 'Group' sia corretto
-        if rows:
+        self.rows = []
+        data_node = uw.get_child(self.table, ctrl_type='Group')  # Assicurati che 'Group' sia corretto
+        if data_node:
             row_count = 0
-            for row in rows.children():
+            for row_node in data_node.children():
                 data_row = {}
-                cells = row.children()
+                cells = row_node.children()
                 for i, cell in enumerate(cells):
                     if i < len(self.header):  # Assicurati di non superare il numero di colonne
                         data_row[self.header[i]] = self.node_str(cell)
@@ -185,12 +186,12 @@ class WebBondDlg:
 
     # Before Send - Prepare Rfq
     def set_combo(self, rfq_type):
-        combo = uw.get_child_chk(self.table, name='-', ctrl_type='ComboBox', deep=2)   # mancano locator
+        combo = uw.get_child_retry(self.table, name='-', ctrl_type='ComboBox', deep=2)   # mancano locator
         uw.win_click(combo)
         uw.edit_set(combo, rfq_type)
 
     def set_price(self, price):
-        label = uw.get_child_chk(self.table, name='PRICE', ctrl_type='Text')
+        label = uw.get_child_retry(self.table, name='PRICE', ctrl_type='Text')
         combo = uw.get_child_after(label, ctrl_type='Spinner')                  # todo mancano Key
         uw.edit_set_manual(combo, price, reset=1)               # usa keyboard
 

@@ -111,9 +111,9 @@ class AppEnv:
 
 
     # Starting....
-    def reset_wsp():
+    def reset_wsp(self):
         path_wsp = Path(config.get('coh.wsp'))
-        if (path_wsp.exists() and ):
+        if path_wsp.exists():
             print('Remove Workspace...')
             path_wsp.unlink()
             VERIFY(not path_wsp.exists(), 'Wsp Exist')
@@ -122,7 +122,7 @@ class AppEnv:
         #    path_wsp_folder.rmdir()
         #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
 
-    def start_dialog(wsp, addins):
+    def start_dialog(self, wsp, addins):
         edit = uw.get_child_chk(app.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
         uw.edit_set(edit, wsp)
 
@@ -205,6 +205,7 @@ class AppEnv:
             butt = app.select_ribbon_butt('Home', 'Auto Connect')
             if uw.butt_is_checked(butt):
                 uw.win_click(butt)
+                uw.warning_replay('Do you want to disable Auto Connect mode and stop all connections?', 'OK')
 
 
     def wait_conn_ready(self, to_sec=30, to_err_sec=5, delay=1, wait_init=0.5, wait_end=0.5):
@@ -257,18 +258,18 @@ class AppEnv:
 
 class Settings:
     #private
-    main = None
+    pane = None
     list = None
 
     def open(self):
         butt = uw.get_child_chk(app.wtop, name='Settings', ctrl_type='Button', deep=4)          # Settings gia aperto se New Wsp
         uw.win_click(butt)
 
-        pane = uw.get_child_chk(app.wtop, name='Settings', ctrl_type='Pane', deep=3)
-        list = uw.get_child_chk(pane, automation_id='103', ctrl_type='List', deep=3)
+        self.pane = uw.get_child_chk(app.wtop, name='Settings', ctrl_type='Pane', deep=3)
+        self.list = uw.get_child_chk(self.pane, automation_id='103', ctrl_type='List', deep=3)
 
-    def close():
-        butt = uw.get_child_chk(self-pane, name='OK', ctrl_type='Button', deep=3)
+    def close(self):
+        butt = uw.get_child_chk(self.pane, name='OK', ctrl_type='Button', deep=3)
         uw.win_click(butt)
     
     def set_platform(self, host, port, user, passwd, save_bw):
@@ -287,7 +288,7 @@ class Settings:
                 uw.win_click(butt)
 
     def metamarket(self, trace_lev):
-        uw.list_select(list, "MetaMarket")
+        uw.list_select(self.list, "MetaMarket")
         trace = uw.get_child_chk(self.pane, name='Trace Level', ctrl_type='Custom', deep=3)
         uw.win_click(trace, mode='combo')
         #sleep(.25)
@@ -297,7 +298,7 @@ class Settings:
         sleep(.25)
 
     def workspace(self, trace_lev):
-        uw.list_select(list, "Workspace")
+        uw.list_select(self.list, "Workspace")
         combo = uw.get_child_chk(self.pane, automation_id='11347', ctrl_type='ComboBox', deep=3)         # Todo: Input Per Valore
         uw.win_click(combo)
         keyboard.press("end")

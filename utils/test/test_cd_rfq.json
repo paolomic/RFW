@@ -33,7 +33,7 @@
     "opt": {
         "run": "local",
         "speed": 100,
-        "reuse_wsp": "yes",s
+        "reuse_wsp": "yes",
         "save_wsp_onclose": "yes",
         "close_all_pages": "yes",
         "_unsd": {
