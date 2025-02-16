@@ -131,8 +131,8 @@ def robot_run(fun_name:str, arg:str, cfg_file, conn=''):
         config.load(cfg_file)
         manage_conn('start')
         func = globals().get(fun_name)
-        #result = func(arg)
-        result = utl.exec_intime(func, 120, arg)            # concurrent execution
+        result = func(arg)
+        #result = utl.exec_intime(func, 8, arg)            # concurrent execution
         manage_conn('exit')
         return ROBOT_RES('ok', result)
     except Exception as e:

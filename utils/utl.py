@@ -115,6 +115,69 @@ def exec_intime(func, seconds, *args, **kwargs):
     return result
 
 
+#####################################################################
+# timeout execution - METOTODO 2 dovrebbe interrompere ip rocesso child
+
+
+import multiprocessing
+
+
+class TimeoutError(Exception):
+    pass
+
+# Funzione globale per eseguire la funzione target in un processo separato
+def _run_function(queue, func, args, kwargs):
+    try:
+        result = func(*args, **kwargs)
+        queue.put(result)
+    except Exception as e:
+        queue.put(e)
+
+def exec_intime_2(func, seconds, *args, **kwargs):
+    """
+    Esegue una funzione con un timeout specificato.
+
+    :param func: La funzione da eseguire.
+    :param seconds: Il timeout in secondi.
+    :param args: Argomenti posizionali da passare alla funzione.
+    :param kwargs: Argomenti keyword da passare alla funzione.
+    :return: Il risultato della funzione se completata in tempo.
+    :raises TimeoutError: Se la funzione non completa entro il timeout.
+    """
+    # Creiamo una coda per comunicare il risultato
+    queue = multiprocessing.Queue()
+
+    # Creiamo un processo per eseguire la funzione
+    process = multiprocessing.Process(
+        target=_run_function,
+        args=(queue, func, args, kwargs)
+    )
+    process.start()
+
+    # Attendiamo che il processo termini entro il timeout
+    process.join(seconds)
+
+    # Se il processo è ancora attivo, significa che il timeout è scaduto
+    if process.is_alive():
+        # Terminiamo il processo in modo forzato
+        process.terminate()
+        process.join(timeout=1)  # Aspettiamo un po' per dare tempo al processo di terminare
+        if process.is_alive():
+            # Se il processo è ancora attivo, usiamo un metodo più aggressivo
+            process.kill()
+            process.join()
+        raise TimeoutError(f"Function {func.__name__} timed out after {seconds} seconds")
+
+    # Otteniamo il risultato dalla coda
+    if not queue.empty():
+        result = queue.get()
+        if isinstance(result, Exception):
+            raise result
+        return result
+    else:
+        raise TimeoutError(f"Function {func.__name__} did not return any result")
+
+
 
 
 
