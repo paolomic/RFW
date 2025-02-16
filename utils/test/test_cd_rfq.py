@@ -142,7 +142,7 @@ def robot_run(fun_name:str, arg:str, cfg_file, conn='', timeout=0):
         excp = str(e)
         DUMP(excp)
         if timeout and utl.exec_intime_tag in excp:
-            manage_conn('timeout')                                  # chiude processi 
+            manage_conn('terminate')                                  # chiude processi 
         return ROBOT_RES('no', excp) 
         
     
@@ -164,6 +164,6 @@ if __name__ == '__main__':
         do_web_manage_rfq('')
         #do_web_login_session('')
     if (select==3):
-        print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=24) )
-        #print(robot_run('do_web_login_session', '', cfg_file, 'coh:new', timeout=24) )
+        print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=11) )
+        #print(robot_run('do_web_login_session', '', cfg_file, 'coh:new', timeout=8) )
 
