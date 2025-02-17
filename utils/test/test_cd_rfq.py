@@ -131,7 +131,7 @@ def do_web_manage_rfq(arg):
 
 def robot_run(fun_name:str, arg:str, cfg_file, conn='', timeout=0):
     func = globals().get(fun_name)
-    return ur.robot_run_2(func, arg, cfg_file, conn, timeout)
+    return ur.robot_run_3(func, arg, cfg_file, conn, timeout)
         
     
 ######################################################
@@ -153,6 +153,6 @@ if __name__ == '__main__':
         #do_web_login_session('')
     if (select==3):
         print(robot_run('do_prepare_test', '', cfg_file, '', timeout=33) )
-        #print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=11) )
+        print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=11) )
         #print(robot_run('do_web_login_session', '', cfg_file, '', timeout=233) )
 

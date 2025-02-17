@@ -188,3 +188,81 @@ def robot_run_2(func: callable, arg: str, cfg_file, conn='', timeout=0):
         DUMP(excp)
 
 #endregion
+
+
+####################################################################
+#region - Mode 3: Async Exception: Controller to Main Thread
+
+import threading
+import ctypes
+from time import sleep
+
+class ThreadTimeout(BaseException):
+    """Custom exception for thread timeout"""
+    pass
+
+def _async_raise(tid, exctype, message=None):
+    """Raises an exception in the specified thread"""
+    if message:
+        exctype.message = message  # Set message as class attribute
+    ret = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), ctypes.py_object(exctype))
+    if ret == 0:
+        raise ValueError("Thread ID not valid")
+    elif ret > 1:
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+        raise SystemError("PyThreadState_SetAsyncExc Fail")
+
+class TimeoutController:
+    def __init__(self, timeout):
+        self.timeout = timeout
+        self.main_thread_id = None
+        self.stop_event = threading.Event()
+        
+    def controller(self):
+        is_timeout = not self.stop_event.wait(self.timeout)
+        
+        if is_timeout:
+            print('Test Execution Timeout')
+            message = f"Execution Timeout {self.timeout} seconds reached"
+            ThreadTimeout.message = message  # Set message as class attribute
+            _async_raise(self.main_thread_id, ThreadTimeout)  # Pass the class, not an instance
+
+def robot_run_3(func: callable, arg: str, cfg_file, conn='', timeout=0):
+    timeout_controller = None
+    
+    def manage_conn(event):
+        app.manage_conn(event, conn)
+        wapp.manage_conn(event, conn)
+
+    try:
+        config.load(cfg_file)
+        manage_conn('start')
+
+        if timeout > 0:
+            timeout_controller = TimeoutController(timeout)
+            timeout_controller.main_thread_id = threading.main_thread().ident
+            
+            controller_thread = threading.Thread(target=timeout_controller.controller)
+            controller_thread.daemon = True
+            controller_thread.start()
+
+        result = func(arg)
+        manage_conn('exit')
+        
+        if timeout_controller:
+            timeout_controller.stop_event.set()
+        
+        return ROBOT_RES('ok', result)
+
+    except ThreadTimeout as e:
+        excp = getattr(ThreadTimeout, 'message', str(e))
+        terminate_sessions()    # All Suite abort
+        if timeout_controller:
+            timeout_controller.stop_event.set()
+        DUMP(excp)
+    except Exception as e:
+        excp = str(e)
+        if timeout_controller:
+            timeout_controller.stop_event.set()
+        DUMP(excp)
+        
