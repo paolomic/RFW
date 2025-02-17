@@ -37,7 +37,7 @@ class WebAppEnv:
         if url:            
             self.url = url
         subprocess.run(["start", "chrome", "--new-window", self.url], shell=True)
-        utl.play_sound('success')
+        #utl.play_sound('success')
         uw.sleep(wait_end)
         self.hang_main()
         uw.win_maximize(self.main, maximize=False)

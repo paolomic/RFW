@@ -34,6 +34,7 @@ def robot_run(func: callable, arg:str, cfg_file, conn='', timeout=0):
     except Exception as e:
         excp = str(e)
         DUMP(excp)
+        return ROBOT_RES('no', excp)
 
 #endregion
 
@@ -109,6 +110,7 @@ def robot_run_1(func:callable, arg:str, cfg_file, conn='', timeout=0):
         DUMP(excp)
         if timeout and utl.exec_intime_tag in excp:
             manage_conn('terminate')                                  # chiude processi 
+        return ROBOT_RES('no', excp)
 
 #endregion
 
@@ -186,6 +188,7 @@ def robot_run_2(func: callable, arg: str, cfg_file, conn='', timeout=0):
                 excp = 'Test Timeout Detected - Process Interrupted: ' + excp
             run_state.stop_event.set()
         DUMP(excp)
+        return ROBOT_RES('no', excp)
 
 #endregion
 
@@ -253,13 +256,14 @@ def robot_run_3(func: callable, arg: str, cfg_file, conn='', timeout=0):
         return ROBOT_RES('ok', result)
 
     except ThreadTimeout:
-        excp = f"Execution Timeout {timeout} seconds reached"
+        info = f"Execution Timeout {timeout} seconds reached"
         terminate_sessions()    # All Suite abort
-        DUMP(excp)
 
     except Exception as e:
-        DUMP(str(e))
+        info = str(e)
 
     finally:
         if controller:
             controller.stop()
+        DUMP(info)
+        return ROBOT_RES('ko', info)

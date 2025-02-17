@@ -230,7 +230,7 @@ class AppEnv:
             sleep(delay)
         if done:
             sleep(wait_end)
-        utl.play_sound('success' if done else 'fail')
+        #utl.play_sound('success' if done else 'fail')
         return done==1
 
     def manage_conn(self, evt, conn):
