@@ -14,6 +14,8 @@ from utl_verifier import VERIFY, RAISE, DUMP
 import utl_dump as ud
 from utl_config import config
 
+def sleep(x):
+    uw.sleep(x)
 
 ##########################################################
 #region - Coherence Environment 
@@ -239,9 +241,9 @@ class AppEnv:
                 try:
                     app = Application(backend="uia").connect(path='Coherence.exe')
                     utl.process_kill(app.top_window())     
-                    sleep(2)
                 except:
                     break
+            sleep(2)
         op = utl.get_conn_events(conn, 'coh')
         if not op:
             return
@@ -265,86 +267,10 @@ class AppEnv:
                     pass
                 VERIFY(not exist, 'Close Session Failed. Process still Exists')
 
-class Settings:
-    #private
-    pane = None
-    list = None
-
-    def open(self):
-        butt = uw.get_child_chk(app.wtop, name='Settings', ctrl_type='Button', deep=4)          # Settings gia aperto se New Wsp
-        uw.win_click(butt)
-
-        self.pane = uw.get_child_chk(app.wtop, name='Settings', ctrl_type='Pane', deep=3)
-        self.list = uw.get_child_chk(self.pane, automation_id='103', ctrl_type='List', deep=3)
-
-    def close(self):
-        butt = uw.get_child_chk(self.pane, name='OK', ctrl_type='Button', deep=3)
-        uw.win_click(butt)
-    
-    def set_platform(self, host, port, user, passwd, save_bw):
-        edit = uw.get_child_chk(self.pane, name='Primary', ctrl_type='Edit', deep=1)
-        uw.edit_set(edit, host)
-        edit = uw.get_child_chk(self.pane, name='Port', ctrl_type='Edit', deep=1)
-        uw.edit_set(edit, port)
-        edit = uw.get_child_chk(self.pane, name='User name', ctrl_type='Edit', deep=3)
-        uw.edit_set(edit, user)
-        edit = uw.get_child_chk(self.pane, automation_id='11303', ctrl_type='Edit', deep=3)
-        uw.edit_set(edit, passwd)
-        
-        if save_bw:
-            butt = uw.get_child_chk(self.pane, name='Bandwidth Saving', ctrl_type='CheckBox', deep=3)
-            if not uw.butt_is_checked(butt):
-                uw.win_click(butt)
-
-    def metamarket(self, trace_lev):
-        uw.list_select(self.list, "MetaMarket")
-        trace = uw.get_child_chk(self.pane, name='Trace Level', ctrl_type='Custom', deep=3)
-        uw.win_click(trace, mode='combo')
-        #sleep(.25)
-        #ud.dump_uia_tree(env.wtop)         # non c'e' lista popup
-        uw.hide_select(-1)                  # Todo Control Inside
-        keyboard.press("enter")             # Confirm Selection
-        sleep(.25)
-
-    def workspace(self, trace_lev):
-        uw.list_select(self.list, "Workspace")
-        combo = uw.get_child_chk(self.pane, automation_id='11347', ctrl_type='ComboBox', deep=3)         # Todo: Input Per Valore
-        uw.win_click(combo)
-        keyboard.press("end")
-        keyboard.press("enter")
-        combo = uw.get_child_chk(self.pane, automation_id='11345', ctrl_type='ComboBox', deep=3)
-        uw.win_click(combo)
-        keyboard.press("end")
-        keyboard.press("enter")
-
-class BondDlg:
-    #private
-    dlg = None
-
-    def __init__(self, rfqid=''):
-        self.dlg_rfq = uw.get_child_chk(app.wtop, name=r"RFQ Outright \[CANDEAL\/BOND\] \[\d+\]", ctrl_type='Pane', deep=1, use_re=1)  
-   
-    def press(self, but_name):
-        butt = uw.get_child_chk(self.dlg_rfq, name=but_name, ctrl_type='Button', deep=1)  
-        uw.win_click(butt)
-
 app = AppEnv()              # class singleton
 #endregion
 
 
-##########################################################
-# Others
 
-def sleep(sec):
-    opt_speed = config.get('opt.speed')
-    if opt_speed:
-        speed = float(opt_speed)/100  
-    else:
-        speed=1
-    
-    time.sleep(sec/speed)
-
-
-if __name__ == '__main__':
-    test_config.load(r'.\utils\test\test_cd_rfq.json')
-    print(config('coh.addin'))
+#if __name__ == '__main__':
+#    print(config('coh.addin'))

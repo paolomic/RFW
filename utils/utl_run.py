@@ -3,8 +3,8 @@ from utl_config import config
 from utl_win import sleep, ROBOT_RES
 from utl_verifier import VERIFY, RAISE, DUMP
 
-from utl_app import app, Settings, BondDlg
-from utl_web import wapp, WebTable, WebBondDlg
+from utl_app import app
+from utl_web import wapp
 
 import utl as utl
 

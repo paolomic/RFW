@@ -16,8 +16,8 @@ sys.path.append(_new_path)
 
 import utl as utl
 from utl_config import config
-from utl_app import app, Settings, BondDlg
-from utl_web import wapp, WebTable, WebBondDlg
+from utl_app import app
+from utl_web import wapp
 from utl_verifier import VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
 import utl_run as ur
@@ -26,6 +26,10 @@ import utl_win as uw
 import utl_log as ul
 import utl_grid as ug
 import utl_dump as ud
+
+from pg_settings import PageSettings
+from dg_rfq_bond import DlgRfqBond
+from wdg_rfq_bond import WebDlgRfqBond
 
 #endregion
 
@@ -47,7 +51,7 @@ def do_coh_start_dialog(arg):
     #app.connection(start=False)             # se riuso il wsp stacco la conn
         
 def do_coh_setting_init(arg):
-    setting_dlg = Settings()
+    setting_dlg = PageSettings()
     setting_dlg.open()
     ### Connection  - Disable se connection Ready
     setting_dlg.set_platform(config.get('coh.primary'), config.get('coh.port'), 
@@ -68,7 +72,7 @@ def do_coh_prepare_session(arg):
     do_coh_start_connections(arg)
 
 def do_coh_reply(arg):
-    dlg_rfq = BondDlg()
+    dlg_rfq = DlgRfqBond()
     utl.sleep_progress(20)  # suspance ...
     dlg_rfq.press('Done')
 
@@ -90,7 +94,7 @@ def do_web_open_rfq(arg):
     sleep(1.5)                                              # new windows opening - todo smart_wait ?
 
 def do_web_send_rfq(arg):
-    rfq = WebBondDlg()
+    rfq = WebDlgRfqBond()
     rfq.set_combo('My offer')
     rfq.set_price(config.get('web.price'))
     rfq.set_qty(config.get('web.qty'))
@@ -100,7 +104,7 @@ def do_web_send_rfq(arg):
     sleep(1)
 
 def do_web_manage_rfq(arg):
-    dlg_rfq = WebBondDlg()
+    dlg_rfq = WebDlgRfqBond()
 
     while dlg_rfq.is_live():
         str_time = dlg_rfq.get_time()
@@ -154,6 +158,6 @@ if __name__ == '__main__':
     if (select==3):
         #ur.terminate_sessions()
         #print(robot_run('do_prepare_test', '', cfg_file, '', timeout=33) )
-        print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=22) )
+        print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=66) )
         #print(robot_run('do_web_login_session', '', cfg_file, '', timeout=233) )
 

@@ -28,8 +28,15 @@ WIN_BUTT_STATE_CHECKED          = (1<<4)
 ##########################################################
 #region
 
-def sleep(x):
-    ua.sleep(x)
+def sleep(sec):
+    opt_speed = config.get('opt.speed')
+    if opt_speed:
+        speed = float(opt_speed)/100  
+    else:
+        speed=1
+    
+    time.sleep(sec/speed)
+
 
 def is_array(a):
     if isinstance(a, (list, tuple)):
