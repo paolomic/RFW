@@ -184,9 +184,7 @@ def robot_run_2(func: callable, arg: str, cfg_file, conn='', timeout=0):
         if timeout_thread:
             if run_state.get() == RS_TIMEOUT:
                 excp = 'Test Timeout Detected - Process Interrupted: ' + excp
-            else:
-                if timeout_thread:
-                    run_state.stop_event.set()
+            run_state.stop_event.set()
         DUMP(excp)
 
 #endregion
