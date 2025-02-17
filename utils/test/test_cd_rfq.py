@@ -152,7 +152,7 @@ if __name__ == '__main__':
         do_web_manage_rfq('')
         #do_web_login_session('')
     if (select==3):
-        print(robot_run('do_prepare_test', '', cfg_file, '', timeout=0) )
-        #print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=11) )
+        #print(robot_run('do_prepare_test', '', cfg_file, '', timeout=20) )
+        print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=11) )
         #print(robot_run('do_web_login_session', '', cfg_file, '', timeout=233) )
 

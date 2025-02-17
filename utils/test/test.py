@@ -39,7 +39,6 @@ def exec_intime(func, seconds, *args, **kwargs):
 
     # Se il processo è ancora attivo, significa che il timeout è scaduto
     if process.is_alive():
-        # Terminiamo il processo in modo forzato
         process.terminate()
         process.join(timeout=1)  # Aspettiamo un po' per dare tempo al processo di terminare
         if process.is_alive():

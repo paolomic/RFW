@@ -50,11 +50,11 @@ class WebAppEnv:
         try:
             #ud.dump_uia_tree(brw, max_depth=1)                
             doc = uw.get_child_chk(main, name='CanDeal Evolution', ctrl_type='Document')   # main page
-            print(f'doc:{doc} logged')
+            #print(f'doc:{doc}')
         except:
             ud.dump_uia_tree(main, max_depth=3)                      # PATCH - MISTERO atrimenti non trova il doc
             doc = uw.get_child_chk(main, ctrl_type='Document')       # login page
-            print(f'doc:{doc} loggin')
+            #print(f'doc:{doc}')
         try:
             pass
             # todo verifica unicita
@@ -67,20 +67,22 @@ class WebAppEnv:
         self.doc = doc
 
     def manage_conn(self, evt, conn):
-        if evt=='start':
-            pass
-        elif evt=='exit':
-            pass
-        elif evt=='terminate':
+        if evt=='terminate':
             print('Terminate: Web App Browsers')
             to = utl.TimeOut(10)
             while not to.expired():
-                main = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)
+                main = uw.get_main_wnd('CanDeal Evolution - Google Chrome.*', use_re=1)
                 if main:
-                    utl.process_kill(main)
+                    uw.win_close(main)
+                    #utl.process_kill(main)         # forced closure, ma chiude TUTTI i chrome - hanno lo stesso pid ?
                     uw.sleep(2)
                 else:
                     break
+        elif evt=='start':
+            pass
+        elif evt=='exit':
+            pass
+        
             
     def hang_rfq(self, url=None, move=True):
         pass

@@ -21,7 +21,7 @@ def terminate_sessions():
 ####################################################################
 #region - Base Mode: Simple Execution
 
-def robot_run_1(func, arg:str, cfg_file, conn='', timeout=0):
+def robot_run(func: callable, arg:str, cfg_file, conn='', timeout=0):
     def manage_conn(event):
         app.manage_conn(event, conn)
         wapp.manage_conn(event, conn)
@@ -91,7 +91,7 @@ def exec_intime(seconds, func, *args, **kwargs):
 
 
 
-def robot_run_1(func, arg:str, cfg_file, conn='', timeout=0):
+def robot_run_1(func:callable, arg:str, cfg_file, conn='', timeout=0):
     def manage_conn(event):
         app.manage_conn(event, conn)
         wapp.manage_conn(event, conn)
@@ -115,25 +115,36 @@ def robot_run_1(func, arg:str, cfg_file, conn='', timeout=0):
 ####################################################################
 #region - Mode 2: Timeout Controller in Child Thread
 
+RS_NONE =       'none'
+RS_START =      'start'
+RS_DONE =       'done'      # execution completed, ok or no
+RS_TIMEOUT =    'timeout'   # execution over timeout interrupted
+
+
 class RunState:
-    _run_state = None
+    def __init__(self):
+        self._run_state = RS_NONE
+        self._lock = threading.Lock()       # ME
+
     def set(self, state):
-        self._run_state = state
+        with self._lock:
+            self._run_state = state
+
     def get(self):
-        return self._run_state
+        with self._lock:
+            return self._run_state
 
 run_state = RunState()
     
 def timeout_controller(timeout):
     to = utl.TimeOut(timeout)
     while not to.expired():
-         sleep(0.5)
-         if run_state.get()=='done':
+         sleep(0.250)
+         if run_state.get()==RS_DONE:
             return
-
-    if not run_state.get():
-        print('Test Timeout - Test too slow')
-        run_state.set('timeout')
+    if run_state.get() != RS_DONE:
+        print('Test Execution Timeout')
+        run_state.set(RS_TIMEOUT)
         terminate_sessions()
 
 def start_controller(timeout):
@@ -147,31 +158,30 @@ def start_controller(timeout):
 def end_controller(timeout, timeout_thread):
     if not timeout:
         return None
-    #stop_evt.set()
-    timeout_thread.join() 
+    #timeout_thread.join() 
 
-def robot_run_2(func, arg:str, cfg_file, conn='', timeout=0):
+def robot_run_2(func:callable, arg:str, cfg_file, conn='', timeout=0):
     def manage_conn(event):
         app.manage_conn(event, conn)
         wapp.manage_conn(event, conn)
     try:
-        run_state.set(None)
+        run_state.set(RS_START)
         config.load(cfg_file)
         manage_conn('start')
         timeout_thread  = start_controller(timeout)
         result = func(arg)
         manage_conn('exit')
-        end_controller(timeout, timeout_thread )
-        if (run_state.get()=='timeout'):        
-            RAISE('Test Execution too Slow')
+        #end_controller(timeout, timeout_thread )
+        if (run_state.get()==RS_TIMEOUT):        
+            RAISE('Test Execution takes more than {timeout} seconds.')
         else:
-            run_state.set('done')
+            run_state.set(RS_DONE)
         
         return ROBOT_RES('ok', result)
     except Exception as e:
         excp = str(e)
         #print (f'runstate {run_state.get()}')
-        if (run_state.get()=='timeout'):
+        if (run_state.get()==RS_TIMEOUT):
             excp = 'Test Timeout Detected - Process Interrupted: ' + excp
         DUMP(excp)
 

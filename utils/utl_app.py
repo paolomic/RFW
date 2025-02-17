@@ -233,7 +233,7 @@ class AppEnv:
 
     def manage_conn(self, evt, conn):
         if evt=='terminate':
-            print('Terminate: All Coherence instance')
+            print('Terminate: All Coherence instances')
             to = utl.TimeOut(10)
             while not to.expired():
                 try:
@@ -282,7 +282,7 @@ class Settings:
         uw.win_click(butt)
     
     def set_platform(self, host, port, user, passwd, save_bw):
-        edit = uw.get_child_chk(self.pane, name='Host', ctrl_type='Edit', deep=1)
+        edit = uw.get_child_chk(self.pane, name='Primary', ctrl_type='Edit', deep=1)
         uw.edit_set(edit, host)
         edit = uw.get_child_chk(self.pane, name='Port', ctrl_type='Edit', deep=1)
         uw.edit_set(edit, port)
