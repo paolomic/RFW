@@ -183,6 +183,8 @@ def robot_run_2(func:callable, arg:str, cfg_file, conn='', timeout=0):
         #print (f'runstate {run_state.get()}')
         if (run_state.get()==RS_TIMEOUT):
             excp = 'Test Timeout Detected - Process Interrupted: ' + excp
+        else:
+            run_state.set(RS_DONE)
         DUMP(excp)
 
 
