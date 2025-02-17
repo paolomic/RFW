@@ -75,9 +75,9 @@ class WebAppEnv:
                 if main:
                     uw.win_close(main)
                     #utl.process_kill(main)         # forced closure, ma chiude TUTTI i chrome - hanno lo stesso pid ?
-                    uw.sleep(2)
                 else:
                     break
+            uw.sleep(1)
         elif evt=='start':
             pass
         elif evt=='exit':

@@ -203,8 +203,6 @@ class ThreadTimeout(BaseException):
 
 def _async_raise(tid, exctype, message=None):
     """Raises an exception in the specified thread"""
-    if message:
-        exctype.message = message  # Set message as class attribute
     ret = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), ctypes.py_object(exctype))
     if ret == 0:
         raise ValueError("Thread ID not valid")
@@ -224,47 +222,44 @@ class TimeoutController:
         
         if is_timeout:
             print('Test Execution Timeout')
-            _async_raise(self.main_thread_id, ThreadTimeout)  # Pass the class, not an instance
+            _async_raise(self.main_thread_id, ThreadTimeout)
 
     def start(self):
         self.thread = threading.Thread(target=self.controller)
         self.thread.daemon = True
         self.thread.start()
 
+    def stop(self):
+        self.stop_event.set()
+
 def robot_run_3(func: callable, arg: str, cfg_file, conn='', timeout=0):
     def manage_conn(event):
         app.manage_conn(event, conn)
         wapp.manage_conn(event, conn)
 
-    timeout_controller = None
+    controller = None
 
-    def start_controller():
-        if timeout > 0:
-            timeout_controller = TimeoutController(timeout)
-            timeout_controller.main_thread_id = threading.main_thread().ident
-            timeout_controller.start()
-            
-            
-    def close_controller():
-        if timeout > 0 and timeout_controller:
-            timeout_controller.stop_event.set()
     try:
-        start_controller()
+        if timeout > 0:
+            controller = TimeoutController(timeout)
+            controller.main_thread_id = threading.main_thread().ident
+            controller.start()
+
         config.load(cfg_file)
         manage_conn('start')
         result = func(arg)
         manage_conn('exit')
-        close_controller()
+        
         return ROBOT_RES('ok', result)
 
-    except ThreadTimeout as e:
+    except ThreadTimeout:
         excp = f"Execution Timeout {timeout} seconds reached"
         terminate_sessions()    # All Suite abort
-        close_controller()
         DUMP(excp)
 
     except Exception as e:
-        excp = str(e)
-        close_controller()
-        DUMP(excp)
-        
+        DUMP(str(e))
+
+    finally:
+        if controller:
+            controller.stop()
