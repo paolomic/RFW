@@ -14,6 +14,7 @@ from pathlib import Path
 _new_path = str(Path(__file__).parent.parent)
 sys.path.append(_new_path) 
 
+# util modules
 import utl as utl
 from utl_config import config
 from utl_app import app
@@ -21,15 +22,15 @@ from utl_web import wapp
 from utl_verifier import VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
 import utl_run as ur
-
 import utl_win as uw
 import utl_log as ul
 import utl_grid as ug
 import utl_dump as ud
 
-from pg_settings import PageSettings
-from dg_rfq_bond import DlgRfqBond
-from wdg_rfq_bond import WebDlgRfqBond
+# page modules
+from page_console           import PageSettings
+from page_addin_sellside    import DlgRfqBond
+from page_web               import WebDlgRfqBond
 
 #endregion
 
@@ -157,7 +158,7 @@ if __name__ == '__main__':
         #do_web_login_session('')
     if (select==3):
         #ur.terminate_sessions()
-        #print(robot_run('do_prepare_test', '', cfg_file, '', timeout=33) )
-        print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=66) )
+        print(robot_run('do_prepare_test', '', cfg_file, '', timeout=30) )
+        #print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=66) )
         #print(robot_run('do_web_login_session', '', cfg_file, '', timeout=233) )
 

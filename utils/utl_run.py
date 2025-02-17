@@ -14,7 +14,6 @@ import utl as utl
 def terminate_sessions():
     app.manage_conn('terminate', 'coh:all')
     wapp.manage_conn('terminate', 'web:all')
-
 #endregion
 
 
@@ -39,7 +38,7 @@ def robot_run(func: callable, arg:str, cfg_file, conn='', timeout=0):
 #endregion
 
 ####################################################################
-#region - Mode 1: Execution in child Thread 
+#region - Mode #1: Execution in child Thread 
 
 import threading
 
@@ -115,7 +114,7 @@ def robot_run_1(func:callable, arg:str, cfg_file, conn='', timeout=0):
 #endregion
 
 ####################################################################
-#region - Mode 2: Timeout Controller in Child Thread
+#region - Mode #2: Timeout Controller in Child Thread
 
 import threading
 from time import sleep
@@ -192,20 +191,17 @@ def robot_run_2(func: callable, arg: str, cfg_file, conn='', timeout=0):
 
 #endregion
 
-
 ####################################################################
-#region - Mode 3: Async Exception: Controller to Main Thread
+#region - Mode #3: Async Exception Raise: Controller to Main Thread
 
 import threading
 import ctypes
 from time import sleep
 
 class ThreadTimeout(BaseException):
-    """Custom exception for thread timeout"""
     pass
 
 def _async_raise(tid, exctype, message=None):
-    """Raises an exception in the specified thread"""
     ret = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), ctypes.py_object(exctype))
     if ret == 0:
         raise ValueError("Thread ID not valid")
@@ -214,11 +210,12 @@ def _async_raise(tid, exctype, message=None):
         raise SystemError("PyThreadState_SetAsyncExc Fail")
 
 class TimeoutController:
-    def __init__(self, timeout):
+    def __init__(self, timeout, thread_id):
         self.timeout = timeout
-        self.main_thread_id = None
+        self.main_thread_id = thread_id
         self.stop_event = threading.Event()
         self.thread = None
+        self.start()
         
     def controller(self):
         is_timeout = not self.stop_event.wait(self.timeout)
@@ -244,26 +241,23 @@ def robot_run_3(func: callable, arg: str, cfg_file, conn='', timeout=0):
 
     try:
         if timeout > 0:
-            controller = TimeoutController(timeout)
-            controller.main_thread_id = threading.main_thread().ident
-            controller.start()
-
+            controller = TimeoutController(timeout, threading.main_thread().ident)
+            
         config.load(cfg_file)
         manage_conn('start')
         result = func(arg)
         manage_conn('exit')
-        
         return ROBOT_RES('ok', result)
-
-    except ThreadTimeout:
-        info = f"Execution Timeout {timeout} seconds reached"
-        terminate_sessions()    # All Suite abort
-
+    except ThreadTimeout:                           # non si riesce ad accorparele exception
+        exc_mess = f"Execution Timeout {timeout} seconds reached"
+        terminate_sessions()                        # Full Suite abort
+        DUMP(exc_mess)
+        return ROBOT_RES('no', exc_mess)   
     except Exception as e:
-        info = str(e)
-
-    finally:
+        exc_mess = str(e)
+        DUMP(exc_mess)
+        return ROBOT_RES('no', exc_mess)
+    finally:                                        # viene eseguio sempre, prima di ritornare
         if controller:
             controller.stop()
-        DUMP(info)
-        return ROBOT_RES('ko', info)
+        

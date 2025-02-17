@@ -2,81 +2,72 @@ import multiprocessing
 import time
 import os
 
-class TimeoutError(Exception):
-    pass
+def test1(arg):
+    print('enter1')
+    time.sleep(10)  # Simula un'operazione lunga
+    print('exit1')
 
-# Funzione globale per eseguire la funzione target in un processo separato
-def _run_function(queue, func, args, kwargs):
+def test2(arg):
+    print('enter2')
+    time.sleep(5)  # Simula un'operazione lunga
+    print('exit2')
+
+def target(queue, func, arg):
+    """Funzione eseguita nel processo figlio."""
     try:
-        result = func(*args, **kwargs)
-        queue.put(result)
+        result = func(arg)
+        queue.put((True, result))
     except Exception as e:
-        queue.put(e)
+        queue.put((False, str(e)))
 
-def exec_intime(func, seconds, *args, **kwargs):
-    """
-    Esegue una funzione con un timeout specificato.
-
-    :param func: La funzione da eseguire.
-    :param seconds: Il timeout in secondi.
-    :param args: Argomenti posizionali da passare alla funzione.
-    :param kwargs: Argomenti keyword da passare alla funzione.
-    :return: Il risultato della funzione se completata in tempo.
-    :raises TimeoutError: Se la funzione non completa entro il timeout.
-    """
-    # Creiamo una coda per comunicare il risultato
+def run_with_timeout(func, arg, timeout):
+    """Esegue la funzione in un processo separato con un timeout."""
     queue = multiprocessing.Queue()
-
-    # Creiamo un processo per eseguire la funzione
-    process = multiprocessing.Process(
-        target=_run_function,
-        args=(queue, func, args, kwargs)
-    )
+    process = multiprocessing.Process(target=target, args=(queue, func, arg))
     process.start()
+    process.join(timeout)  # Attende il timeout
 
-    # Attendiamo che il processo termini entro il timeout
-    process.join(seconds)
-
-    # Se il processo è ancora attivo, significa che il timeout è scaduto
     if process.is_alive():
+        # Se il processo è ancora in esecuzione, termina forzatamente
         process.terminate()
-        process.join(timeout=1)  # Aspettiamo un po' per dare tempo al processo di terminare
-        if process.is_alive():
-            # Se il processo è ancora attivo, usiamo un metodo più aggressivo
-            process.kill()
-            process.join()
-        raise TimeoutError(f"Function {func.__name__} timed out after {seconds} seconds")
-
-    # Otteniamo il risultato dalla coda
-    if not queue.empty():
-        result = queue.get()
-        if isinstance(result, Exception):
-            raise result
-        return result
+        process.join()
+        raise TimeoutError(f"Timeout: la funzione '{func.__name__}' ha superato il tempo massimo di {timeout} secondi")
     else:
-        raise TimeoutError(f"Function {func.__name__} did not return any result")
+        # Se il processo è terminato, recupera il risultato
+        if not queue.empty():
+            success, result = queue.get()
+            if success:
+                return result
+            else:
+                raise Exception(result)
+        else:
+            raise Exception("Errore: nessun risultato disponibile")
 
-# Esempio di utilizzo della funzione
-def test1():
-    time.sleep(10)  # Simula un'operazione che richiede molto tempo
-    print("Test1 completato")
-    return "Successo test1"
+def robot_run(fun_name: str, arg: str, conn='', timeout=0):
+    try:
+        func = globals().get(fun_name)
+        if not func:
+            raise ValueError(f"Funzione '{fun_name}' non trovata.")
 
-def test2():
-    time.sleep(1)  # Simula un'operazione che richiede poco tempo
-    print("Test2 completato")
-    return "Successo test2"
+        if timeout > 0:
+            result = run_with_timeout(func, arg, timeout)
+        else:
+            result = func(arg)
+        return result
+    except Exception as e:
+        excp = str(e)
+        print(f'exception {excp}')
 
 if __name__ == '__main__':
     # Esecuzione dei test
     try:
-        print(exec_intime(test1, 5))  # Timeout di 5 secondi
-    except TimeoutError as e:
+        print("Esecuzione di test1 con timeout di 3 secondi:")
+        robot_run('test1', '', '', 3)  # Timeout di 3 secondi
+    except Exception as e:
         print(e)
-        os._exit(1)  # Termina immediatamente il processo corrente
 
     try:
-        print(exec_intime(test2, 3))  # Timeout di 3 secondi
-    except TimeoutError as e:
+        print("\nEsecuzione di test2 con timeout di 3 secondi:")
+        robot_run('test2', '', '', 3)  # Timeout di 3 secondi
+    except Exception as e:
         print(e)
-        os._exit(1)  # Termina immediatamente il processo corrente
