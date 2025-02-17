@@ -115,16 +115,19 @@ def robot_run_1(func:callable, arg:str, cfg_file, conn='', timeout=0):
 ####################################################################
 #region - Mode 2: Timeout Controller in Child Thread
 
-RS_NONE =       'none'
-RS_START =      'start'
-RS_DONE =       'done'      # execution completed, ok or no
-RS_TIMEOUT =    'timeout'   # execution over timeout interrupted
+import threading
+from time import sleep
 
+RS_NONE =   'none'
+RS_START =  'start'
+RS_DONE =   'done'
+RS_TIMEOUT = 'timeout'
 
 class RunState:
     def __init__(self):
         self._run_state = RS_NONE
-        self._lock = threading.Lock()       # ME
+        self._lock = threading.Lock()
+        self.stop_event = threading.Event()
 
     def set(self, state):
         with self._lock:
@@ -134,58 +137,56 @@ class RunState:
         with self._lock:
             return self._run_state
 
-run_state = RunState()
+    #def request_stop(self):
+    #    self.stop_event.set()
+    #    self.set(RS_TIMEOUT)
+
+def timeout_controller(run_state: RunState, timeout: float):
+    # Aspetta che l'evento di stop sia settato o che scada il timeout
+    is_timeout = not run_state.stop_event.wait(timeout)
     
-def timeout_controller(timeout):
-    to = utl.TimeOut(timeout)
-    while not to.expired():
-         sleep(0.250)
-         if run_state.get()==RS_DONE:
-            return
-    if run_state.get() != RS_DONE:
+    if is_timeout and run_state.get() != RS_DONE:
         print('Test Execution Timeout')
         run_state.set(RS_TIMEOUT)
         terminate_sessions()
 
-def start_controller(timeout):
-    if not timeout:
-        return None
-    timeout_thread = threading.Thread(target=timeout_controller, args=(timeout,))
-    timeout_thread.start()
-    #stop_event = threading.Event()
-    return timeout_thread
+def robot_run_2(func: callable, arg: str, cfg_file, conn='', timeout=0):
+    run_state = RunState()
+    timeout_thread = None
 
-def end_controller(timeout, timeout_thread):
-    if not timeout:
-        return None
-    #timeout_thread.join() 
-
-def robot_run_2(func:callable, arg:str, cfg_file, conn='', timeout=0):
     def manage_conn(event):
         app.manage_conn(event, conn)
         wapp.manage_conn(event, conn)
+
     try:
         run_state.set(RS_START)
         config.load(cfg_file)
         manage_conn('start')
-        timeout_thread  = start_controller(timeout)
+
+        if timeout > 0:
+            timeout_thread = threading.Thread( target=timeout_controller, args=(run_state, timeout) )
+            timeout_thread.daemon = True            # Importante: Il thread terminerà quando il main thread termina
+            timeout_thread.start()
+
         result = func(arg)
         manage_conn('exit')
-        #end_controller(timeout, timeout_thread )
-        if (run_state.get()==RS_TIMEOUT):        
-            RAISE('Test Execution takes more than {timeout} seconds.')
-        else:
+        
+        if timeout_thread:
+            if run_state.get() == RS_TIMEOUT:
+                RAISE(f'Test Execution takes more than {timeout} seconds.')
             run_state.set(RS_DONE)
+            run_state.stop_event.set()  # Segnala al controller di terminare
         
         return ROBOT_RES('ok', result)
+
     except Exception as e:
         excp = str(e)
-        #print (f'runstate {run_state.get()}')
-        if (run_state.get()==RS_TIMEOUT):
-            excp = 'Test Timeout Detected - Process Interrupted: ' + excp
-        else:
-            run_state.set(RS_DONE)
+        if timeout_thread:
+            if run_state.get() == RS_TIMEOUT:
+                excp = 'Test Timeout Detected - Process Interrupted: ' + excp
+            else:
+                if timeout_thread:
+                    run_state.stop_event.set()
         DUMP(excp)
-
 
 #endregion
