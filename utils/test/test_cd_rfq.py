@@ -20,6 +20,7 @@ from utl_app import app, Settings, BondDlg
 from utl_web import wapp, WebTable, WebBondDlg
 from utl_verifier import VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
+import utl_run as ur
 
 import utl_win as uw
 import utl_log as ul
@@ -27,6 +28,10 @@ import utl_grid as ug
 import utl_dump as ud
 
 #endregion
+
+def do_prepare_test(arg):
+    ur.terminate_sessions()
+    sleep(1)
 
 ####################################################################
 #region - Robot Coherence 
@@ -125,25 +130,8 @@ def do_web_manage_rfq(arg):
 
 
 def robot_run(fun_name:str, arg:str, cfg_file, conn='', timeout=0):
-    def manage_conn(event):
-        app.manage_conn(event, conn)
-        wapp.manage_conn(event, conn)
-    try:
-        config.load(cfg_file)
-        manage_conn('start')
-        func = globals().get(fun_name)
-        if timeout:
-            result = utl.exec_intime(timeout, func, arg)            # forked execution - time check - to test
-        else:
-            result = func(arg)
-        manage_conn('exit')
-        return ROBOT_RES('ok', result)
-    except Exception as e:
-        excp = str(e)
-        DUMP(excp)
-        if timeout and utl.exec_intime_tag in excp:
-            manage_conn('terminate')                                  # chiude processi 
-        return ROBOT_RES('no', excp) 
+    func = globals().get(fun_name)
+    return ur.robot_run_2(func, arg, cfg_file, conn, timeout)
         
     
 ######################################################
@@ -164,6 +152,7 @@ if __name__ == '__main__':
         do_web_manage_rfq('')
         #do_web_login_session('')
     if (select==3):
-        print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=11) )
-        #print(robot_run('do_web_login_session', '', cfg_file, 'coh:new', timeout=8) )
+        print(robot_run('do_prepare_test', '', cfg_file, '', timeout=0) )
+        #print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=11) )
+        #print(robot_run('do_web_login_session', '', cfg_file, '', timeout=233) )
 

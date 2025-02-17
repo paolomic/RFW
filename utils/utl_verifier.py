@@ -112,6 +112,7 @@ class Verifier:
 
         # Scrivi i dettagli dell'errore nel file di log
         with open(self.log_file, "a") as log_file:
+            log_file.write(f"====================================================================================\n")
             log_file.write(f"=== Error on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===\n")
             log_file.write(f"Error in function '{function_name}' at line {lineno} in file {filename}:\n")
             log_file.write(f"Code: {code_context}\nMessage: {message}\n")

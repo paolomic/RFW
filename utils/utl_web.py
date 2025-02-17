@@ -72,7 +72,7 @@ class WebAppEnv:
         elif evt=='exit':
             pass
         elif evt=='terminate':
-            print('Timeout: Terminate of Web App Browsers')
+            print('Terminate: Web App Browsers')
             to = utl.TimeOut(10)
             while not to.expired():
                 main = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)

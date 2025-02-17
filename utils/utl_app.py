@@ -232,6 +232,16 @@ class AppEnv:
         return done==1
 
     def manage_conn(self, evt, conn):
+        if evt=='terminate':
+            print('Terminate: All Coherence instance')
+            to = utl.TimeOut(10)
+            while not to.expired():
+                try:
+                    app = Application(backend="uia").connect(path='Coherence.exe')
+                    utl.process_kill(app.top_window())     
+                    sleep(2)
+                except:
+                    break
         op = utl.get_conn_events(conn, 'coh')
         if not op:
             return
@@ -254,16 +264,6 @@ class AppEnv:
                 except Exception as e:
                     pass
                 VERIFY(not exist, 'Close Session Failed. Process still Exists')
-        if evt=='terminate':
-            print('Timeout: Terminate All Coherence instance')
-            to = utl.TimeOut(10)
-            while not to.expired():
-                try:
-                    app = Application(backend="uia").connect(path='Coherence.exe')
-                    utl.process_kill(app.top_window())     
-                    sleep(2)
-                except:
-                    break
 
 class Settings:
     #private
