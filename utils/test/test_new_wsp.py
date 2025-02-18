@@ -133,7 +133,7 @@ def do_coh_grid_sample(arg):
     
     # esempio Data Row Search
     print (f'Collected Rows: {grid_mng.get_row_num()}')
-    sel = grid_mng.search_first_match({"Primary Ref.": config.get('coh.sec')})             # piu segmenti con , 
+    sel = grid_mng.search_first_match({"Security Ref.": config.get('coh.sec')})             # piu segmenti con , 
     print(f'Find {1 if sel else 0} Row')
     VERIFY(sel, 'Security not Found')
     

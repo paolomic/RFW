@@ -124,14 +124,14 @@ class AppEnv:
         #VERIFY(not path_wsp_folder.exists(), 'Wsp Folder Exist')
 
     def start_dialog(self, wsp, addins):
-        edit = uw.get_child_chk(app.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
+        edit = uw.get_child_chk(self.wtop, automation_id='12429', ctrl_type='Edit', deep=3)
         uw.edit_set(edit, wsp)
 
-        list = uw.get_child_chk(app.wtop, name='Import From', ctrl_type='List', deep=3)
+        list = uw.get_child_chk(self.wtop, name='Import From', ctrl_type='List', deep=3)
         uw.list_check(list, '*', False)
         uw.list_check(list, addins, True)
 
-        butt = uw.get_child_chk(app.wtop, automation_id='1', ctrl_type='Button', deep=3)
+        butt = uw.get_child_chk(self.wtop, automation_id='1', ctrl_type='Button', deep=3)
         if not config.get('opt.reuse_wsp')=='yes':
             VERIFY(butt.window_text()=='Create', 'Can`t Create New Workspace')
 
@@ -190,20 +190,20 @@ class AppEnv:
             
             addins = ['MetaMarket']                                                     # TODO pass form Robot ?
             for addin in addins:
-                butt = app.select_ribbon_butt(addin, 'Auto Connect')
+                butt = self.select_ribbon_butt(addin, 'Auto Connect')
                 if not uw.butt_is_checked(butt):
                     uw.win_click(butt)
 
-            butt = app.select_ribbon_butt('Home', 'Auto Connect')
+            butt = self.select_ribbon_butt('Home', 'Auto Connect')
             if not uw.butt_is_checked(butt):
                 uw.win_click(butt)
 
-            if app.wait_conn_ready(to_sec=120, to_err_sec=5, delay=2):
+            if self.wait_conn_ready(to_sec=120, to_err_sec=5, delay=2.5):
                 print ('Connection Ready')
             else:
                 RAISE("Connection Fail")
         else:
-            butt = app.select_ribbon_butt('Home', 'Auto Connect')
+            butt = self.select_ribbon_butt('Home', 'Auto Connect')
             if uw.butt_is_checked(butt):
                 uw.win_click(butt)
                 uw.warning_replay('Do you want to disable Auto Connect mode and stop all connections?', 'OK')
@@ -214,20 +214,33 @@ class AppEnv:
         sleep(wait_init)
         done = 0
         print ('Wait Connection Ready...')
-        while (1):
+        to = utl.TimeOut(to_sec)
+        count = 0
+        while not to.expired():
             elaps = (datetime.now()-now).seconds
             if elaps>to_sec:
-                    break
-            cld = uw.get_child_chk(self.st_bar, 'Ready', ctrl_type='Text', verify=False)
+                break
+            if count % 2 == 0:
+                cld = uw.get_child(self.wtop, name='FIXatdl Strategies', ctrl_type='Pane', deep=2)
+                utl.play_sound('success')
+                if cld:
+                    sleep(4)
+                    butt = uw.get_child(cld, name='Close', ctrl_type='Button')
+                    if butt:
+                        utl.play_sound('fail')
+                        uw.win_click(butt)
+            cld = uw.get_child_chk(self.st_bar, name='Ready', ctrl_type='Text', verify=False)
             if cld:
                 done = 1
                 break
             if elaps > to_err_sec:
-                cld = uw.get_child_chk(self.st_bar, 'Failed', ctrl_type='Text', verify=False)
-            if cld:
-                done = 0
-                break
+                cld = uw.get_child_chk(self.st_bar, name='Failed', ctrl_type='Text', verify=False)
+                if cld:
+                    done = 0
+                    break
+            
             sleep(delay)
+            count += 1
         if done:
             sleep(wait_end)
         #utl.play_sound('success' if done else 'fail')
@@ -256,10 +269,10 @@ class AppEnv:
                 VERIFY(self.app and self.wtop, "Hang or New Session Failed")
         if evt=='exit':
             if 'kill' in conn:
-                uw.session_close(app.wtop, wait_init=1, wait_end=1, logoff=True)
+                uw.session_close(self.wtop, wait_init=1, wait_end=1, logoff=True)
                 exist = 0
                 try:
-                    app.hang_app(config.get('coh.path'))
+                    self.hang_app(config.get('coh.path'))
                     exist=1
                 except Exception as e:
                     pass
