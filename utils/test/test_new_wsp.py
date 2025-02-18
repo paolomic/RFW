@@ -57,7 +57,7 @@ def do_coh_setting_init(arg):
     setting_dlg.close()
 
 def do_coh_start_connections(arg):
-    app.connection(start=True, addins = ['MetaMarket'])
+    app.connection(start=True, addins = ['MetaMarket'], timeout=120)
 
 def do_coh_search_security(arg):
     secbr = PageSecurityBrowser(new=1)

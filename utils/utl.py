@@ -43,7 +43,9 @@ class TimeOut():
     def reset(self):
         self.start_time = time.time()
     def expired(self):
-        return time.time() - self.start_time > self.timeout
+        return self.elapsed() > self.timeout
+    def elapsed(self):
+         return time.time() - self.start_time
 
 
 def get_conn_events(input_string, phase_type: str) -> list:

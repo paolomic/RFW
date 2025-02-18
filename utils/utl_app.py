@@ -183,12 +183,11 @@ class AppEnv:
             self.placeholder()
         VERIFY(self.ready(), "Connection Was not Ready by Timeout")
 
-    def connection(self, start=True, addins = []):
+    def connection(self, start=True, addins = [], timeout=120):
         if start:
             if config.get('opt.close_all_pages')=='yes':
                 uw.page_close_all()
-            
-            addins = ['MetaMarket']                                                     # TODO pass form Robot ?
+                                                               # TODO pass form Robot ?
             for addin in addins:
                 butt = self.select_ribbon_butt(addin, 'Auto Connect')
                 if not uw.butt_is_checked(butt):
@@ -198,7 +197,7 @@ class AppEnv:
             if not uw.butt_is_checked(butt):
                 uw.win_click(butt)
 
-            if self.wait_conn_ready(to_sec=120, to_err_sec=5, delay=2.5):
+            if self.wait_conn_ready(tim=120, to_err_sec=5, delay=2.5):
                 print ('Connection Ready')
             else:
                 RAISE("Connection Fail")
@@ -209,38 +208,32 @@ class AppEnv:
                 uw.warning_replay('Do you want to disable Auto Connect mode and stop all connections?', 'OK')
 
 
-    def wait_conn_ready(self, to_sec=30, to_err_sec=5, delay=1, wait_init=0.5, wait_end=0.5):
-        now = datetime.now() 
+    def wait_conn_ready(self, timeout=60, to_err_sec=5, delay=1, wait_init=0.5, wait_end=0.5):
         sleep(wait_init)
         done = 0
         print ('Wait Connection Ready...')
-        to = utl.TimeOut(to_sec)
+        to = utl.TimeOut(timeout)
         count = 0
+        fix_warn = False
         while not to.expired():
-            elaps = (datetime.now()-now).seconds
-            if elaps>to_sec:
-                break
-            if count % 2 == 0:
+            count += 1
+            if not fix_warn and count % 3 == 0:
                 cld = uw.get_child(self.wtop, name='FIXatdl Strategies', ctrl_type='Pane', deep=2)
-                utl.play_sound('success')
                 if cld:
-                    sleep(4)
+                    sleep(3)
                     butt = uw.get_child(cld, name='Close', ctrl_type='Button')
-                    if butt:
-                        utl.play_sound('fail')
-                        uw.win_click(butt)
-            cld = uw.get_child_chk(self.st_bar, name='Ready', ctrl_type='Text', verify=False)
+                    uw.win_click(butt)
+                    fix_warn = True
+            cld = uw.get_child_chk(self.st_bar, name='Ready', ctrl_type='Text', verify=False)           # todo puntare con autid ?
             if cld:
                 done = 1
                 break
-            if elaps > to_err_sec:
+            if to.elapsed() > to_err_sec:
                 cld = uw.get_child_chk(self.st_bar, name='Failed', ctrl_type='Text', verify=False)
                 if cld:
                     done = 0
                     break
-            
             sleep(delay)
-            count += 1
         if done:
             sleep(wait_end)
         #utl.play_sound('success' if done else 'fail')

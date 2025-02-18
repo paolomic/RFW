@@ -63,7 +63,7 @@ def do_coh_setting_init(arg):
     setting_dlg.close()
 
 def do_coh_start_connections(arg):
-    app.connection(start=True, addins = ['MetaMarket'])
+    app.connection(start=True, addins = ['MetaMarket'], timeout=120)
 
 def do_coh_prepare_session(arg):
     do_coh_new_session(arg)
@@ -73,7 +73,7 @@ def do_coh_prepare_session(arg):
 
 def do_coh_reply(arg):
     dlg_rfq = DlgRfqBond()
-    utl.sleep_progress(20)  # suspance ...
+    utl.sleep_progress(10)  # suspance ...
     dlg_rfq.press('Done')
 
 #endregion
@@ -101,7 +101,8 @@ def do_web_send_rfq(arg):
     rfq.set_dealer('RBC')
     rfq.set_dealer('CBMO')
     rfq.send()
-    sleep(1)
+    sleep(10)                                                #smart wait ?
+    VERIFY(rfq.is_live(), 'Rfq Dialog non Stared')
 
 def do_web_manage_rfq(arg):
     dlg_rfq = WebDlgRfqBond()
