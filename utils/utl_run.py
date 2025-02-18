@@ -233,36 +233,31 @@ class TimeoutController:
         self.stop_event.set()
 
 def robot_run_3(func: callable, req:dict, cfg_file:str):
-    def manage_conn(event, conn_coh, conn_web):
-        app.manage_conn(event, conn_coh)
-        wapp.manage_conn(event, conn_web)
-
     controller = None
-
     try:
+        config.load(cfg_file)
         arg = req['arg']
         conn_coh = req['coh']
         conn_web = req['web']
         timeout = eval(req['timeout'])
-        config.load(cfg_file)
-
         if timeout > 0:
             controller = TimeoutController(timeout, threading.main_thread().ident)
-            
-        manage_conn('start', conn_coh, conn_web)
+        app.manage_conn ('start', conn_coh)
+        wapp.manage_conn('start', conn_web)
         result = func(arg)
-        manage_conn('exit', conn_coh, conn_web)
+        app.manage_conn ('exit', conn_coh)
+        wapp.manage_conn('exit', conn_web)
         return ROBOT_RES('ok', result)
-    except ThreadTimeout:                           # non si riesce ad accorparele exception
+    except ThreadTimeout:                                       # non si riesce ad accorparele exception
         exc_mess = f"Execution Timeout {timeout} seconds reached"
-        terminate_sessions()                        # Full Suite abort
+        terminate_sessions()                                    # Full Suite abort
         DUMP(exc_mess)
         return ROBOT_RES('no', exc_mess)   
     except Exception as e:
         exc_mess = str(e)
         DUMP(exc_mess)
         return ROBOT_RES('no', exc_mess)
-    finally:                                        # viene eseguio sempre, prima di ritornare
+    finally:                                                    # viene eseguio sempre, prima di ritornare
         if controller:
             controller.stop()
         

@@ -132,14 +132,11 @@ def do_web_manage_rfq(arg):
 
 # todo: piu sessioni coh
 # todo: smartwait (web)
-        
+
 
 def robot_run(req:dict, cfg_file:str):
-    fun_name = req['fun']
-    func = globals().get(fun_name)
-    return ur.robot_run_3(func, req, cfg_file)             # ha il suo exception handler
+    return ur.robot_run_3(globals().get(req['fun']), req, cfg_file)             # ha il suo exception handler
         
-
 
 ######################################################
 # Main - DEBUG 
