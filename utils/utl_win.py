@@ -115,6 +115,9 @@ def ROBOT_RES(status='ok', info=''):
     sleep(0.3)
     if (info==None):
         info=""
+    
+    utl.play_sound('success' if status=='ok' else 'fail')
+    
     return {
         "status": status,
         'info': info}

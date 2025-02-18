@@ -234,7 +234,7 @@ class AppEnv:
         return done==1
 
     def manage_conn(self, evt, conn):
-        if evt=='terminate':
+        if evt=='terminate' or conn=='terminate':                                # terminate all
             print('Terminate: All Coherence instances')
             to = utl.TimeOut(10)
             while not to.expired():
@@ -244,20 +244,18 @@ class AppEnv:
                 except:
                     break
             sleep(2)
-        op = utl.get_conn_events(conn, 'coh')
-        if not op:
-            return
+
         if evt=='start':
-            if 'new' in op:
+            if 'new' in conn:
                 self.launch_app(config.get('coh.path'))
-            elif 'hang' in op:
+            elif 'hang' in conn:
                 self.hang_app(config.get('coh.path'))
                 self.wtop.set_focus()
 
-            if 'new' in op or 'hang' in op:
+            if 'new' in conn or 'hang' in conn:
                 VERIFY(self.app and self.wtop, "Hang or New Session Failed")
         if evt=='exit':
-            if 'kill' in op:
+            if 'kill' in conn:
                 uw.session_close(app.wtop, wait_init=1, wait_end=1, logoff=True)
                 exist = 0
                 try:

@@ -71,7 +71,7 @@ class WebAppEnv:
         self.doc = doc
 
     def manage_conn(self, evt, conn):
-        if evt=='terminate':
+        if evt=='terminate'  or conn=='terminate':
             print('Terminate: Web App Browsers')
             to = utl.TimeOut(10)
             while not to.expired():
@@ -87,7 +87,6 @@ class WebAppEnv:
         elif evt=='exit':
             pass
         
-            
     def hang_rfq(self, url=None, move=True):
         pass
 
@@ -105,7 +104,7 @@ class WebAppEnv:
         return self.doc
     
     def set_login_user_password(self):
-        edit = uw.get_child_chk(wapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1)
+        edit = uw.get_child_retry(wapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1, timeout=5)
         uw.edit_set(edit, config.get('web.user'))
         edit = uw.get_child_chk(wapp.doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
         uw.edit_set(edit, config.get('web.pass'))

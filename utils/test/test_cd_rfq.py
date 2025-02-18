@@ -61,7 +61,6 @@ def do_coh_setting_init(arg):
     setting_dlg.metamarket('detail')
     setting_dlg.workspace('detail')
     setting_dlg.close()
-    
 
 def do_coh_start_connections(arg):
     app.connection(start=True, addins = ['MetaMarket'])
@@ -134,11 +133,32 @@ def do_web_manage_rfq(arg):
 # todo: smartwait (web)
 
 
-def robot_run(fun_name:str, arg:str, cfg_file, conn='', timeout=0):
-    func = globals().get(fun_name)
-    return ur.robot_run_3(func, arg, cfg_file, conn, timeout)
+def robot_run_old(fun_name:str, arg:dict, cfg_file, conn='', timeout=0):
+    print(arg)
+    #if arg['vino']=='merlot':
+    #    utl.play_sound('success')
+    #func = globals().get(fun_name)
+    #return ur.robot_run_3(func, arg, cfg_file, conn, timeout)
         
+def robot_run(req:dict, cfg_file:str):
+    try:
+        fun_name = req['fun']
+        arg = req['arg']
+        conn_coh = req['coh']
+        conn_web = req['web']
+        timeout = eval(req['timeout'])
+        
+        config.load(cfg_file)
+        func = globals().get(fun_name)
+    except Exception as e:
+        exc_mess = str(e)
+        DUMP(exc_mess)
+        return ROBOT_RES('no', exc_mess)
     
+    return ur.robot_run_3(func, arg, conn_coh, conn_web, timeout)             # ha il suo exception handler
+        
+
+
 ######################################################
 # Main - DEBUG 
 
@@ -157,8 +177,10 @@ if __name__ == '__main__':
         do_web_manage_rfq('')
         #do_web_login_session('')
     if (select==3):
-        #ur.terminate_sessions()
-        print(robot_run('do_prepare_test', '', cfg_file, '', timeout=30) )
+        #req = {'fun':'do_prepare_test','arg':'', 'coh':'terminate', 'web':'terminate','timeout':'60'}
+        #robot_run(req, cfg_file)
+        #print(robot_run('do_prepare_test', '', cfg_file, '', timeout=30) )
         #print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=66) )
         #print(robot_run('do_web_login_session', '', cfg_file, '', timeout=233) )
+        pass
 

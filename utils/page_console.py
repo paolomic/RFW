@@ -30,7 +30,7 @@ class PageSettings:
         uw.win_click(butt)
     
     def set_platform(self, host, port, user, passwd, save_bw):
-        edit = uw.get_child_chk(self.pane, name='Primary', ctrl_type='Edit', deep=1)
+        edit = uw.get_child_chk(self.pane, name=r'[Primary|Host]', ctrl_type='Edit', deep=1, use_re=1)
         uw.edit_set(edit, host)
         edit = uw.get_child_chk(self.pane, name='Port', ctrl_type='Edit', deep=1)
         uw.edit_set(edit, port)

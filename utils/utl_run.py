@@ -232,10 +232,10 @@ class TimeoutController:
     def stop(self):
         self.stop_event.set()
 
-def robot_run_3(func: callable, arg: str, cfg_file, conn='', timeout=0):
+def robot_run_3(func: callable, arg: str, conn_coh='', conn_web='', timeout=0):
     def manage_conn(event):
-        app.manage_conn(event, conn)
-        wapp.manage_conn(event, conn)
+        app.manage_conn(event, conn_coh)
+        wapp.manage_conn(event, conn_web)
 
     controller = None
 
@@ -243,7 +243,6 @@ def robot_run_3(func: callable, arg: str, cfg_file, conn='', timeout=0):
         if timeout > 0:
             controller = TimeoutController(timeout, threading.main_thread().ident)
             
-        config.load(cfg_file)
         manage_conn('start')
         result = func(arg)
         manage_conn('exit')
