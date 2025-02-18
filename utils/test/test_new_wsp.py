@@ -149,10 +149,22 @@ def do_close_test(arg):
 
 ######################################################
 # Generic Caller
-def robot_run(fun_name:str, arg:str, cfg_file, conn='', timeout=0):
-    func = globals().get(fun_name)
-    return ur.robot_run_3(func, arg, cfg_file, conn, timeout)
+def robot_run(req:dict, cfg_file:str):
+    try:
+        fun_name = req['fun']
+        arg = req['arg']
+        conn_coh = req['coh']
+        conn_web = req['web']
+        timeout = eval(req['timeout'])
+        
+        config.load(cfg_file)
+        func = globals().get(fun_name)
+    except Exception as e:
+        exc_mess = str(e)
+        DUMP(exc_mess)
+        return ROBOT_RES('no', exc_mess)
     
+    return ur.robot_run_3(func, arg, conn_coh, conn_web, timeout)       
 ######################################################
 # Main DEBUG 
 
