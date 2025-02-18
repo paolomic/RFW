@@ -133,7 +133,7 @@ def do_coh_grid_sample(arg):
     
     # esempio Data Row Search
     print (f'Collected Rows: {grid_mng.get_row_num()}')
-    sel = grid_mng.search_first_match({"Description": config.get('coh.sec')})             # piu segmenti con , 
+    sel = grid_mng.search_first_match({"Primary Ref.": config.get('coh.sec')})             # piu segmenti con , 
     print(f'Find {1 if sel else 0} Row')
     VERIFY(sel, 'Security not Found')
     
@@ -150,21 +150,10 @@ def do_close_test(arg):
 ######################################################
 # Generic Caller
 def robot_run(req:dict, cfg_file:str):
-    try:
-        fun_name = req['fun']
-        arg = req['arg']
-        conn_coh = req['coh']
-        conn_web = req['web']
-        timeout = eval(req['timeout'])
-        
-        config.load(cfg_file)
-        func = globals().get(fun_name)
-    except Exception as e:
-        exc_mess = str(e)
-        DUMP(exc_mess)
-        return ROBOT_RES('no', exc_mess)
+    fun_name = req['fun']
+    func = globals().get(fun_name)
+    return ur.robot_run_3(func, req, cfg_file)       
     
-    return ur.robot_run_3(func, arg, conn_coh, conn_web, timeout)       
 ######################################################
 # Main DEBUG 
 

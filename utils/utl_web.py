@@ -113,7 +113,7 @@ class WebAppEnv:
         uw.win_click(butt)
         uw.sleep(2)                   # todo - smart wait
         try:
-            wrn = uw.get_child_chk(wapp.doc, name='Notifications popup are disabled')
+            wrn = uw.get_child_retry(wapp.doc, name='Notifications popup are disabled', timeout=3)
             butt = uw.get_child_chk(wrn, name='OK', deep=2)
             uw.win_click(butt)
         except:

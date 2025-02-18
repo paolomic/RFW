@@ -131,31 +131,12 @@ def do_web_manage_rfq(arg):
 
 # todo: piu sessioni coh
 # todo: smartwait (web)
-
-
-def robot_run_old(fun_name:str, arg:dict, cfg_file, conn='', timeout=0):
-    print(arg)
-    #if arg['vino']=='merlot':
-    #    utl.play_sound('success')
-    #func = globals().get(fun_name)
-    #return ur.robot_run_3(func, arg, cfg_file, conn, timeout)
         
+
 def robot_run(req:dict, cfg_file:str):
-    try:
-        fun_name = req['fun']
-        arg = req['arg']
-        conn_coh = req['coh']
-        conn_web = req['web']
-        timeout = eval(req['timeout'])
-        
-        config.load(cfg_file)
-        func = globals().get(fun_name)
-    except Exception as e:
-        exc_mess = str(e)
-        DUMP(exc_mess)
-        return ROBOT_RES('no', exc_mess)
-    
-    return ur.robot_run_3(func, arg, conn_coh, conn_web, timeout)             # ha il suo exception handler
+    fun_name = req['fun']
+    func = globals().get(fun_name)
+    return ur.robot_run_3(func, req, cfg_file)             # ha il suo exception handler
         
 
 

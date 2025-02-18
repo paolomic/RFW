@@ -232,20 +232,26 @@ class TimeoutController:
     def stop(self):
         self.stop_event.set()
 
-def robot_run_3(func: callable, arg: str, conn_coh='', conn_web='', timeout=0):
-    def manage_conn(event):
+def robot_run_3(func: callable, req:dict, cfg_file:str):
+    def manage_conn(event, conn_coh, conn_web):
         app.manage_conn(event, conn_coh)
         wapp.manage_conn(event, conn_web)
 
     controller = None
 
     try:
+        arg = req['arg']
+        conn_coh = req['coh']
+        conn_web = req['web']
+        timeout = eval(req['timeout'])
+        config.load(cfg_file)
+
         if timeout > 0:
             controller = TimeoutController(timeout, threading.main_thread().ident)
             
-        manage_conn('start')
+        manage_conn('start', conn_coh, conn_web)
         result = func(arg)
-        manage_conn('exit')
+        manage_conn('exit', conn_coh, conn_web)
         return ROBOT_RES('ok', result)
     except ThreadTimeout:                           # non si riesce ad accorparele exception
         exc_mess = f"Execution Timeout {timeout} seconds reached"
