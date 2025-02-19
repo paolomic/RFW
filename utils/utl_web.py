@@ -39,16 +39,16 @@ class WebAppEnv:
         subprocess.run(["start", "chrome", "--new-window", self.url], shell=True)
         #utl.play_sound('success')
         uw.sleep(wait_end)
-        self.hang_main()
+        self.hang_main(retry_timeout=5)
         uw.win_maximize(self.main, maximize=False)
         uw.win_move(self.main, 950, 0)
         uw.win_resize(self.main, 1000, 1080)
 
     #@utl.chrono
-    def hang_main(self, url=None, wait_end=1):
+    def hang_main(self, url=None, wait_end=1, retry_timeout=0):
         if url:
             self.init(url)
-        main = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)  
+        main = uw.get_main_wnd_retry('CanDeal Evolution.*Google Chrome.*', use_re=1, retry_timeout=retry_timeout)  
         #@print(f'brw:{brw}')                                      # very long string     
         VERIFY(main, 'browser start fail')
         try:
@@ -130,7 +130,7 @@ class WebAppEnv:
         uw.win_click(butt, wait_end=.5)
 
     def new_rfq(self):
-        butt = uw.get_child_retry(wapp.doc, name='NEW RFQ', ctrl_type='Button', deep=2, timeout=4)  # retry: long timeout web
+        butt = uw.get_child_retry(wapp.doc, name='NEW RFQ', ctrl_type='Button', deep=2, timeout=6)  # retry: long timeout web
         uw.win_click(butt, wait_end=.5)
 
 wapp = WebAppEnv()              # class singleton

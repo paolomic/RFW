@@ -68,7 +68,7 @@ def sleep_progress(sec):
     print('')
 
 #####################################################################
-# timeout execution
+# process kill forced
 
 import ctypes
 import ctypes.wintypes
@@ -94,6 +94,46 @@ def process_kill(win='', pid=None):
     print(f"Kill Done")
 
 
+
+#####################################################################
+# function retry
+
+class RetryContext:
+    def __init__(self, max_seconds=10, interval=2):
+        self.max_seconds = max_seconds
+        self.interval = interval
+    
+    def __call__(self, func, *args, **kwargs):
+        start_time = time.time()
+        end_time = start_time + self.max_seconds
+        
+        result = func(*args, **kwargs)
+        if result is not None:
+            return result
+            
+        while time.time() < end_time:
+            time.sleep(self.interval)
+            result = func(*args, **kwargs)
+            if result is not None:
+                return result
+        
+        return None
+
+def retry_for(max_seconds=10, interval=2):
+    def wrapper(func, *args, **kwargs):
+        context = RetryContext(max_seconds, interval)
+        return context(func, *args, **kwargs)
+    return wrapper
+
 if __name__ == '__main__':
-    play_sound('fail')
-    sleep_progress(4)
+    def test2(x=5, y=5):
+        # Simulazione: ritorna None le prime volte, poi un risultato
+        import random
+        result = None
+        if random.random() < 0.1:
+            result  = x+y
+        print(f'test2 res: {result}')
+        return result
+
+    result = retry_for(10, 2) (test2)
+    print(f'Out res: {result}')

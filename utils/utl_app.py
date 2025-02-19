@@ -197,7 +197,7 @@ class AppEnv:
             if not uw.butt_is_checked(butt):
                 uw.win_click(butt)
 
-            if self.wait_conn_ready(tim=120, to_err_sec=5, delay=2.5):
+            if self.wait_conn_ready(timeout=120, to_err_sec=5, delay=2.5):
                 print ('Connection Ready')
             else:
                 RAISE("Connection Fail")
@@ -212,18 +212,19 @@ class AppEnv:
         sleep(wait_init)
         done = 0
         print ('Wait Connection Ready...')
-        to = utl.TimeOut(timeout)
         count = 0
         fix_warn = False
+        to = utl.TimeOut(timeout)
         while not to.expired():
             count += 1
-            if not fix_warn and count % 3 == 0:
+            if not fix_warn and count % 4 == 0:
                 cld = uw.get_child(self.wtop, name='FIXatdl Strategies', ctrl_type='Pane', deep=2)
                 if cld:
                     sleep(3)
                     butt = uw.get_child(cld, name='Close', ctrl_type='Button')
-                    uw.win_click(butt)
-                    fix_warn = True
+                    if butt:
+                        uw.win_click(butt)
+                        fix_warn = True
             cld = uw.get_child_chk(self.st_bar, name='Ready', ctrl_type='Text', verify=False)           # todo puntare con autid ?
             if cld:
                 done = 1

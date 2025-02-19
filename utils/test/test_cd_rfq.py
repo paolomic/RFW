@@ -101,7 +101,8 @@ def do_web_send_rfq(arg):
     rfq.set_dealer('RBC')
     rfq.set_dealer('CBMO')
     rfq.send()
-    sleep(10)                                                #smart wait ?
+    sleep(10)    
+    rfq = WebDlgRfqBond()                                      # reload trading mode
     VERIFY(rfq.is_live(), 'Rfq Dialog non Stared')
 
 def do_web_manage_rfq(arg):

@@ -648,6 +648,22 @@ def get_main_wnd(name=None, handle=None, pid=None, use_re=False):
         return None
 
 
+def get_main_wnd_retry(name=None, handle=None, pid=None, use_re=False, 
+                       retry_timeout=0, wait_init=0.25,  delay=1, wait_end=0.25):
+    to = utl.TimeOut(retry_timeout)
+    sleep(wait_init)
+    first = 1
+    while first or not to.expired():
+        first = 0
+        wnd = get_main_wnd(name, handle, pid, use_re)
+        if (wnd):
+            sleep(wait_end) 
+            return wnd
+        sleep(delay) 
+    return None
+
+
+
 #  super_fast version
 from typing import Optional, Union
 from ctypes import windll, create_unicode_buffer, sizeof, byref
