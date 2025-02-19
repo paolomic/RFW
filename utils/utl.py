@@ -94,46 +94,95 @@ def process_kill(win='', pid=None):
     print(f"process kill Done")
 
 
-
 #####################################################################
-# function retry
+# function retry #1
+
+#sample:   
+#    result = retry_for(8, 1)(test, 10, 20)    # chiama la test coi suoi arg ripetutamente
 
 class RetryContext:
-    def __init__(self, max_seconds=10, interval=2):
-        self.max_seconds = max_seconds
-        self.interval = interval
+    def __init__(self, timeout=10, delay=2, skip_excp=False):
+        self.timeout = timeout
+        self.delay = delay
+        self.skip_excp = skip_excp
     
     def __call__(self, func, *args, **kwargs):
         start_time = time.time()
-        end_time = start_time + self.max_seconds
+        end_time = start_time + self.timeout
+        attempts = 0
         
-        result = func(*args, **kwargs)
-        if result is not None:
-            return result
-            
-        while time.time() < end_time:
-            time.sleep(self.interval)
+        # Primo tentativo
+        try:
+            attempts += 1
             result = func(*args, **kwargs)
             if result is not None:
                 return result
+        except Exception as e:
+            if not self.skip_excp:
+                raise
+            result = None
         
+        while time.time() < end_time:
+            remaining_time = end_time - time.time()
+            wait_time = min(self.delay, remaining_time)
+            is_last_attempt = (remaining_time - wait_time) < self.delay
+            if wait_time > 0:
+                time.sleep(wait_time)
+            try:
+                attempts += 1
+                result = func(*args, **kwargs)
+                if result is not None:
+                    return result
+            except Exception as e:
+                if is_last_attempt or not self.skip_excp:
+                    raise
+                result = None
         return None
 
-def retry_for(max_seconds=10, interval=2):
+def retry_for(max_seconds=10, interval=2, ignore_exceptions=False):
     def wrapper(func, *args, **kwargs):
-        context = RetryContext(max_seconds, interval)
+        context = RetryContext(max_seconds, interval, ignore_exceptions)
         return context(func, *args, **kwargs)
     return wrapper
 
-if __name__ == '__main__':
-    def test2(x=5, y=5):
-        # Simulazione: ritorna None le prime volte, poi un risultato
-        import random
-        result = None
-        if random.random() < 0.1:
-            result  = x+y
-        print(f'test2 res: {result}')
-        return result
 
-    result = retry_for(10, 2) (test2)
-    print(f'Out res: {result}')
+
+#####################################################################
+# function retry #2
+
+#sample:
+#   test2_retry = retry_for(timeout=10, delay=2, skip_excp=True)(test2)   
+# difinisce test2_retry analoga a test, con in piu arg: _timeout, _delay customizzabili
+
+class RetryContext:
+    def __init__(self, timeout=10, delay=2, skip_excp=False):
+        self.timeout = timeout
+        self.delay = delay
+        self.skip_excp = skip_excp
+    
+    def __call__(self, func):
+        def wrapped(*args, _timeout=None, _delay=None, **kwargs):                   # <== aggiunge 2 arg 
+            timeout = _timeout if _timeout is not None else self.timeout
+            delay = _delay if _delay is not None else self.delay
+
+            start_time = time.time()
+            end_time = start_time + timeout
+            attempt = 0
+
+            while time.time() < end_time:
+                attempt += 1
+                is_last_attempt = time.time() + delay >= end_time
+                try:
+                    result = func(*args, **kwargs)
+                    if result is not None:
+                        return result
+                except Exception as e:
+                    if not self.skip_excp or is_last_attempt:
+                        raise  # Solleva l'eccezione se skip_excp=False o è l'ultimo tentativo
+                time.sleep(delay)
+            return None
+        return wrapped
+
+def retry_for(timeout=10, delay=2, skip_excp=False):
+    return RetryContext(timeout, delay, skip_excp)
+
