@@ -146,25 +146,27 @@ def retry_for(max_seconds=10, interval=2, ignore_exceptions=False):
     return wrapper
 
 
-
 #####################################################################
 # function retry #2
 
 #sample:
-#   test2_retry = retry_for(timeout=10, delay=2, skip_excp=True)(test2)   
-# difinisce test2_retry analoga a test, con in piu arg: _timeout, _delay customizzabili
+#   test_retry = retry_fun(_timeout=10, retry_delay=2, skip_excp=True, wait_init=0.25, wait_end=0.25)(test)   
+# difinisce test_retry analoga a test, con in piu 5 arg cutomizabili
 
 class RetryContext:
-    def __init__(self, timeout=10, delay=2, skip_excp=False):
-        self.timeout = timeout
-        self.delay = delay
+    def __init__(self, retry_timeout=10, retry_delay=2, skip_excp=False, wait_init=0.25, wait_end=0.25):
+        self.timeout = retry_timeout
+        self.delay = retry_delay
         self.skip_excp = skip_excp
+        self.wait_init = wait_init      #rename restr_wait...? can conflict
+        self.wait_end = wait_end
     
     def __call__(self, func):
-        def wrapped(*args, _timeout=None, _delay=None, **kwargs):                   # <== aggiunge 2 arg 
-            timeout = _timeout if _timeout is not None else self.timeout
-            delay = _delay if _delay is not None else self.delay
+        def wrapped(*args, retry_timeout=None, retry_delay=None, **kwargs):                   # <== aggiunge 2 arg 
+            timeout = retry_timeout if retry_timeout is not None else self.timeout
+            delay = retry_delay if retry_delay is not None else self.delay
 
+            time.sleep(self.wait_init)
             start_time = time.time()
             end_time = start_time + timeout
             attempt = 0
@@ -175,6 +177,7 @@ class RetryContext:
                 try:
                     result = func(*args, **kwargs)
                     if result is not None:
+                        time.sleep(self.wait_end)
                         return result
                 except Exception as e:
                     if not self.skip_excp or is_last_attempt:
@@ -183,6 +186,6 @@ class RetryContext:
             return None
         return wrapped
 
-def retry_for(timeout=10, delay=2, skip_excp=False):
-    return RetryContext(timeout, delay, skip_excp)
+def retry_fun(retry_timeout=10, retry_delay=2, skip_excp=False, wait_init=0.25, wait_end=0.25):
+    return RetryContext(retry_timeout, retry_delay, skip_excp, wait_init, wait_end)
 

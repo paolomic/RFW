@@ -647,21 +647,8 @@ def get_main_wnd(name=None, handle=None, pid=None, use_re=False):
         print(f"Error in get_main_wnd: {e}")
         return None
 
-
-def get_main_wnd_retry(name=None, handle=None, pid=None, use_re=False, 
-                       retry_timeout=0, wait_init=0.25,  delay=1, wait_end=0.25):
-    to = utl.TimeOut(retry_timeout)
-    sleep(wait_init)
-    first = 1
-    while first or not to.expired():
-        first = 0
-        wnd = get_main_wnd(name, handle, pid, use_re)
-        if (wnd):
-            sleep(wait_end) 
-            return wnd
-        sleep(delay) 
-    return None
-
+# definisce la fun ---_retry. ci aggiunge 5 args
+get_main_wnd_retry = utl.retry_fun(retry_timeout=5, retry_delay=1, wait_init=0.25, wait_end=0.25)(get_main_wnd)
 
 
 #  super_fast version
