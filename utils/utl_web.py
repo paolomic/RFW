@@ -124,7 +124,7 @@ class WebAppEnv:
        uw.win_click(butt, wait_end=.5)
 
     def filter_set_security(self, sec):
-        combo = uw.get_child_chk(wapp.doc, name='Search Security', ctrl_type='ComboBox', deep=2)  # clear - todo AutomationId
+        combo = uw.get_child_retry(wapp.doc, name='Search Security', ctrl_type='ComboBox', deep=2, timeout=4)  # clear - todo AutomationId
         uw.edit_set(combo, sec, wait_end=.5)
         butt = uw.get_child_retry(wapp.doc, name='', deep=2, timeout=4)        # retry: long timeout web
         uw.win_click(butt, wait_end=.5)

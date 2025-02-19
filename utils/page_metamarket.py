@@ -124,7 +124,7 @@ class DlgNewCareOrder:
 
     def retrieve_orderid(self, mytag, send_time):
         log_path = uw.get_log_path(config.get('coh.wsp'), 'MetaMarket')
-        return ul.GetLogRows(log_path, 'CLIENT_ORDER', 'ComplianceText', mytag, send_time, retry = 10, wait_s = 1)
+        return ul.GetLogRows(log_path, 'CLIENT_ORDER', 'ComplianceText', mytag, send_time, retry = 6, wait_s = 1)
 
     def close(self):
         uw.win_close(self.wnd)     
