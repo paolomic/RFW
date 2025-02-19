@@ -90,7 +90,7 @@ class WebAppEnv:
     def hang_rfq(self, url=None, move=True):
         pass
 
-    def kill_app(self, url=None):
+    def close_app(self, url=None):
         while 1:
             inst = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)  
             if not inst:

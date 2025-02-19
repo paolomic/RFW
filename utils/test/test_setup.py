@@ -88,11 +88,11 @@ def robot_run(fun_name:str, arg:str='', options=[], session='hang'):
            app.start()
         else:
             app.connect()
-        if session=='kill':
+        if session=='close':
             pass
             #uw.session_close(env.wtop, wait_init=1, wait_end=1, logoff=True)
     def verify_session(session):
-        if session=='kill':
+        if session=='close':
             pass
         else:
             VERIFY(app.app and app.wtop, "Hang or New Session Failed")

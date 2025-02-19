@@ -262,7 +262,7 @@ class AppEnv:
             if 'new' in conn or 'hang' in conn:
                 VERIFY(self.app and self.wtop, "Hang or New Session Failed")
         if evt=='exit':
-            if 'kill' in conn:
+            if 'close' in conn:
                 uw.session_close(self.wtop, wait_init=1, wait_end=1, logoff=True)
                 exist = 0
                 try:

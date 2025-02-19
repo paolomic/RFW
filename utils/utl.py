@@ -91,7 +91,7 @@ def process_kill(win='', pid=None):
     # Termina il processo
     ctypes.windll.kernel32.TerminateProcess(handle, -1)
     ctypes.windll.kernel32.CloseHandle(handle)  # Chiudi l'handle del processo
-    print(f"Kill Done")
+    print(f"process kill Done")
 
 
 

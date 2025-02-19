@@ -80,7 +80,7 @@ Grid Operation Sample
 
 Session Close
     [Documentation]     Close Session and Check
-    &{req}              Create Dictionary   fun=do_close_test  arg=   coh=kill   web=-   timeout=120
+    &{req}              Create Dictionary   fun=do_close_test  arg=   coh=close   web=-   timeout=120
     &{result}=          evaluate            test_new_wsp.robot_run(&{req},'${cfg_file}')  
     ${info} =           Set Variable        ${result}[info]
     Should Be Equal As Strings              ${result}[status]     ok
