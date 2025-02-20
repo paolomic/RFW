@@ -527,22 +527,9 @@ def get_child_chk(parent_wnd, name=None, ctrl_type=None, class_name=None, automa
     
     return cld
 
-def get_child_retry(parent_wnd, name=None, ctrl_type=None, class_name=  None, automation_id=None, handle=None, texts=None,
-                         deep=1, use_re=False, use_case=True, visible_only=False, enable_only=True,
-                         timeout=2, wait_init=0.25,  delay=1, wait_end=0.25):
-    
-    to = utl.TimeOut(timeout)
-    sleep(wait_init)
-    while not to.expired():
-        #print (attempt)
-        cld = get_child(parent_wnd, name, ctrl_type, class_name, automation_id, handle, texts,
-                         deep, use_re, use_case, visible_only, enable_only)
-        if (cld):
-            sleep(wait_end) 
-            return cld
-    
-        sleep(delay) 
-    return None
+# definisce la fun ---_retry. ci aggiunge 5 args
+get_child_retry = utl.retry_fun(retry_timeout=2.5, retry_delay=1, wait_init=0.25, wait_end=0.25)(get_child)
+
 
 # patch per trovare se non ho elementi - web Quantity
 def get_child_after(child_wnd, name=None, ctrl_type=None, class_name=None, automation_id=None, handle=None, texts=None,

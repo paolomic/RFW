@@ -139,20 +139,28 @@ def robot_run(req:dict, cfg_file:str):
     return ur.robot_run_3(globals().get(req['fun']), req, cfg_file)             # ha il suo exception handler
         
 
+
+
+
+
+
 ######################################################
 # Main - DEBUG 
 
+
 if __name__ == '__main__':
     cfg_file = r'.\utils\test\test_cd_rfq.json'
-    select = 3
+    req = {'fun':'do_web_send_rfq',    'arg':'',    'coh':'',    'web':'',   'timeout':'300' }       #parte il controller
+    #  do_web_open_rfq           
+    #  do_web_send_rfq
+    #
+    #
+    #
+    #
+    select = 1
     if (select==1):
-        print(robot_run('do_web_login_session', '', cfg_file, '') )
-        #print(robot_run('do_web_open_rfq', '', cfg_file, '') )
-        #print(robot_run('do_web_send_rfq', '', cfg_file, '') )
-        #print(robot_run('do_web_manage_rfq', '', cfg_file, '') )
-        #print(robot_run('do_coh_new_session', '', cfg_file, 'coh:new') )
-        #print(robot_run('do_coh_setting_init', '', cfg_file, 'hang') )
-        #print(robot_run('do_coh_reply', '', cfg_file, 'coh:hang') )
+        print(robot_run(req, cfg_file))
+        pass
     if (select==2):
         do_web_manage_rfq('')
         #do_web_login_session('')
