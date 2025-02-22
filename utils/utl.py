@@ -184,6 +184,7 @@ class RetryContext:
                     if not self.skip_excp or is_last_attempt:
                         raise
                 if is_last_attempt:
+                    print(f'Exit Fail: retry_fun: attempt {attempt} ')
                     break
                 time.sleep(delay)
             return None

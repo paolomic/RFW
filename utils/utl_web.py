@@ -104,7 +104,7 @@ class WebAppEnv:
         return self.doc
     
     def set_login_user_password(self):
-        edit = uw.get_child_retry(wapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1, retry_timeout=5)
+        edit = uw.get_child_retry(wapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1, retry_timeout=8)
         uw.edit_set(edit, config.get('web.user'))
         edit = uw.get_child_chk(wapp.doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
         uw.edit_set(edit, config.get('web.pass'))
