@@ -121,17 +121,17 @@ class WebAppEnv:
 
     def filter_clear(self):
        butt = uw.get_child_chk(wapp.doc, name='', deep=2)              # clear - todo AutomationId
-       uw.win_click(butt, wait_end=.5)
+       uw.win_click(butt, wait_end=.6)
 
     def filter_set_security(self, sec):
-        combo = uw.get_child_retry(wapp.doc, name='Search Security', ctrl_type='ComboBox', deep=2, retry_timeout=4)  # clear - todo AutomationId
-        uw.edit_set(combo, sec, wait_end=.5)
-        butt = uw.get_child_retry(wapp.doc, name='', deep=2, retry_timeout=4)        # retry: long timeout web
-        uw.win_click(butt, wait_end=.5)
+        combo = uw.get_child_retry(wapp.doc, name='Search Security', ctrl_type='ComboBox', deep=2, retry_timeout=6)  # clear - todo AutomationId
+        uw.edit_set(combo, sec, wait_end=.6)
+        butt = uw.get_child_retry(wapp.doc, name='', deep=2, retry_timeout=6)        # retry: long timeout web
+        uw.win_click(butt, wait_end=.6)
 
     def new_rfq(self):
-        butt = uw.get_child_retry(wapp.doc, name='NEW RFQ', ctrl_type='Button', deep=2, retry_timeout=6)  # retry: long timeout web
-        uw.win_click(butt, wait_end=.5)
+        butt = uw.get_child_retry(wapp.doc, name='NEW RFQ', ctrl_type='Button', deep=3, retry_timeout=6)  # retry: long timeout web
+        uw.win_click(butt, wait_end=.6)
 
 wapp = WebAppEnv()              # class singleton
 

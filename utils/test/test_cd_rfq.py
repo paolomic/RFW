@@ -94,6 +94,7 @@ def do_web_open_rfq(arg):
     sleep(1.5)                                              # new windows opening - todo smart_wait ?
 
 def do_web_send_rfq(arg):
+    wapp.hang_main()
     rfq = WebDlgRfqBond()
     rfq.set_combo('My offer')
     rfq.set_price(config.get('web.price'))

@@ -27,7 +27,7 @@ class WebDlgRfqBond:
 
     def __init__(self, timeout = 240, move=True):
         uw.sleep(0.25)
-        self.main = uw.get_main_wnd('New Bond RFQ.*Google Chrome.*', use_re=1)
+        self.main = uw.get_main_wnd_retry('New Bond RFQ.*Google Chrome.*', use_re=1, retry_timeout=6)
         VERIFY(self.main, 'rfq panel fail')
         if move:
             uw.win_move(self.main, 1300, 500)
@@ -38,12 +38,12 @@ class WebDlgRfqBond:
 
     # Before Send - Prepare Rfq
     def set_combo(self, rfq_type):
-        combo = uw.get_child_retry(self.table, name='-', ctrl_type='ComboBox', deep=2)   # mancano locator
+        combo = uw.get_child_retry(self.table, name='-', ctrl_type='ComboBox', deep=2, retry_timeout=5)   # mancano locator
         uw.win_click(combo)
         uw.edit_set(combo, rfq_type)
 
     def set_price(self, price):
-        label = uw.get_child_retry(self.table, name='PRICE', ctrl_type='Text')
+        label = uw.get_child_retry(self.table, name='PRICE', ctrl_type='Text', retry_timeout=5)
         combo = uw.get_child_after(label, ctrl_type='Spinner')                  # todo mancano Key
         uw.edit_set_manual(combo, price, reset=1)               # usa keyboard
 
