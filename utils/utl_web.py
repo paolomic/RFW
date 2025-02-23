@@ -39,7 +39,7 @@ class WebAppEnv:
         subprocess.run(["start", "chrome", "--new-window", self.url], shell=True)
         #utl.play_sound('success')
         uw.sleep(wait_end)
-        self.hang_main(retry_timeout=6)
+        self.hang_main(retry_timeout=15)
         uw.win_maximize(self.main, maximize=False)
         uw.win_move(self.main, 950, 0)
         uw.win_resize(self.main, 1000, 1080)
@@ -104,7 +104,7 @@ class WebAppEnv:
         return self.doc
     
     def set_login_user_password(self):
-        edit = uw.get_child_retry(wapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1, retry_timeout=8)
+        edit = uw.get_child_retry(wapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1, retry_timeout=15)
         uw.edit_set(edit, config.get('web.user'))
         edit = uw.get_child_chk(wapp.doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
         uw.edit_set(edit, config.get('web.pass'))
@@ -113,7 +113,7 @@ class WebAppEnv:
         uw.win_click(butt)
         uw.sleep(2)                   # todo - smart wait
         try:
-            wrn = uw.get_child_retry(wapp.doc, name='Notifications popup are disabled', retry_timeout=3)
+            wrn = uw.get_child_retry(wapp.doc, name='Notifications popup are disabled', retry_timeout=15)
             butt = uw.get_child_chk(wrn, name='OK', deep=2)
             uw.win_click(butt)
         except:
@@ -124,13 +124,13 @@ class WebAppEnv:
        uw.win_click(butt, wait_end=.6)
 
     def filter_set_security(self, sec):
-        combo = uw.get_child_retry(wapp.doc, name='Search Security', ctrl_type='ComboBox', deep=2, retry_timeout=6)  # clear - todo AutomationId
+        combo = uw.get_child_retry(wapp.doc, name='Search Security', ctrl_type='ComboBox', deep=2, retry_timeout=15)  # clear - todo AutomationId
         uw.edit_set(combo, sec, wait_end=.6)
-        butt = uw.get_child_retry(wapp.doc, name='', deep=2, retry_timeout=6)        # retry: long timeout web
+        butt = uw.get_child_retry(wapp.doc, name='', deep=2, retry_timeout=15)        # retry: long timeout web
         uw.win_click(butt, wait_end=.6)
 
     def new_rfq(self):
-        butt = uw.get_child_retry(wapp.doc, name='NEW RFQ', ctrl_type='Button', deep=3, retry_timeout=6)  # retry: long timeout web
+        butt = uw.get_child_retry(wapp.doc, name='NEW RFQ', ctrl_type='Button', deep=3, retry_timeout=15)  # retry: long timeout web
         uw.win_click(butt, wait_end=.6)
 
 wapp = WebAppEnv()              # class singleton
@@ -188,4 +188,4 @@ class WebTable:
 
 #endregion
 if __name__ == '__main__':
-    wapp.hang_main(url=None, wait_end=1, retry_timeout=12)
+    wapp.hang_main(url=None, wait_end=1, retry_timeout=15)

@@ -150,26 +150,21 @@ def robot_run(req:dict, cfg_file:str):
 
 
 if __name__ == '__main__':
-    cfg_file = r'.\utils\test\test_cd_rfq.json'
-    req = {'fun':'do_web_send_rfq',    'arg':'',    'coh':'',    'web':'',   'timeout':'300' }       #parte il controller
-    #  do_web_open_rfq           
-    #  do_web_send_rfq
-    #
-    #
-    #
-    #
+    
     select = 1
     if (select==1):
+        cfg_file = r'.\utils\test\test_cd_rfq.json'
+        req = {'fun':'do_web_open_rfq',    'arg':'',    'coh':'',    'web':'',   'timeout':'300' }       #parte il controller
+        #call
         print(robot_run(req, cfg_file))
         pass
     if (select==2):
         do_web_manage_rfq('')
         #do_web_login_session('')
     if (select==3):
-        #req = {'fun':'do_prepare_test','arg':'', 'coh':'terminate', 'web':'terminate','timeout':'60'}
-        #robot_run(req, cfg_file)
-        #print(robot_run('do_prepare_test', '', cfg_file, '', timeout=30) )
-        #print(robot_run('do_coh_prepare_session', '', cfg_file, 'coh:new', timeout=66) )
-        #print(robot_run('do_web_login_session', '', cfg_file, '', timeout=233) )
+        config.load(cfg_file)
+        wapp.launch_url(config.get('web.url'))
+        edit = uw.get_child_retry(wapp.doc, name='USERNAMEx.*', automation_id='username', ctrl_type='Edit', use_re=1, retry_timeout=16)
+        print (edit)
         pass
 
