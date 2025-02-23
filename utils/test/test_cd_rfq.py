@@ -2,7 +2,6 @@
 # TEST CD_RFQ
 ####################################################################
 
-####################################################################
 #region - import
 
 import keyboard
@@ -19,7 +18,7 @@ import utl as utl
 from utl_config import config
 from utl_app import app
 from utl_web import wapp
-from utl_verifier import VERIFY, RAISE, DUMP
+from utl_verifier import CLEAR, VERIFY, RAISE, DUMP
 from utl_win import sleep, ROBOT_RES
 import utl_run as ur
 import utl_win as uw
@@ -36,6 +35,7 @@ from page_web               import WebDlgRfqBond
 
 def do_prepare_test(arg):
     ur.terminate_sessions()
+    CLEAR(5)
     sleep(1)
 
 ####################################################################

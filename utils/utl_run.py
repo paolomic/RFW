@@ -236,6 +236,7 @@ def robot_run_3(func: callable, req:dict, cfg_file:str):
     controller = None
     try:
         config.load(cfg_file)
+        test_name = req['fun']
         arg = req['arg']
         conn_coh = req['coh']
         conn_web = req['web']
@@ -251,11 +252,11 @@ def robot_run_3(func: callable, req:dict, cfg_file:str):
     except ThreadTimeout:                                       # non si riesce ad accorparele exception
         exc_mess = f"Execution Timeout {timeout} seconds reached"
         terminate_sessions()                                    # Full Suite abort
-        DUMP(exc_mess)
+        DUMP(exc_mess, test_name)
         return ROBOT_RES('no', exc_mess)   
     except Exception as e:
         exc_mess = str(e)
-        DUMP(exc_mess)
+        DUMP(exc_mess, test_name)
         return ROBOT_RES('no', exc_mess)
     finally:                                                    # viene eseguio sempre, prima di ritornare
         if controller:
