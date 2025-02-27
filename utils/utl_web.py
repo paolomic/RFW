@@ -20,6 +20,17 @@ from utl_config import config
 ##########################################################
 #region - Web Application - Browser 
 
+def look_for_username_control():
+    main = uw.get_main_wnd('CanDeal Evolution.*Google Chrome.*', use_re=1)  
+    if main:
+        edit = uw.get_child(wapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1, deep=2)
+        if edit:
+            return True
+    return None
+
+wait_reload_login =  utl.retry_fun(retry_timeout=15, retry_delay=1, wait_init=0.25, wait_end=0.25)(look_for_username_control)
+
+
 class WebAppEnv:
     #private
     url = None
@@ -33,16 +44,22 @@ class WebAppEnv:
         if url:            
             self.url = url
 
-    def launch_url(self, url=None, wait_end=3):
+    def launch_url(self, url=None, wait_end=0.5):
         if url:            
             self.url = url
         subprocess.run(["start", "chrome", "--new-window", self.url], shell=True)
         #utl.play_sound('success')
-        uw.sleep(wait_end)
+        
+        #complete reload - waiting for username control
+        wait_reload_login()
+        
         self.hang_main(retry_timeout=15)
         uw.win_maximize(self.main, maximize=False)
         uw.win_move(self.main, 950, 0)
         uw.win_resize(self.main, 1000, 1080)
+
+        uw.sleep(wait_end)
+
 
     #@utl.chrono
     def hang_main(self, url=None, wait_end=1, retry_timeout=0):
@@ -104,33 +121,44 @@ class WebAppEnv:
         return self.doc
     
     def set_login_user_password(self):
-        edit = uw.get_child_retry(wapp.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1, retry_timeout=15)
+        edit = uw.get_child_retry(self.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1, retry_timeout=15)
         uw.edit_set(edit, config.get('web.user'))
-        edit = uw.get_child_chk(wapp.doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
+        edit = uw.get_child_chk(self.doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
         uw.edit_set(edit, config.get('web.pass'))
         keyboard.press_and_release('esc')
-        butt = uw.get_child_chk(wapp.doc, name='LOGIN.*', ctrl_type='Button', use_re=1)
+        butt = uw.get_child_chk(self.doc, name='LOGIN.*', ctrl_type='Button', use_re=1)
         uw.win_click(butt)
-        uw.sleep(2)                   # todo - smart wait
-        try:
-            wrn = uw.get_child_retry(wapp.doc, name='Notifications popup are disabled', retry_timeout=15)
-            butt = uw.get_child_chk(wrn, name='OK', deep=2)
-            uw.win_click(butt)
-        except:
-            pass
+        uw.sleep(3)                  
+
+        to = utl.TimeOut(60)            # smartwait check hang
+        while  not to.expired():
+            try:
+                #wrn = uw.get_child_retry(self.doc, name='Notifications popup are disabled', retry_timeout=15)
+                wrn = uw.get_child(self.doc, name='Notifications popup are disabled')
+                if wrn:
+                    butt = uw.get_child_chk(wrn, name='OK', deep=2)
+                    uw.win_click(butt)
+                
+                wapp.hang_main()
+                butt = uw.get_child_chk(self.doc, name='', deep=2)      
+                if butt:
+                    break
+            except:
+                pass
 
     def filter_clear(self):
-       butt = uw.get_child_chk(wapp.doc, name='', deep=2)              # clear - todo AutomationId
+       butt = uw.get_child_chk(self.doc, name='', deep=2)              # clear - todo AutomationId
        uw.win_click(butt, wait_end=.6)
 
     def filter_set_security(self, sec):
-        combo = uw.get_child_retry(wapp.doc, name='Search Security', ctrl_type='ComboBox', deep=2, retry_timeout=15)  # clear - todo AutomationId
-        uw.edit_set(combo, sec, wait_end=.6)
-        butt = uw.get_child_retry(wapp.doc, name='', deep=2, retry_timeout=15)        # retry: long timeout web
-        uw.win_click(butt, wait_end=.6)
+        combo = uw.get_child_retry(self.doc, name='Search Security', ctrl_type='ComboBox', deep=2, retry_timeout=10)  # clear - todo AutomationId
+        uw.edit_set(combo, sec, wait_end=2)                                     # crtitico a volte non abilita
+        keyboard.press_and_release('enter')
+        butt = uw.get_child_retry(self.doc, name='', deep=2, retry_timeout=10)        # retry: long timeout web
+        uw.win_click(butt, wait_end=1)
 
     def new_rfq(self):
-        butt = uw.get_child_retry(wapp.doc, name='NEW RFQ', ctrl_type='Button', deep=3, retry_timeout=15)  # retry: long timeout web
+        butt = uw.get_child_retry(self.doc, name='NEW RFQ', ctrl_type='Button', deep=3, retry_timeout=15, recover_fun=wapp.hang_main)  # retry: long timeout web - # todo - smart wait
         uw.win_click(butt, wait_end=.6)
 
 wapp = WebAppEnv()              # class singleton
@@ -188,4 +216,5 @@ class WebTable:
 
 #endregion
 if __name__ == '__main__':
-    wapp.hang_main(url=None, wait_end=1, retry_timeout=15)
+    #wapp.hang_main(url=None, wait_end=1, retry_timeout=15)
+    wait_reload_login()

@@ -3,6 +3,7 @@ import time
 from functools import wraps
 import winsound
 
+
 def get_now_sec(sep=':'):
     now = datetime.now()
     return f'{now.hour:02}{sep}{now.minute:02}{sep}{now.second:02}'
@@ -155,21 +156,23 @@ def retry_for(max_seconds=10, interval=2, ignore_exceptions=False):
 
 
 class RetryContext:
-    def __init__(self, retry_timeout=10, retry_delay=2, skip_excp=False, wait_init=0.25, wait_end=0.25):
+    def __init__(self, retry_timeout=10, retry_delay=2, skip_excp=False, recover_fun = None, wait_init=0.25, wait_end=0.25):
         self.timeout = retry_timeout
         self.delay = retry_delay
         self.skip_excp = skip_excp
+        self.recover_fun = recover_fun
         self.wait_init = wait_init
         self.wait_end = wait_end
     
     def __call__(self, func):
-        def wrapped(*args, retry_timeout=None, retry_delay=None, **kwargs):
+        def wrapped(*args, retry_timeout=None, retry_delay=None, recover_fun = None, **kwargs):
             timeout = retry_timeout if retry_timeout is not None else self.timeout
             delay = retry_delay if retry_delay is not None else self.delay
 
             time.sleep(self.wait_init)
             start_time = time.time()
-            end_time = start_time + timeout
+            end_time = start_time + timeout 
+
             attempt = 0
 
             while True:
@@ -184,12 +187,29 @@ class RetryContext:
                     if not self.skip_excp or is_last_attempt:
                         raise
                 if is_last_attempt:
-                    print(f'Exit Fail: retry_fun: attempt {attempt} ')
-                    break
+                    if recover_fun:
+                        end_time = end_time + timeout 
+                        print(f'retry_fun: attempt {attempt}: Main Loop fail: recover_fun')
+                        recover_fun()
+                        recover_fun = None
+                    else:
+                        print(f'Exit Fail: retry_fun: attempt {attempt} ')
+                        break
                 time.sleep(delay)
             return None
         return wrapped
 
-def retry_fun(retry_timeout=10, retry_delay=2, skip_excp=False, wait_init=0.25, wait_end=0.25):
-    return RetryContext(retry_timeout, retry_delay, skip_excp, wait_init, wait_end)
+def retry_fun(retry_timeout=10, retry_delay=2, skip_excp=False, recover_fun = None, wait_init=0.25, wait_end=0.25):
+    return RetryContext(retry_timeout, retry_delay, skip_excp, recover_fun, wait_init, wait_end)
 
+if __name__ == '__main__':
+    def hang():
+        print('Hang')
+        time.sleep(1)
+    def foo():
+        print('attempt')
+        time.sleep(1)
+    test_fun = retry_fun()(foo)
+   
+    test_fun(recover_fun=hang)
+   

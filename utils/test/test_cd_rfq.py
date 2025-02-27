@@ -81,6 +81,8 @@ def do_coh_reply(arg):
 ####################################################################
 #region - Robot Web 
 
+filter_set_security_retray = utl.retry_fun(retry_delay=20, retry_timeout=2)(wapp.filter_set_security)
+
 def do_web_login_session(arg):
     wapp.launch_url(config.get('web.url'))
     wapp.set_login_user_password()
@@ -88,10 +90,10 @@ def do_web_login_session(arg):
 def do_web_open_rfq(arg):
     wapp.hang_main()
 
-    wapp.filter_clear()                                     # todo: mancano locators
-    wapp.filter_set_security(config.get('web.sec'))         # todo: mancano locators
-    wapp.new_rfq()                                          # todo: mancano locators
-    sleep(1.5)                                              # new windows opening - todo smart_wait ?
+    wapp.filter_clear()                                             # todo: mancano locators
+    filter_set_security_retray(config.get('web.sec'))          # todo: mancano locators
+    wapp.new_rfq()                                                  # todo: mancano locators
+    sleep(1.5)                                                      # new windows opening - todo smart_wait ?
 
 def do_web_send_rfq(arg):
     wapp.hang_main()
