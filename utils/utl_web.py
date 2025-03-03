@@ -120,7 +120,8 @@ class WebAppEnv:
     def get_doc(self):  
         return self.doc
     
-    def set_login_user_password(self):
+    def web_boot(self):
+        wapp.launch_url(config.get('web.url'), wait_end=3)
         edit = uw.get_child_retry(self.doc, name='USERNAME.*', automation_id='username', ctrl_type='Edit', use_re=1, retry_timeout=15)
         uw.edit_set(edit, config.get('web.user'))
         edit = uw.get_child_chk(self.doc, name='PASSWORD.', automation_id='password', ctrl_type='Edit', use_re=1)
@@ -128,7 +129,7 @@ class WebAppEnv:
         keyboard.press_and_release('esc')
         butt = uw.get_child_chk(self.doc, name='LOGIN.*', ctrl_type='Button', use_re=1)
         uw.win_click(butt)
-        uw.sleep(3)                  
+        uw.sleep(10)                  
 
         to = utl.TimeOut(60)            # smartwait check hang
         while  not to.expired():
@@ -139,12 +140,16 @@ class WebAppEnv:
                     butt = uw.get_child_chk(wrn, name='OK', deep=2)
                     uw.win_click(butt)
                 
+                uw.sleep(1)
                 wapp.hang_main()
                 butt = uw.get_child_chk(self.doc, name='', deep=2)      
                 if butt:
-                    break
+                    return True
             except:
                 pass
+
+        self.manage_conn('terminate')
+        return False
 
     def filter_clear(self):
        butt = uw.get_child_chk(self.doc, name='', deep=2)              # clear - todo AutomationId

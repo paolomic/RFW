@@ -83,16 +83,27 @@ def do_coh_reply(arg):
 
 filter_set_security_retray = utl.retry_fun(retry_delay=20, retry_timeout=2)(wapp.filter_set_security)
 
+
+
 def do_web_login_session(arg):
-    wapp.launch_url(config.get('web.url'))
-    wapp.set_login_user_password()
+    retry_fun = utl.retry_fun(retry_timeout=120, retry_delay=2) (wapp.web_boot)
+    retry_fun()
     
 def do_web_open_rfq(arg):
-    wapp.hang_main()
-
-    wapp.filter_clear()                                             # todo: mancano locators
-    filter_set_security_retray(config.get('web.sec'))          # todo: mancano locators
-    wapp.new_rfq()                                                  # todo: mancano locators
+    def attempt():
+        try:
+            wapp.hang_main()
+            wapp.filter_clear()                                             # todo: mancano locators
+            filter_set_security_retray(config.get('web.sec'))               # todo: mancano locators
+            wapp.new_rfq()                                                  # todo: mancano locators
+            return True
+        except:
+            # chiusura
+            return None
+    
+    retry_fun = utl.retry_fun(retry_timeout=60, retry_delay=2) (attempt)
+    retry_fun()
+    
     sleep(1.5)                                                      # new windows opening - todo smart_wait ?
 
 def do_web_send_rfq(arg):
